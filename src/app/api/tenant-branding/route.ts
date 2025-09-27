@@ -233,7 +233,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Prepare update data (only include provided fields)
-    const updateData: any = {}
+    const updateData: Partial<TenantBranding> = {}
     if (logo_url !== undefined) updateData.logo_url = logo_url
     if (primary_color !== undefined) updateData.primary_color = primary_color
     if (secondary_color !== undefined) updateData.secondary_color = secondary_color

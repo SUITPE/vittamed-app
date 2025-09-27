@@ -32,6 +32,21 @@ interface Member {
   full_name: string
 }
 
+// Interface for member data from API
+interface AvailableMember {
+  member_id: string
+  first_name: string | null
+  last_name: string | null
+  email: string | null
+  full_name: string
+}
+
+// Interface for time slot data from API
+interface TimeSlot {
+  time: string
+  is_available: boolean
+}
+
 interface FormErrors {
   patient_first_name?: string
   patient_last_name?: string
@@ -47,7 +62,7 @@ export default function BookingPage() {
   const [selectedService, setSelectedService] = useState<Service | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
-  const [appointment, setAppointment] = useState<any>(null)
+  const [appointment, setAppointment] = useState<Appointment | null>(null)
 
   const [form, setForm] = useState<BookingForm>({
     tenant_id: '',
@@ -164,7 +179,7 @@ export default function BookingPage() {
 
       if (data.available_members) {
         // Format members for the UI
-        const formattedMembers = data.available_members.map((member: any) => ({
+        const formattedMembers = data.available_members.map((member: AvailableMember) => ({
           id: member.member_id,
           first_name: member.first_name,
           last_name: member.last_name,
@@ -190,8 +205,8 @@ export default function BookingPage() {
       if (data.time_slots) {
         // Extract only available time slots
         const availableSlots = data.time_slots
-          .filter((slot: any) => slot.is_available)
-          .map((slot: any) => slot.time)
+          .filter((slot: TimeSlot) => slot.is_available)
+          .map((slot: TimeSlot) => slot.time)
         setTimeSlots(availableSlots)
       }
     } catch (error) {

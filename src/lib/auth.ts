@@ -1,12 +1,13 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { User } from '@supabase/supabase-js'
+import { UserRole } from '@/types/user'
 
 export interface UserProfile {
   id: string
   email: string | null
   first_name: string | null
   last_name: string | null
-  role: 'admin_tenant' | 'doctor' | 'patient'
+  role: UserRole
   tenant_id: string | null
   doctor_id: string | null
   created_at: string

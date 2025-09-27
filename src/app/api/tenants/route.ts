@@ -30,10 +30,10 @@ export async function POST(request: NextRequest) {
     // TEMPORARY: Skip auth check for testing
     const isTestMode = true
 
-    if (!isTestMode) {
-      // Get current user
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Get current user (even in test mode for potential admin assignment)
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
+    if (!isTestMode) {
       if (authError || !user) {
         return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
       }
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     }
 
     // TEMPORARY: Skip admin assignment in test mode
-    if (!isTestMode) {
+    if (!isTestMode && user) {
       // Update user profile to assign as admin of new tenant
       const { error: updateError } = await supabase
         .from('user_profiles')

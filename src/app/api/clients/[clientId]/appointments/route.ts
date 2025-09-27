@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { clientId: string } }
 ) {
   try {
-    const supabase = getSupabaseServerClient()
+    const supabase = await getSupabaseServerClient()
     const { clientId } = params
 
     if (!clientId) {

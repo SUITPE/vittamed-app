@@ -788,15 +788,20 @@ export interface SMSReminderTemplateData {
   tenant: {
     name: string
     sms_sender_name?: string
+    phone?: string
   }
   appointment: {
     date: string
     time: string
+    service_name: string
     provider_name: string
     provider_type: 'doctor' | 'member'
   }
   patient: {
     first_name: string
+  }
+  reminder: {
+    hours_before: number
   }
 }
 

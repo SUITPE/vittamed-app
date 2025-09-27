@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { UserRole, isValidUserRole, getRoleDisplayName, getRoleColor } from '@/types/user'
+import { UserRole, isValidUserRole, getRoleDisplayName, getRoleColor, UserRoleView } from '@/types/user'
 
 interface AddTeamMemberModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess: (member: any) => void
+  onSuccess: (member: UserRoleView) => void
   tenantId: string
   tenantName: string
 }
@@ -113,6 +113,7 @@ export default function AddTeamMemberModal({
       admin_tenant: 'Acceso completo al negocio, puede gestionar usuarios y configuraciones.',
       doctor: 'Puede gestionar agenda, pacientes y consultas médicas.',
       staff: 'Puede asistir con recepción, citas y tareas administrativas.',
+      receptionist: 'Puede gestionar citas, pacientes y tareas de recepción.',
       patient: 'Acceso básico como paciente para reservar citas.'
     }
     return descriptions[role]

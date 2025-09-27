@@ -148,7 +148,7 @@ export async function PUT(
     }
 
     // Validate updates
-    const updates: any = {}
+    const updates: Partial<UpdateMemberAvailabilityData & { updated_at: string }> = {}
 
     if (data.day_of_week !== undefined) {
       if (data.day_of_week < 0 || data.day_of_week > 6) {
