@@ -60,7 +60,7 @@ export async function PATCH(
     }
 
     // Update the appointment
-    const updateData: any = {}
+    const updateData: Record<string, unknown> = {}
     if (body.status) updateData.status = body.status
     if (body.patient_name) updateData.patient_name = body.patient_name
     if (body.start_time) updateData.start_time = body.start_time

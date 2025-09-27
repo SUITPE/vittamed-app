@@ -6,9 +6,7 @@ import { cookies } from 'next/headers'
 import { type NextRequest, type NextResponse } from 'next/server'
 
 // Export the function that other files are trying to import
-export async function getSupabaseServerClient() {
-  return createApiClient()
-}
+export const getSupabaseServerClient = createApiClient
 
 export async function createApiClient() {
   return createServerClient(
@@ -63,5 +61,3 @@ export async function createMiddlewareClient(
   )
 }
 
-// Export alias for API routes
-export const getSupabaseServerClient = createApiClient

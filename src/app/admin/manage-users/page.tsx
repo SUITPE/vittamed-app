@@ -7,39 +7,16 @@ import AddTeamMemberModal from '@/components/AddTeamMemberModal'
 
 export default function ManageUsersPage() {
   const { user, loading: authLoading } = useAuth()
+  const [users, setUsers] = useState<UserRoleView[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false)
 
   // For now, use simple admin check until multi-tenant is fully integrated
   const isAdmin = () => user?.profile?.role === 'admin_tenant'
   const currentTenant = {
     tenant_id: user?.profile?.tenant_id || '',
     tenant_name: 'Clínica San Rafael' // Default for demo
-  }
-
-  const [users, setUsers] = useState<UserRoleView[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [showAddMemberModal, setShowAddMemberModal] = useState(false)
-
-
-  // Check access
-  if (!authLoading && !isAdmin()) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            <div className="text-center">
-              <div className="text-red-500 text-4xl mb-4">⚠️</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Acceso Restringido
-              </h2>
-              <p className="text-gray-600">
-                Solo los administradores pueden gestionar usuarios.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   // Fetch tenant users
@@ -72,10 +49,31 @@ export default function ManageUsersPage() {
     }
   }, [currentTenant?.tenant_id, user])
 
-  const handleMemberAdded = (member: any) => {
+  const handleMemberAdded = (member: UserRoleView) => {
     // Refresh the users list
     fetchTenantUsers()
     setShowAddMemberModal(false)
+  }
+
+  // Check access
+  if (!authLoading && !isAdmin()) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+            <div className="text-center">
+              <div className="text-red-500 text-4xl mb-4">⚠️</div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                Acceso Restringido
+              </h2>
+              <p className="text-gray-600">
+                Solo los administradores pueden gestionar usuarios.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const handleRemoveUser = async (userId: string, userName: string) => {

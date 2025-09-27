@@ -6,14 +6,14 @@ import { authService, AuthUser } from '@/lib/auth'
 interface AuthContextType {
   user: AuthUser | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: any }>
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signUp: (email: string, password: string, userData: {
     first_name: string
     last_name: string
     role?: 'admin_tenant' | 'doctor' | 'patient'
-  }) => Promise<{ error: any }>
-  signInWithOAuth: (provider: 'google' | 'facebook' | 'apple') => Promise<{ error: any }>
-  signOut: () => Promise<{ error: any }>
+  }) => Promise<{ error: Error | null }>
+  signInWithOAuth: (provider: 'google' | 'facebook' | 'apple') => Promise<{ error: Error | null }>
+  signOut: () => Promise<{ error: Error | null }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)

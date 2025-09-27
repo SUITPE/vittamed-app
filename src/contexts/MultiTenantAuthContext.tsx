@@ -12,14 +12,14 @@ interface MultiTenantAuthContextType {
   hasMultipleTenants: boolean
   switchTenant: (tenantId: string) => Promise<SwitchTenantResponse | { error: string }>
   refreshTenants: () => Promise<void>
-  signIn: (email: string, password: string) => Promise<{ error: any }>
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signUp: (email: string, password: string, userData: {
     first_name: string
     last_name: string
     role?: 'admin_tenant' | 'doctor' | 'patient'
-  }) => Promise<{ error: any }>
-  signInWithOAuth: (provider: 'google' | 'facebook' | 'apple') => Promise<{ error: any }>
-  signOut: () => Promise<{ error: any }>
+  }) => Promise<{ error: Error | null }>
+  signInWithOAuth: (provider: 'google' | 'facebook' | 'apple') => Promise<{ error: Error | null }>
+  signOut: () => Promise<{ error: Error | null }>
 }
 
 const MultiTenantAuthContext = createContext<MultiTenantAuthContextType | undefined>(undefined)

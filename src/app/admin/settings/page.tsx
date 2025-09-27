@@ -12,7 +12,7 @@ interface TenantSettings {
   address: string
   phone: string
   email: string
-  business_settings?: any
+  business_settings?: Record<string, unknown>
 }
 
 export default function SettingsPage() {
@@ -53,7 +53,7 @@ export default function SettingsPage() {
 
       if (response.ok) {
         const tenants = await response.json()
-        const currentTenant = tenants.find((t: any) => t.id === currentTenantId)
+        const currentTenant = tenants.find((t: TenantSettings) => t.id === currentTenantId)
 
         if (currentTenant) {
           setTenantData(currentTenant)
