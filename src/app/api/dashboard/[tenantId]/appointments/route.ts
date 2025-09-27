@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { getSupabaseServerClient } from '@/lib/supabase-api'
 
 export async function GET(
   request: NextRequest,
@@ -15,6 +10,8 @@ export async function GET(
   const date = searchParams.get('date')
 
   try {
+    const supabase = await getSupabaseServerClient()
+
     // Validate tenantId
     if (!tenantId || tenantId === 'null') {
       return NextResponse.json({ error: 'Invalid tenant ID' }, { status: 400 })
