@@ -89,8 +89,23 @@ CRON_SECRET=tu-secreto-ultra-seguro-2024
 ## ⚙️ **Configuraciones Avanzadas Incluidas**
 
 ### **Cron Jobs Automáticos:**
+
+#### **Plan Hobby (Gratuito):**
 ```json
-// vercel.json - Ya configurado
+// vercel.json - Configurado para plan gratuito
+{
+  "crons": [
+    {
+      "path": "/api/process-reminders",
+      "schedule": "0 9 * * *"  // Una vez al día a las 9 AM
+    }
+  ]
+}
+```
+
+#### **Plan Pro ($20/mes):**
+```json
+// Para recordatorios cada 2 horas
 {
   "crons": [
     {
@@ -152,6 +167,31 @@ curl https://tu-app.vercel.app/api/process-reminders
 Admin: admin@clinicasanrafael.com / password
 Doctor: ana.rodriguez@email.com / password
 Patient: patient@example.com / password
+```
+
+---
+
+## ⚠️ **Limitaciones Plan Hobby vs Pro**
+
+### **Plan Hobby (Gratuito) - Incluye:**
+- ✅ **Todo el frontend**: UI completa
+- ✅ **Todas las APIs**: Funcionalidad completa
+- ✅ **Autenticación**: Supabase integrado
+- ✅ **Pagos**: Stripe webhooks funcionan
+- ✅ **Confirmaciones**: VT-44 instantáneas
+- ⚠️ **Recordatorios**: Solo 1 vez/día (9 AM)
+- ⚠️ **Function timeout**: 10 segundos máximo
+
+### **Plan Pro ($20/mes) - Agrega:**
+- ✅ **Recordatorios**: Cada 2 horas
+- ✅ **Function timeout**: 5 minutos
+- ✅ **Analytics avanzado**
+- ✅ **Más concurrent executions**
+
+### **Recomendación:**
+```bash
+# Para Demo/Testing: Plan Hobby es perfecto
+# Para Producción: Plan Pro recomendado
 ```
 
 ---

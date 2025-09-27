@@ -5,13 +5,10 @@
   "regions": ["iad1"],
   "functions": {
     "src/app/api/process-reminders/route.ts": {
-      "maxDuration": 300
+      "maxDuration": 10
     },
     "src/app/api/scheduled-reminders/route.ts": {
-      "maxDuration": 60
-    },
-    "src/app/api/reminder-configurations/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 10
     }
   },
   "crons": [
