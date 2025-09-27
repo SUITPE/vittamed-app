@@ -19,16 +19,33 @@ export interface AuthUser extends User {
 }
 
 class AuthService {
-  private supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  private _supabase: ReturnType<typeof createBrowserClient> | null = null
+
+  private get supabase() {
+    if (!this._supabase) {
+      // Only initialize if environment variables are available
+      if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        this._supabase = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        )
+      } else {
+        // During SSR or when env vars are not available, return a mock client
+        return null as any
+      }
+    }
+    return this._supabase
+  }
 
   async signUp(email: string, password: string, userData: {
     first_name: string
     last_name: string
     role?: 'admin_tenant' | 'doctor' | 'patient'
   }) {
+    if (!this.supabase) {
+      return { data: null, error: { message: 'Supabase client not available during SSR' } }
+    }
+
     const { data, error } = await this.supabase.auth.signUp({
       email,
       password,
@@ -45,6 +62,10 @@ class AuthService {
   }
 
   async signIn(email: string, password: string) {
+    if (!this.supabase) {
+      return { data: null, error: { message: 'Supabase client not available during SSR' } }
+    }
+
     const { data, error } = await this.supabase.auth.signInWithPassword({
       email,
       password
@@ -54,6 +75,10 @@ class AuthService {
   }
 
   async signInWithOAuth(provider: 'google' | 'facebook' | 'apple') {
+    if (!this.supabase || typeof window === 'undefined') {
+      return { data: null, error: { message: 'Supabase client not available during SSR' } }
+    }
+
     const { data, error } = await this.supabase.auth.signInWithOAuth({
       provider,
       options: {
@@ -66,6 +91,10 @@ class AuthService {
 
   async signOut() {
     try {
+      if (!this.supabase) {
+        return { error: { message: 'Supabase client not available during SSR' } }
+      }
+
       // Sign out from Supabase
       const { error } = await this.supabase.auth.signOut()
 
@@ -88,6 +117,10 @@ class AuthService {
   }
 
   async getCurrentUser(): Promise<AuthUser | null> {
+    if (!this.supabase) {
+      return null
+    }
+
     const { data: { user } } = await this.supabase.auth.getUser()
 
     if (!user) return null
@@ -162,6 +195,10 @@ class AuthService {
   }
 
   async getUserProfile(userId: string): Promise<UserProfile | null> {
+    if (!this.supabase) {
+      return null
+    }
+
     const { data, error } = await this.supabase
       .from('user_profiles')
       .select('*')
@@ -177,6 +214,10 @@ class AuthService {
   }
 
   async updateUserProfile(userId: string, updates: Partial<UserProfile>) {
+    if (!this.supabase) {
+      return { data: null, error: { message: 'Supabase client not available during SSR' } }
+    }
+
     const { data, error } = await this.supabase
       .from('user_profiles')
       .update(updates)
@@ -203,6 +244,10 @@ class AuthService {
 
   // Get user's accessible tenants
   async getUserTenants(userId: string): Promise<string[]> {
+    if (!this.supabase) {
+      return []
+    }
+
     const profile = await this.getUserProfile(userId)
 
     if (!profile) return []
@@ -226,6 +271,10 @@ class AuthService {
   }
 
   onAuthStateChange(callback: (user: AuthUser | null) => void) {
+    if (!this.supabase) {
+      return { data: { subscription: { unsubscribe: () => {} } } }
+    }
+
     return this.supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         const authUser = await this.getCurrentUser()
