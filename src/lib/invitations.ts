@@ -133,25 +133,60 @@ Si no esperabas este correo, puedes ignorarlo con seguridad.
   }
 
   /**
-   * Send invitation email (placeholder - needs actual email service integration)
+   * Send invitation email using nodemailer
    */
   async sendInvitationEmail(data: InvitationData): Promise<boolean> {
     try {
       const template = this.generateInvitationEmail(data)
 
-      // TODO: Integrate with actual email service (SendGrid, AWS SES, etc.)
-      console.log('📧 INVITATION EMAIL (Demo Mode):')
-      console.log('To:', data.email)
-      console.log('Subject:', template.subject)
-      console.log('Content:', template.text)
-      console.log('---')
+      // Import nodemailer at runtime for server-side only
+      const nodemailer = await import('nodemailer')
 
-      // For now, simulate email sending
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // Check if email configuration is available
+      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+        console.log('📧 INVITATION EMAIL (Demo Mode - No email config):')
+        console.log('To:', data.email)
+        console.log('Subject:', template.subject)
+        console.log('Content preview:', template.text.substring(0, 200) + '...')
+        console.log('---')
+        // Simulate delay for demo
+        await new Promise(resolve => setTimeout(resolve, 500))
+        return true
+      }
 
+      // Create transporter
+      const transporter = nodemailer.default.createTransport({
+        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+        port: parseInt(process.env.EMAIL_PORT || '587'),
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+      })
+
+      // Send email
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: data.email,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+      }
+
+      await transporter.sendMail(mailOptions)
+
+      console.log(`✅ Invitation email sent successfully to ${data.email}`)
       return true
     } catch (error) {
       console.error('Error sending invitation email:', error)
+
+      // Fallback to demo mode if email fails
+      console.log('📧 INVITATION EMAIL (Fallback - Demo Mode):')
+      console.log('To:', data.email)
+      console.log('Subject:', this.generateInvitationEmail(data).subject)
+      console.log('---')
+
       return false
     }
   }

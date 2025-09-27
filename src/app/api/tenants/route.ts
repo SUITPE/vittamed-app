@@ -27,27 +27,22 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
 
-    // TEMPORARY: Skip auth check for testing
-    const isTestMode = true
-
-    // Get current user (even in test mode for potential admin assignment)
+    // Get current user and verify authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!isTestMode) {
-      if (authError || !user) {
-        return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-      }
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
 
-      // Check if user is admin (simplified check - in production you'd verify admin role)
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
+    // Check if user is admin
+    const { data: userProfile } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
 
-      if (!userProfile || userProfile.role !== 'admin_tenant') {
-        return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
-      }
+    if (!userProfile || userProfile.role !== 'admin_tenant') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -101,18 +96,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create tenant' }, { status: 500 })
     }
 
-    // TEMPORARY: Skip admin assignment in test mode
-    if (!isTestMode && user) {
-      // Update user profile to assign as admin of new tenant
-      const { error: updateError } = await supabase
-        .from('user_profiles')
-        .update({ tenant_id: tenant.id })
-        .eq('id', user.id)
+    // Update user profile to assign as admin of new tenant
+    const { error: updateError } = await supabase
+      .from('user_profiles')
+      .update({ tenant_id: tenant.id })
+      .eq('id', user.id)
 
-      if (updateError) {
-        console.error('Error updating user profile:', updateError)
-        // Note: Tenant created but admin assignment failed
-      }
+    if (updateError) {
+      console.error('Error updating user profile:', updateError)
+      // Note: Tenant created but admin assignment failed
     }
 
     return NextResponse.json({
@@ -122,7 +114,7 @@ export async function POST(request: NextRequest) {
         tenant_type: tenant_type, // Return original selected type, not mapped DB type
         business_config: businessConfig
       },
-      message: `${businessConfig.label} creado exitosamente${!isTestMode ? ' y admin asignado' : ''}`
+      message: `${businessConfig.label} creado exitosamente y admin asignado`
     }, { status: 201 })
 
   } catch (error) {

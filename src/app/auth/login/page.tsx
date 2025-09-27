@@ -29,21 +29,30 @@ export default function LoginPage() {
       }
 
       // Small delay to ensure auth state is updated
-      await new Promise(resolve => setTimeout(resolve, 100))
+      await new Promise(resolve => setTimeout(resolve, 500))
 
       // Get user data to redirect based on role
       const { authService } = await import('@/lib/auth')
       const user = await authService.getCurrentUser()
 
-      // Force redirect with window.location for better reliability in tests
+      // Use router.push for better test compatibility, with fallback
+      let redirectPath = '/dashboard'
       if (user?.profile?.role === 'admin_tenant') {
-        window.location.href = `/dashboard/${user.profile.tenant_id}`
+        redirectPath = `/dashboard/${user.profile.tenant_id}`
       } else if (user?.profile?.role === 'doctor') {
-        window.location.href = '/agenda'
+        redirectPath = '/agenda'
       } else if (user?.profile?.role === 'patient') {
-        window.location.href = '/my-appointments'
-      } else {
-        window.location.href = '/dashboard'
+        redirectPath = '/my-appointments'
+      }
+
+      // Try router.push first for test compatibility
+      try {
+        router.push(redirectPath)
+        // Add small delay for navigation
+        await new Promise(resolve => setTimeout(resolve, 200))
+      } catch (routerError) {
+        // Fallback to window.location if router fails
+        window.location.href = redirectPath
       }
     } catch (err) {
       console.error('Login error:', err)

@@ -36,11 +36,8 @@ export default function CreateTenantPage() {
     )
   }
 
-  // TEMPORARY: Skip auth check for testing purposes
-  // TODO: Re-enable once Supabase Auth is working properly
-  const isTestMode = true;
-
-  if (!isTestMode && (!user || (user && user.profile?.role !== 'admin_tenant'))) {
+  // Check authentication and authorization
+  if (!user || (user && user.profile?.role !== 'admin_tenant')) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -87,14 +84,7 @@ export default function CreateTenantPage() {
       } else {
         setSuccess(true)
         setTimeout(() => {
-          // In test mode, just stay on the success page longer or redirect to home
-          if (isTestMode) {
-            console.log('Tenant created successfully:', data.tenant)
-            // Could redirect to home or stay on success page
-            // router.push('/')
-          } else {
-            router.push(`/dashboard/${data.tenant.id}`)
-          }
+          router.push(`/dashboard/${data.tenant.id}`)
         }, 2000)
       }
     } catch (err) {

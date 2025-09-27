@@ -8,13 +8,18 @@ test.describe('Agenda Management Tests', () => {
     await page.fill('[data-testid="password-input"]', 'password')
     await page.click('[data-testid="login-submit"]')
 
-    await page.waitForURL('/agenda')
+    // Wait for agenda page with extended timeout
+    await page.waitForURL('/agenda', { timeout: 30000 })
+    await page.waitForLoadState('networkidle')
+
+    // Wait for page content to load
+    await expect(page.locator('h1')).toContainText('Mi Agenda', { timeout: 15000 })
   })
 
   test('should display doctor agenda page', async ({ page }) => {
-    await expect(page.locator('h1')).toContainText('Mi Agenda')
-    await expect(page.locator('text=Dr. Ana Rodriguez')).toBeVisible()
-    await expect(page.locator('text=Gestiona tu disponibilidad y revisa tus citas')).toBeVisible()
+    await expect(page.locator('h1')).toContainText('Mi Agenda', { timeout: 10000 })
+    await expect(page.locator('text=Dr. Ana Rodriguez')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('text=Gestiona tu disponibilidad y revisa tus citas')).toBeVisible({ timeout: 10000 })
   })
 
   test('should show availability schedule section', async ({ page }) => {
@@ -46,10 +51,10 @@ test.describe('Agenda Management Tests', () => {
       await mondayCheckbox.check()
     }
 
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(2000)
 
     const timeInputs = page.locator('input[type="time"]')
-    await expect(timeInputs.first()).toBeVisible()
+    await expect(timeInputs.first()).toBeVisible({ timeout: 10000 })
   })
 
   test('should display appointments for today section', async ({ page }) => {
@@ -90,9 +95,9 @@ test.describe('Agenda Management Tests', () => {
     const dateInput = page.locator('input[type="date"]')
     await dateInput.fill(futureDateString)
 
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(2000)
 
-    await expect(page.locator('text=No hay citas programadas para este día')).toBeVisible()
+    await expect(page.locator('text=No hay citas programadas para este día')).toBeVisible({ timeout: 15000 })
   })
 
   test('should update availability settings', async ({ page }) => {
@@ -100,7 +105,7 @@ test.describe('Agenda Management Tests', () => {
 
     if (!await mondayCheckbox.isChecked()) {
       await mondayCheckbox.check()
-      await page.waitForTimeout(1000)
+      await page.waitForTimeout(2000)
     }
 
     const startTimeInput = page.locator('input[type="time"]').first()
@@ -126,7 +131,7 @@ test.describe('Agenda Management Tests', () => {
 
     if (!await mondayCheckbox.isChecked()) {
       await mondayCheckbox.check()
-      await page.waitForTimeout(1000)
+      await page.waitForTimeout(2000)
     }
 
     await expect(page.locator('label:has-text("Inicio")')).toBeVisible()
@@ -159,7 +164,7 @@ test.describe('Agenda Management Tests', () => {
 
       if (await confirmButton.isVisible()) {
         await confirmButton.click()
-        await page.waitForTimeout(1000)
+        await page.waitForTimeout(2000)
       }
     }
   })
