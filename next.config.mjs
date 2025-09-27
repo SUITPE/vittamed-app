@@ -67,12 +67,8 @@ const nextConfig = {
     return config
   },
 
-  // Output configuration for Netlify
-  output: 'export',
-  trailingSlash: true,
-  images: {
-    unoptimized: true
-  },
+  // Output configuration for Vercel (serverless)
+  output: 'standalone',
 
   // Enable SWC minification
   swcMinify: true,
