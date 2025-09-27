@@ -5,6 +5,11 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { type NextRequest, type NextResponse } from 'next/server'
 
+// Export the function that other files are trying to import
+export async function getSupabaseServerClient() {
+  return createApiClient()
+}
+
 export async function createApiClient() {
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
