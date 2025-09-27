@@ -6,6 +6,10 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient()
 
   try {
+    if (!stripe) {
+      return NextResponse.json({ error: 'Payment processing not configured' }, { status: 503 })
+    }
+
     const { data: { session } } = await supabase.auth.getSession()
 
     if (!session?.user) {

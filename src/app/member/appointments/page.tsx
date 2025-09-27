@@ -49,7 +49,7 @@ export default function MemberAppointmentsPage() {
 
       // For members, fetch only their assigned appointments
       // Using doctor endpoint for now, would need member-specific endpoint in production
-      let appointmentsUrl = `/api/doctors/${user?.id}/appointments?date=${selectedDate}`
+      const appointmentsUrl = `/api/doctors/${user?.id}/appointments?date=${selectedDate}`
 
       const appointmentsResponse = await fetch(appointmentsUrl)
 

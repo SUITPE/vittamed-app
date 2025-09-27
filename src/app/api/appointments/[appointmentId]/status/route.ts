@@ -32,10 +32,10 @@ const STATUS_TRANSITION_RULES = {
 // Update appointment status
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { appointmentId: string } }
+  { params }: { params: Promise<{ appointmentId: string }> }
 ) {
   try {
-    const appointmentId = params.appointmentId
+    const { appointmentId } = await params
     const body: StatusTransitionData = await request.json()
     const { new_status, reason, notes, automated = false, change_source = 'api' } = body
 
@@ -213,10 +213,10 @@ export async function PUT(
 // Get appointment status history
 export async function GET(
   request: NextRequest,
-  { params }: { params: { appointmentId: string } }
+  { params }: { params: Promise<{ appointmentId: string }> }
 ) {
   try {
-    const appointmentId = params.appointmentId
+    const { appointmentId } = await params
     const supabase = await createClient()
 
     // Get current user profile for authorization

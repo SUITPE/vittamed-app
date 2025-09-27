@@ -1,13 +1,16 @@
 import Stripe from 'stripe'
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set')
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+
+// Allow build without Stripe key for deployment
+if (!stripeSecretKey && process.env.NODE_ENV !== 'production') {
+  console.warn('STRIPE_SECRET_KEY is not set - Stripe functionality will be disabled')
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+export const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, {
   apiVersion: '2025-08-27.basil',
   typescript: true,
-})
+}) : null
 
 export const CURRENCY = 'mxn'
 
