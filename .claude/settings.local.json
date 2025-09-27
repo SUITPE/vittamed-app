@@ -47,7 +47,12 @@
       "Bash(open http://localhost:3001)",
       "Bash(open http://localhost:3001/booking)",
       "Bash(npm test:*)",
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)"
     ],
     "deny": [],
     "ask": []

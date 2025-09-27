@@ -67,11 +67,12 @@ const nextConfig = {
     return config
   },
 
-  // Output configuration for static export (if needed)
-  output: 'standalone',
-
-  // Trailing slash configuration
-  trailingSlash: false,
+  // Output configuration for Netlify
+  output: 'export',
+  trailingSlash: true,
+  images: {
+    unoptimized: true
+  },
 
   // Enable SWC minification
   swcMinify: true,
