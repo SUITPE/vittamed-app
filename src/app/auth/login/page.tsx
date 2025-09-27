@@ -24,24 +24,30 @@ export default function LoginPage() {
 
       if (error) {
         setError(error.message || 'Error al iniciar sesión')
-      } else {
-        // Get user data to redirect based on role
-        const { authService } = await import('@/lib/auth')
-        const user = await authService.getCurrentUser()
+        setLoading(false)
+        return
+      }
 
-        if (user?.profile?.role === 'admin_tenant') {
-          router.push(`/dashboard/${user.profile.tenant_id}`)
-        } else if (user?.profile?.role === 'doctor') {
-          router.push('/agenda')
-        } else if (user?.profile?.role === 'patient') {
-          router.push('/my-appointments')
-        } else {
-          router.push('/dashboard')
-        }
+      // Small delay to ensure auth state is updated
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      // Get user data to redirect based on role
+      const { authService } = await import('@/lib/auth')
+      const user = await authService.getCurrentUser()
+
+      // Force redirect with window.location for better reliability in tests
+      if (user?.profile?.role === 'admin_tenant') {
+        window.location.href = `/dashboard/${user.profile.tenant_id}`
+      } else if (user?.profile?.role === 'doctor') {
+        window.location.href = '/agenda'
+      } else if (user?.profile?.role === 'patient') {
+        window.location.href = '/my-appointments'
+      } else {
+        window.location.href = '/dashboard'
       }
     } catch (err) {
+      console.error('Login error:', err)
       setError('Error inesperado')
-    } finally {
       setLoading(false)
     }
   }

@@ -47,7 +47,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Protected routes that require authentication
-    const protectedRoutes = ['/dashboard', '/agenda', '/patients', '/appointments']
+    const protectedRoutes = ['/dashboard', '/agenda', '/patients', '/appointments', '/my-appointments']
     const isProtectedRoute = protectedRoutes.some(route =>
       request.nextUrl.pathname.startsWith(route)
     )
@@ -59,9 +59,29 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl)
     }
 
-    // If authenticated user tries to access auth pages, redirect to dashboard
+    // If authenticated user tries to access auth pages, redirect based on role
     if (user && (request.nextUrl.pathname.startsWith('/auth/'))) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+      try {
+        // Get user profile to determine redirect
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('role, tenant_id')
+          .eq('id', user.id)
+          .single()
+
+        if (profile?.role === 'admin_tenant' && profile.tenant_id) {
+          return NextResponse.redirect(new URL(`/dashboard/${profile.tenant_id}`, request.url))
+        } else if (profile?.role === 'doctor') {
+          return NextResponse.redirect(new URL('/agenda', request.url))
+        } else if (profile?.role === 'patient') {
+          return NextResponse.redirect(new URL('/my-appointments', request.url))
+        } else {
+          return NextResponse.redirect(new URL('/dashboard', request.url))
+        }
+      } catch (profileError) {
+        console.error('Error fetching user profile in middleware:', profileError)
+        return NextResponse.redirect(new URL('/dashboard', request.url))
+      }
     }
 
     return response

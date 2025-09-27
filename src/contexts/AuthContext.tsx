@@ -23,13 +23,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get initial user
-    authService.getCurrentUser().then(setUser).finally(() => setLoading(false))
+    let mounted = true
 
-    // Listen for auth changes
-    const { data: { subscription } } = authService.onAuthStateChange(setUser)
+    // Get initial user with error handling
+    const initializeAuth = async () => {
+      try {
+        const currentUser = await authService.getCurrentUser()
+        if (mounted) {
+          setUser(currentUser)
+        }
+      } catch (error) {
+        console.error('Error getting current user:', error)
+        if (mounted) {
+          setUser(null)
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false)
+        }
+      }
+    }
 
-    return () => subscription.unsubscribe()
+    initializeAuth()
+
+    // Listen for auth changes with error handling
+    let subscription: any
+    try {
+      const result = authService.onAuthStateChange((authUser) => {
+        if (mounted) {
+          setUser(authUser)
+          setLoading(false)
+        }
+      })
+      subscription = result?.data?.subscription
+    } catch (error) {
+      console.error('Error setting up auth state listener:', error)
+      if (mounted) {
+        setLoading(false)
+      }
+    }
+
+    return () => {
+      mounted = false
+      if (subscription?.unsubscribe) {
+        subscription.unsubscribe()
+      }
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {

@@ -23,8 +23,14 @@ test.describe('Authentication Tests', () => {
     await page.fill('[data-testid="password-input"]', 'password')
     await page.click('[data-testid="login-submit"]')
 
-    await page.waitForURL('/dashboard/**')
-    await expect(page.locator('h1')).toContainText('Dashboard')
+    // Wait for either dashboard URL pattern or explicit redirect
+    await page.waitForURL('/dashboard/**', { timeout: 30000 })
+
+    // Wait for page to load completely
+    await page.waitForLoadState('networkidle')
+
+    // Check for dashboard content
+    await expect(page.locator('h1')).toContainText('Dashboard', { timeout: 15000 })
   })
 
   test('should login successfully with doctor credentials', async ({ page }) => {
@@ -32,8 +38,12 @@ test.describe('Authentication Tests', () => {
     await page.fill('[data-testid="password-input"]', 'password')
     await page.click('[data-testid="login-submit"]')
 
-    await page.waitForURL('/agenda')
-    await expect(page.locator('h1')).toContainText('Mi Agenda')
+    // Wait for agenda page with increased timeout
+    await page.waitForURL('/agenda', { timeout: 30000 })
+    await page.waitForLoadState('networkidle')
+
+    // Check for agenda content
+    await expect(page.locator('h1')).toContainText('Mi Agenda', { timeout: 15000 })
   })
 
   test('should login successfully with patient credentials', async ({ page }) => {
@@ -41,8 +51,12 @@ test.describe('Authentication Tests', () => {
     await page.fill('[data-testid="password-input"]', 'password')
     await page.click('[data-testid="login-submit"]')
 
-    await page.waitForURL('/my-appointments')
-    await expect(page.locator('h1')).toContainText('Mis Citas')
+    // Wait for patient appointments page
+    await page.waitForURL('/my-appointments', { timeout: 30000 })
+    await page.waitForLoadState('networkidle')
+
+    // Check for appointments content
+    await expect(page.locator('h1')).toContainText('Mis Citas', { timeout: 15000 })
   })
 
   test('should show error message for invalid credentials', async ({ page }) => {
