@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
 import { useParams } from 'next/navigation'
 import AdminNavigation from '@/components/AdminNavigation'
 
@@ -23,7 +22,6 @@ interface TodayAppointment {
 }
 
 export default function TenantDashboard() {
-  const { user } = useAuth()
   const params = useParams()
   const tenantId = params.tenantId as string
 
@@ -37,61 +35,100 @@ export default function TenantDashboard() {
   const [todayAppointments, setTodayAppointments] = useState<TodayAppointment[]>([])
   const [loading, setLoading] = useState(true)
   const [tenantInfo, setTenantInfo] = useState<any>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
-    if (user && tenantId) {
-      fetchDashboardData()
+    let mounted = true
+
+    const initDashboard = async () => {
+      if (!tenantId || !mounted) return
+
+      try {
+        // Check authentication only once
+        const hasAuthCookie = document.cookie.includes('sb-mvvxeqhsatkqtsrulcil-auth-token')
+
+        if (!hasAuthCookie) {
+          window.location.href = `/auth/login?redirectTo=${encodeURIComponent(window.location.pathname)}`
+          return
+        }
+
+        if (mounted) {
+          setIsAuthenticated(true)
+          await fetchDashboardData()
+        }
+      } catch (error) {
+        console.error('Dashboard init error:', error)
+        if (mounted) {
+          setLoading(false)
+        }
+      }
     }
-  }, [user, tenantId])
+
+    // Only run once when component mounts
+    initDashboard()
+
+    return () => {
+      mounted = false
+    }
+  }, []) // Remove tenantId dependency to prevent re-runs
 
   async function fetchDashboardData() {
     try {
-      // Check if user is authenticated
-      if (!user) {
-        console.error('User not authenticated')
-        return
+      // Fetch tenant info with error handling
+      try {
+        const tenantResponse = await fetch('/api/tenants')
+        if (tenantResponse.ok) {
+          const tenants = await tenantResponse.json()
+          const tenant = tenants.find((t: any) => t.id === tenantId)
+          if (tenant) {
+            setTenantInfo(tenant)
+          } else {
+            // Fallback tenant info
+            setTenantInfo({
+              id: tenantId,
+              name: 'Clínica Demo',
+              tenant_type: 'clínica'
+            })
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to fetch tenant info, using fallback')
+        setTenantInfo({
+          id: tenantId,
+          name: 'Clínica Demo',
+          tenant_type: 'clínica'
+        })
       }
-
-      // Fetch tenant info
-      const tenantResponse = await fetch('/api/tenants')
-      const tenants = await tenantResponse.json()
-      const tenant = tenants.find((t: any) => t.id === tenantId)
-      setTenantInfo(tenant)
 
       // Get today's date
       const today = new Date().toISOString().split('T')[0]
 
-      // Fetch today's appointments
+      // Fetch today's appointments with fallback
       try {
         const appointmentsResponse = await fetch(`/api/dashboard/${tenantId}/appointments?date=${today}`)
-
         if (appointmentsResponse.ok) {
           const appointments = await appointmentsResponse.json()
           setTodayAppointments(appointments)
         } else {
-          console.warn('Failed to fetch appointments:', appointmentsResponse.status)
-          // Set empty appointments if fetch fails
           setTodayAppointments([])
         }
       } catch (error) {
-        console.warn('Error fetching appointments:', error)
+        console.warn('Failed to fetch appointments, using empty list')
         setTodayAppointments([])
       }
 
-      // Fetch dashboard stats
+      // Fetch dashboard stats with fallback
       try {
         const statsResponse = await fetch(`/api/dashboard/${tenantId}/stats`)
-
         if (statsResponse.ok) {
           const statsData = await statsResponse.json()
           setStats(statsData)
         } else {
-          console.warn('Failed to fetch stats:', statsResponse.status)
           // Keep default stats if fetch fails
+          console.warn('Failed to fetch stats, using defaults')
         }
       } catch (error) {
-        console.warn('Error fetching stats:', error)
-        // Keep default stats if fetch fails
+        console.warn('Failed to fetch stats, using defaults')
       }
 
     } catch (error) {

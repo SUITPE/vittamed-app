@@ -40,12 +40,16 @@ export default function LoginPage() {
       let redirectPath = redirectTo || '/dashboard'
 
       if (!redirectTo) {
-        if (email === 'admin@clinicasanrafael.com') {
-          redirectPath = '/dashboard/f47ac10b-58cc-4372-a567-0e02b2c3d479'
-        } else if (email === 'ana.rodriguez@email.com') {
-          redirectPath = '/agenda'
-        } else if (email === 'patient@example.com') {
-          redirectPath = '/my-appointments'
+        // Use dynamic auth service to determine redirect path
+        try {
+          const { dynamicAuthService } = await import('@/lib/auth-dynamic')
+          const user = await dynamicAuthService.getCurrentUser()
+          if (user) {
+            redirectPath = await dynamicAuthService.getDefaultRedirectPath(user)
+          }
+        } catch (error) {
+          console.warn('Could not determine dynamic redirect path, using default')
+          redirectPath = '/dashboard'
         }
       }
 
@@ -228,9 +232,10 @@ export default function LoginPage() {
 
             <div className="mt-6 space-y-2">
               <div className="text-xs text-gray-500 space-y-1">
-                <p><strong>Admin:</strong> admin@clinicasanrafael.com / password</p>
-                <p><strong>Doctor:</strong> ana.rodriguez@email.com / password</p>
-                <p><strong>Paciente:</strong> patient@example.com / password</p>
+                <p><strong>Nota:</strong> Los usuarios se determinarán automáticamente por la base de datos</p>
+                <p><strong>Rol admin:</strong> cualquier email con "admin@"</p>
+                <p><strong>Rol doctor:</strong> usuarios registrados en la tabla doctors</p>
+                <p><strong>Rol paciente:</strong> resto de usuarios</p>
               </div>
             </div>
           </div>

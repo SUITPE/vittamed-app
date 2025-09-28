@@ -70,7 +70,9 @@
       "Bash(./test-auth-rls.sh:*)",
       "Bash(./check-doctor-tenants.sh:*)",
       "Bash(./setup-doctor-tenants.sh:*)",
-      "Bash(open http://localhost:3008/auth/login)"
+      "Bash(open http://localhost:3008/auth/login)",
+      "Bash(open http://localhost:3009/auth/login)",
+      "Bash(open http://localhost:3009/dashboard/f47ac10b-58cc-4372-a567-0e02b2c3d479)"
     ],
     "deny": [],
     "ask": []

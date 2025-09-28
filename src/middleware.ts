@@ -26,7 +26,31 @@ export async function middleware(request: NextRequest) {
         if (redirectTo) {
           return NextResponse.redirect(new URL(redirectTo, request.url))
         }
-        return NextResponse.redirect(new URL('/dashboard/f47ac10b-58cc-4372-a567-0e02b2c3d479', request.url))
+        // Get user's default tenant dynamically
+        try {
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+          const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+          // Fetch first available tenant for redirect
+          const tenantsResponse = await fetch(`${supabaseUrl}/rest/v1/tenants?select=id&limit=1`, {
+            headers: {
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`
+            }
+          })
+
+          if (tenantsResponse.ok) {
+            const tenants = await tenantsResponse.json()
+            if (tenants && tenants.length > 0) {
+              return NextResponse.redirect(new URL(`/dashboard/${tenants[0].id}`, request.url))
+            }
+          }
+        } catch (error) {
+          console.warn('Could not fetch tenant for redirect')
+        }
+
+        // Fallback to generic dashboard
+        return NextResponse.redirect(new URL('/dashboard', request.url))
       }
 
       return response
@@ -86,8 +110,25 @@ export async function middleware(request: NextRequest) {
           .eq('id', user.id)
           .single()
 
-        if (profile?.role === 'admin_tenant' && profile.tenant_id) {
-          return NextResponse.redirect(new URL(`/dashboard/${profile.tenant_id}`, request.url))
+        if (profile?.role === 'admin_tenant') {
+          if (profile.tenant_id) {
+            return NextResponse.redirect(new URL(`/dashboard/${profile.tenant_id}`, request.url))
+          } else {
+            // Get first available tenant dynamically
+            try {
+              const { data: tenants } = await supabase
+                .from('tenants')
+                .select('id')
+                .limit(1)
+
+              if (tenants && tenants.length > 0) {
+                return NextResponse.redirect(new URL(`/dashboard/${tenants[0].id}`, request.url))
+              }
+            } catch (tenantError) {
+              console.warn('Could not fetch tenant for admin redirect')
+            }
+            return NextResponse.redirect(new URL('/dashboard', request.url))
+          }
         } else if (profile?.role === 'doctor') {
           return NextResponse.redirect(new URL('/agenda', request.url))
         } else if (profile?.role === 'patient') {

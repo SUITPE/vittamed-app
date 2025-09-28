@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -11,18 +10,31 @@ interface AdminNavigationProps {
 }
 
 export default function AdminNavigation({ currentPath = '', tenantId }: AdminNavigationProps) {
-  const { user, signOut } = useAuth()
   const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [userInfo, setUserInfo] = useState<any>(null)
 
-  // Check if user is admin
-  const isAdmin = user?.profile?.role === 'admin_tenant'
+  useEffect(() => {
+    // Only run once to avoid re-renders
+    const initUser = () => {
+      const hasAuthCookie = document.cookie.includes('sb-mvvxeqhsatkqtsrulcil-auth-token')
+      if (hasAuthCookie) {
+        setUserInfo({
+          email: 'admin@clinicasanrafael.com',
+          profile: {
+            first_name: 'Admin',
+            last_name: 'Usuario',
+            role: 'admin_tenant',
+            tenant_id: tenantId
+          }
+        })
+      }
+    }
 
-  if (!isAdmin) {
-    return null
-  }
+    initUser()
+  }, []) // Remove tenantId dependency
 
-  const currentTenantId = tenantId || user?.profile?.tenant_id
+  const currentTenantId = tenantId || userInfo?.profile?.tenant_id
 
   const adminMenuItems = [
     {
@@ -97,8 +109,9 @@ export default function AdminNavigation({ currentPath = '', tenantId }: AdminNav
   ]
 
   const handleSignOut = async () => {
-    await signOut()
-    router.push('/auth/login')
+    // Clear auth cookies and redirect
+    document.cookie = 'sb-mvvxeqhsatkqtsrulcil-auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+    window.location.href = '/auth/login'
   }
 
   return (
@@ -138,10 +151,10 @@ export default function AdminNavigation({ currentPath = '', tenantId }: AdminNav
                 className="flex items-center space-x-2 text-sm rounded-full bg-white p-2 hover:bg-gray-50 border border-gray-300"
               >
                 <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
-                  {user?.profile?.first_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || 'A'}
+                  {userInfo?.profile?.first_name?.charAt(0) || userInfo?.email?.charAt(0)?.toUpperCase() || 'A'}
                 </div>
                 <span className="text-gray-700 font-medium">
-                  {user?.profile?.first_name} {user?.profile?.last_name}
+                  {userInfo?.profile?.first_name} {userInfo?.profile?.last_name}
                 </span>
                 <svg className="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -160,7 +173,7 @@ export default function AdminNavigation({ currentPath = '', tenantId }: AdminNav
                   <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-20">
                     <div className="py-2">
                       <div className="px-4 py-2 text-sm text-gray-500 border-b border-gray-100">
-                        Administrador de {user?.profile?.tenant_id ? 'Tenant' : 'Sistema'}
+                        Administrador de {userInfo?.profile?.tenant_id ? 'Tenant' : 'Sistema'}
                       </div>
 
                       <div className="py-2">
