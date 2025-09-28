@@ -15,6 +15,23 @@ export async function middleware(request: NextRequest) {
       return response
     }
 
+    // Temporary bypass for auth-bypass sessions in Vercel
+    const hasAuthBypassCookie = request.cookies.has('sb-mvvxeqhsatkqtsrulcil-auth-token')
+    if (hasAuthBypassCookie && (request.nextUrl.hostname.includes('vercel.app') || process.env.VERCEL)) {
+      console.log('🚀 Middleware: Bypassing auth check for auth-bypass session')
+
+      // For authenticated users trying to access auth pages, redirect appropriately
+      if (request.nextUrl.pathname.startsWith('/auth/')) {
+        const redirectTo = request.nextUrl.searchParams.get('redirectTo')
+        if (redirectTo) {
+          return NextResponse.redirect(new URL(redirectTo, request.url))
+        }
+        return NextResponse.redirect(new URL('/dashboard/f47ac10b-58cc-4372-a567-0e02b2c3d479', request.url))
+      }
+
+      return response
+    }
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,

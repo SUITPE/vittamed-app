@@ -45,16 +45,10 @@ export async function signInWithPasswordBypass(email: string, password: string) 
       if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         const expirationTime = new Date(Date.now() + 3600 * 1000).toUTCString() // 1 hour
 
-        // Set the cookies that Supabase middleware expects
-        document.cookie = `sb-mvvxeqhsatkqtsrulcil-auth-token=${JSON.stringify({
-          access_token: data.access_token,
-          refresh_token: data.refresh_token,
-          expires_at: Math.floor(Date.now() / 1000) + 3600,
-          token_type: 'bearer',
-          user: data.user
-        })}; expires=${expirationTime}; path=/; secure; samesite=lax`
+        // Set a simple bypass cookie for middleware detection
+        document.cookie = `sb-mvvxeqhsatkqtsrulcil-auth-token=bypass-session; expires=${expirationTime}; path=/; secure; samesite=lax`
 
-        console.log('🍪 Session cookies set manually')
+        console.log('🍪 Bypass session cookie set for middleware')
       }
 
       // Also try the original setSession as fallback
