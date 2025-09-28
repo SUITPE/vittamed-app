@@ -25,29 +25,61 @@ export default function LoginPage() {
         return
       }
 
-      // Call API route for authentication
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      })
+      // Prevent browser extension interference
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        setError(errorData.error || 'Error al iniciar sesión')
+      try {
+        // Call API route for authentication with abort signal
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+          signal: controller.signal,
+        })
+
+        clearTimeout(timeoutId)
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Error de respuesta del servidor' }))
+          setError(errorData.error || 'Error al iniciar sesión')
+          setLoading(false)
+          return
+        }
+
+        const { redirectPath } = await response.json()
+
+        // Use location.replace instead of href to avoid back button issues
+        window.location.replace(redirectPath || '/dashboard')
+
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId)
+
+        // Handle specific error types
+        if (fetchError.name === 'AbortError') {
+          setError('La solicitud tardó demasiado. Intenta nuevamente.')
+        } else if (fetchError.message?.includes('Failed to fetch')) {
+          setError('Error de conexión. Verifica tu internet.')
+        } else {
+          throw fetchError // Re-throw for outer catch
+        }
         setLoading(false)
+      }
+
+    } catch (err: any) {
+      console.error('Login error:', err)
+
+      // Silence browser extension errors that don't affect functionality
+      if (err.message?.includes('message channel closed') ||
+          err.message?.includes('listener indicated') ||
+          err.message?.includes('Extension context invalidated')) {
+        // These are browser extension errors, don't show to user
+        console.warn('Browser extension interference detected, ignoring:', err.message)
         return
       }
 
-      const { redirectPath } = await response.json()
-
-      // Redirect to the appropriate page
-      window.location.href = redirectPath || '/dashboard'
-
-    } catch (err) {
-      console.error('Login error:', err)
       setError('Error al conectar con el servidor')
       setLoading(false)
     }
