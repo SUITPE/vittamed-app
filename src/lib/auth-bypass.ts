@@ -37,6 +37,45 @@ export async function signInWithPasswordBypass(email: string, password: string) 
       throw new Error(`Authentication failed: ${data.error_description || data.message || 'Unknown error'}`)
     }
 
+    // After successful auth, get user profile from database
+    console.log('📋 Getting user profile for:', data.user.id)
+
+    try {
+      const profileResponse = await fetch(`${supabaseUrl}/rest/v1/user_profiles?id=eq.${data.user.id}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${data.access_token}` // Use the new access token
+        }
+      })
+
+      if (profileResponse.ok) {
+        const profiles = await profileResponse.json()
+        const profile = profiles[0]
+
+        console.log('👤 User profile loaded:', profile)
+
+        // Attach profile to user object
+        const userWithProfile = {
+          ...data.user,
+          profile: profile
+        }
+
+        return {
+          data: {
+            user: userWithProfile,
+            session: data
+          },
+          error: null
+        }
+      } else {
+        console.warn('⚠️ Could not load user profile, using auth data only')
+      }
+    } catch (profileError) {
+      console.warn('⚠️ Profile fetch error:', profileError)
+    }
+
     return {
       data: {
         user: data.user,
