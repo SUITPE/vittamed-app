@@ -2,7 +2,11 @@
 const nextConfig = {
   // Production optimizations
   experimental: {
-    optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react']
+    optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
+    // Mejorar estabilidad de RSC
+    serverComponentsExternalPackages: [],
+    // Optimizar componentes del servidor
+    serverActions: true
   },
 
   // Image optimization
