@@ -41,7 +41,23 @@ Repite para todas las variables:
 
 ## ✅ Verificación
 
-Después del redespliegue, la autenticación debe funcionar correctamente.
+### Diagnóstico Automático
+Después del redespliegue, visita esta URL para verificar la configuración:
+```
+https://tu-app.vercel.app/api/debug/supabase
+```
+
+Esta API te mostrará:
+- ✅ Si las variables de entorno están configuradas
+- ✅ Si los valores son válidos
+- ✅ Si la conexión a Supabase funciona
+- ❌ Cualquier error específico que esté ocurriendo
+
+### Verificación Manual
+1. Ve a tu app en Vercel
+2. Intenta hacer login con: `admin@clinicasanrafael.com / password`
+3. Si aparece el error de fetch, revisa la consola del navegador
+4. Usa la API de diagnóstico para identificar el problema exacto
 
 ## 🔧 Solución Aplicada
 
