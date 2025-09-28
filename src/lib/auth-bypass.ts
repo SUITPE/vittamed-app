@@ -37,30 +37,47 @@ export async function signInWithPasswordBypass(email: string, password: string) 
       throw new Error(`Authentication failed: ${data.error_description || data.message || 'Unknown error'}`)
     }
 
-    // Set the session in Supabase client so middleware can see it
+    // Set the session cookies manually for middleware compatibility
     try {
-      console.log('💾 Setting session in Supabase client...')
-      const { createBrowserClient } = await import('@supabase/ssr')
-      console.log('📦 Supabase browser client imported')
+      console.log('💾 Setting session cookies manually...')
 
-      const supabaseClient = createBrowserClient(supabaseUrl, supabaseKey)
-      console.log('🔧 Supabase client created')
+      // Set cookies directly using document.cookie for middleware compatibility
+      if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+        const expirationTime = new Date(Date.now() + 3600 * 1000).toUTCString() // 1 hour
 
-      // Use a timeout to prevent hanging
-      const sessionPromise = supabaseClient.auth.setSession({
-        access_token: data.access_token,
-        refresh_token: data.refresh_token
-      })
+        // Set the cookies that Supabase middleware expects
+        document.cookie = `sb-mvvxeqhsatkqtsrulcil-auth-token=${JSON.stringify({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
+          token_type: 'bearer',
+          user: data.user
+        })}; expires=${expirationTime}; path=/; secure; samesite=lax`
 
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Session timeout')), 2000)
-      })
+        console.log('🍪 Session cookies set manually')
+      }
 
-      const sessionResult = await Promise.race([sessionPromise, timeoutPromise])
-      console.log('✅ Session set successfully')
+      // Also try the original setSession as fallback
+      try {
+        const { createBrowserClient } = await import('@supabase/ssr')
+        const supabaseClient = createBrowserClient(supabaseUrl, supabaseKey)
+
+        const sessionPromise = supabaseClient.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token
+        })
+
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Session timeout')), 1000)
+        })
+
+        await Promise.race([sessionPromise, timeoutPromise])
+        console.log('✅ Supabase session also set successfully')
+      } catch (supabaseError) {
+        console.log('⚠️ Supabase setSession failed, but manual cookies should work')
+      }
     } catch (sessionError) {
-      console.warn('⚠️ Could not set session in client, continuing anyway:', sessionError.message)
-      // Continue execution even if session setting fails
+      console.warn('⚠️ Could not set session, continuing anyway:', sessionError.message)
     }
 
     // After successful auth, get user profile from database
