@@ -1,0 +1,75 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - link "VittaMed" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img [ref=e8] [cursor=pointer]
+        - generic [ref=e10] [cursor=pointer]: VittaMed
+      - generic [ref=e12]:
+        - link "Reservar Cita" [ref=e13] [cursor=pointer]:
+          - /url: /booking
+          - img [ref=e14] [cursor=pointer]
+          - generic [ref=e16] [cursor=pointer]: Reservar Cita
+        - link "Dashboard" [ref=e17] [cursor=pointer]:
+          - /url: /dashboard/f47ac10b-58cc-4372-a567-0e02b2c3d479
+          - img [ref=e18] [cursor=pointer]
+          - generic [ref=e20] [cursor=pointer]: Dashboard
+        - link "Pacientes" [ref=e21] [cursor=pointer]:
+          - /url: /patients
+          - img [ref=e22] [cursor=pointer]
+          - generic [ref=e27] [cursor=pointer]: Pacientes
+      - generic [ref=e29]:
+        - generic [ref=e30]:
+          - generic [ref=e31]:
+            - generic [ref=e32]: Admin Sistema
+            - generic [ref=e33]: Administrador
+          - img [ref=e35]
+        - button "Salir" [ref=e38] [cursor=pointer]:
+          - img [ref=e39] [cursor=pointer]
+          - text: Salir
+  - generic [ref=e42]:
+    - generic [ref=e43]:
+      - heading "Iniciar Sesión en VittaMed" [level=2] [ref=e44]
+      - paragraph [ref=e45]:
+        - text: ¿No tienes cuenta?
+        - link "Regístrate aquí" [ref=e46] [cursor=pointer]:
+          - /url: /auth/signup
+    - generic [ref=e48]:
+      - generic [ref=e49]:
+        - generic [ref=e50]:
+          - generic [ref=e51]: Email
+          - textbox "Email" [ref=e53]: admin@clinicasanrafael.com
+        - generic [ref=e54]:
+          - generic [ref=e55]: Contraseña
+          - textbox "Contraseña" [ref=e57]: password
+        - button "Iniciando sesión..." [disabled] [ref=e59]
+      - generic [ref=e60]:
+        - generic [ref=e65]: O continúa con
+        - generic [ref=e66]:
+          - button "Google" [disabled] [ref=e67]:
+            - img [ref=e68]
+            - generic [ref=e73]: Google
+          - button "Facebook" [disabled] [ref=e74]:
+            - img [ref=e75]
+            - generic [ref=e77]: Facebook
+          - button "Apple" [disabled] [ref=e78]:
+            - img [ref=e79]
+            - generic [ref=e81]: Apple
+        - generic [ref=e87]: Usuarios de Demo
+        - generic [ref=e89]:
+          - paragraph [ref=e90]:
+            - strong [ref=e91]: "Admin:"
+            - text: admin@clinicasanrafael.com / password
+          - paragraph [ref=e92]:
+            - strong [ref=e93]: "Doctor:"
+            - text: ana.rodriguez@email.com / password
+          - paragraph [ref=e94]:
+            - strong [ref=e95]: "Paciente:"
+            - text: patient@example.com / password
+  - button "Open Next.js Dev Tools" [ref=e101] [cursor=pointer]:
+    - img [ref=e102] [cursor=pointer]
+  - alert [ref=e105]
+```

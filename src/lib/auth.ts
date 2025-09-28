@@ -62,6 +62,16 @@ class AuthService {
   }
 
   async signIn(email: string, password: string) {
+    // In production (Vercel), use bypass to avoid fetch issues
+    if (typeof window !== 'undefined' &&
+        (window.location.hostname.includes('vercel.app') || process.env.VERCEL)) {
+      console.log('🚀 Using Vercel auth bypass')
+
+      // Import and use the bypass function
+      const { signInWithPasswordBypass } = await import('./auth-bypass')
+      return await signInWithPasswordBypass(email, password)
+    }
+
     if (!this.supabase) {
       return { data: null, error: { message: 'Supabase client not available during SSR' } }
     }
