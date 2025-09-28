@@ -19,10 +19,29 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    // First, get the doctor_tenant_id for this doctor
+    const { data: doctorTenants, error: doctorTenantError } = await supabase
+      .from('doctor_tenants')
+      .select('id')
+      .eq('doctor_id', doctorId)
+      .eq('is_active', true)
+
+    if (doctorTenantError) {
+      console.error('Error fetching doctor tenants:', doctorTenantError)
+      return NextResponse.json({ error: 'Failed to fetch doctor tenants' }, { status: 500 })
+    }
+
+    if (!doctorTenants || doctorTenants.length === 0) {
+      return NextResponse.json({ error: 'Doctor not assigned to any tenant' }, { status: 404 })
+    }
+
+    // Use the first active doctor_tenant_id (for simplicity, assume one tenant per doctor)
+    const doctorTenantId = doctorTenants[0].id
+
     const { data: availability, error } = await supabase
       .from('doctor_availability')
       .select('*')
-      .eq('doctor_id', doctorId)
+      .eq('doctor_tenant_id', doctorTenantId)
       .order('day_of_week', { ascending: true })
 
     if (error) {
@@ -65,10 +84,23 @@ export async function PUT(
       )
     }
 
+    // First, get the doctor_tenant_id for this doctor
+    const { data: doctorTenants, error: doctorTenantError } = await supabase
+      .from('doctor_tenants')
+      .select('id')
+      .eq('doctor_id', doctorId)
+      .eq('is_active', true)
+
+    if (doctorTenantError || !doctorTenants || doctorTenants.length === 0) {
+      return NextResponse.json({ error: 'Doctor not assigned to any tenant' }, { status: 404 })
+    }
+
+    const doctorTenantId = doctorTenants[0].id
+
     const { data: existing } = await supabase
       .from('doctor_availability')
       .select('id')
-      .eq('doctor_id', doctorId)
+      .eq('doctor_tenant_id', doctorTenantId)
       .eq('day_of_week', day_of_week)
       .single()
 
@@ -91,7 +123,7 @@ export async function PUT(
       result = await supabase
         .from('doctor_availability')
         .insert({
-          doctor_id: doctorId,
+          doctor_tenant_id: doctorTenantId,
           day_of_week,
           start_time,
           end_time,
@@ -145,10 +177,23 @@ export async function DELETE(
       )
     }
 
+    // First, get the doctor_tenant_id for this doctor
+    const { data: doctorTenants, error: doctorTenantError } = await supabase
+      .from('doctor_tenants')
+      .select('id')
+      .eq('doctor_id', doctorId)
+      .eq('is_active', true)
+
+    if (doctorTenantError || !doctorTenants || doctorTenants.length === 0) {
+      return NextResponse.json({ error: 'Doctor not assigned to any tenant' }, { status: 404 })
+    }
+
+    const doctorTenantId = doctorTenants[0].id
+
     const { error } = await supabase
       .from('doctor_availability')
       .delete()
-      .eq('doctor_id', doctorId)
+      .eq('doctor_tenant_id', doctorTenantId)
       .eq('day_of_week', parseInt(dayOfWeek))
 
     if (error) {

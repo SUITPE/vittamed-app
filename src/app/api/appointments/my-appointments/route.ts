@@ -19,18 +19,18 @@ export async function GET(request: NextRequest) {
       .from('appointments')
       .select(`
         id,
-        service_name,
-        doctor_name,
         start_time,
         end_time,
         status,
-        price,
+        total_amount,
         payment_status,
         notes,
         created_at,
+        services!inner(name),
+        doctors!inner(first_name, last_name),
         tenants!inner(name)
       `)
-      .eq('patient_email', session.user.email)
+      .eq('patient_id', session.user.id)
       .order('start_time', { ascending: false })
 
     if (error) {
@@ -40,13 +40,13 @@ export async function GET(request: NextRequest) {
 
     const formattedAppointments = appointments.map((appointment: any) => ({
       id: appointment.id,
-      service_name: appointment.service_name,
-      doctor_name: appointment.doctor_name,
+      service_name: appointment.services?.name,
+      doctor_name: `${appointment.doctors?.first_name} ${appointment.doctors?.last_name}`,
       tenant_name: appointment.tenants?.name,
       start_time: appointment.start_time,
       end_time: appointment.end_time,
       status: appointment.status,
-      price: appointment.price,
+      price: appointment.total_amount,
       payment_status: appointment.payment_status,
       notes: appointment.notes,
       created_at: appointment.created_at

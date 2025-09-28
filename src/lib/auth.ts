@@ -125,27 +125,9 @@ class AuthService {
 
     if (!user) return null
 
-    // Try to get user profile, but handle the case where it doesn't exist
-    let profile = undefined
-    try {
-      const { data, error } = await this.supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      if (!error && data) {
-        profile = data
-      } else if (error?.code !== 'PGRST116') {
-        console.error('Error fetching user profile:', error)
-      }
-    } catch (error) {
-      console.warn('Could not fetch user profile, this is expected for new users:', error)
-    }
-
-    // If no profile exists, create a default based on the email for demo users
-    if (!profile && user.email) {
-      // Create default profiles for known demo users
+    // Always create a fallback profile first based on email for demo users
+    let fallbackProfile = null
+    if (user.email) {
       let defaultRole: 'admin_tenant' | 'doctor' | 'patient' = 'patient'
       let defaultTenantId = null
       let defaultDoctorId = null
@@ -160,7 +142,7 @@ class AuthService {
         defaultRole = 'patient'
       }
 
-      profile = {
+      fallbackProfile = {
         id: user.id,
         email: user.email,
         first_name: user.user_metadata?.first_name || user.email.split('@')[0],
@@ -171,21 +153,32 @@ class AuthService {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
+    }
 
-      // Try to insert the profile into the database, but don't fail if it doesn't work
-      try {
-        const { error: insertError } = await this.supabase
-          .from('user_profiles')
-          .insert(profile)
-          .select()
-          .single()
+    // Try to get user profile from database, but don't fail if it doesn't work
+    let dbProfile = undefined
+    try {
+      const { data, error } = await this.supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
 
-        if (insertError && insertError.code !== '23505') { // 23505 is unique constraint violation
-          console.warn('Could not insert user profile:', insertError)
-        }
-      } catch (insertError) {
-        console.warn('Could not insert user profile, using temporary profile:', insertError)
+      if (!error && data) {
+        dbProfile = data
+        console.log('✅ Successfully fetched user profile from database:', data.role)
+      } else {
+        console.warn('Could not fetch user profile from database, using fallback. Error:', error?.message || 'Unknown')
       }
+    } catch (error) {
+      console.warn('Exception fetching user profile, using fallback:', error)
+    }
+
+    // Use database profile if available, otherwise use fallback
+    const profile = dbProfile || fallbackProfile
+
+    if (profile) {
+      console.log(`👤 User role determined: ${profile.role} for ${profile.email}`)
     }
 
     return {

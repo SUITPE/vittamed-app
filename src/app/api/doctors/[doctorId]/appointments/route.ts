@@ -29,13 +29,12 @@ export async function GET(
       .from('appointments')
       .select(`
         id,
-        patient_name,
-        patient_email,
-        service_name,
         start_time,
         end_time,
         status,
-        notes
+        notes,
+        patients!inner(first_name, last_name, email),
+        services!inner(name)
       `)
       .eq('doctor_id', doctorId)
       .gte('start_time', `${date}T00:00:00`)
@@ -47,7 +46,18 @@ export async function GET(
       return NextResponse.json({ error: 'Failed to fetch appointments' }, { status: 500 })
     }
 
-    return NextResponse.json(appointments || [])
+    const formattedAppointments = (appointments || []).map((appointment: any) => ({
+      id: appointment.id,
+      patient_name: `${appointment.patients?.first_name} ${appointment.patients?.last_name}`,
+      patient_email: appointment.patients?.email,
+      service_name: appointment.services?.name,
+      start_time: appointment.start_time,
+      end_time: appointment.end_time,
+      status: appointment.status,
+      notes: appointment.notes
+    }))
+
+    return NextResponse.json(formattedAppointments)
 
   } catch (error) {
     console.error('Unexpected error:', error)
