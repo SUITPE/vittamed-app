@@ -3,7 +3,7 @@
 
 -- Create member_availability table
 create table member_availability (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   member_user_id uuid not null, -- References user_profiles with role='member'
   tenant_id uuid references tenants(id) on delete cascade not null,
   day_of_week integer not null check (day_of_week >= 0 and day_of_week <= 6), -- 0 = Sunday, 6 = Saturday
@@ -20,7 +20,7 @@ create table member_availability (
 
 -- Create member_breaks table (optional breaks during availability periods)
 create table member_breaks (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   member_user_id uuid not null, -- References user_profiles with role='member'
   tenant_id uuid references tenants(id) on delete cascade not null,
   day_of_week integer not null check (day_of_week >= 0 and day_of_week <= 6),

@@ -3,7 +3,7 @@
 
 -- Create member_services table
 create table member_services (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   member_user_id uuid not null, -- References user_profiles.id where role='member'
   service_id uuid references services(id) on delete cascade not null,
   tenant_id uuid references tenants(id) on delete cascade not null,

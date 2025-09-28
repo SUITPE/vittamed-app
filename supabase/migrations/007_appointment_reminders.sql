@@ -3,7 +3,7 @@
 
 -- Create reminder configurations table
 create table reminder_configurations (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   tenant_id uuid references tenants(id) on delete cascade not null,
 
   -- Configuration scope
@@ -43,7 +43,7 @@ create index idx_reminder_configurations_active on reminder_configurations(tenan
 
 -- Create scheduled reminders table for tracking what reminders need to be sent
 create table scheduled_reminders (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   appointment_id uuid references appointments(id) on delete cascade not null,
   tenant_id uuid references tenants(id) on delete cascade not null,
   reminder_config_id uuid references reminder_configurations(id) on delete cascade,
@@ -77,7 +77,7 @@ create index idx_scheduled_reminders_processing on scheduled_reminders(status, s
 
 -- Create tenant branding table for email customization
 create table tenant_branding (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   tenant_id uuid references tenants(id) on delete cascade not null unique,
 
   -- Brand identity

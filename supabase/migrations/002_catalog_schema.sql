@@ -3,7 +3,7 @@
 
 -- Create unit of measure table
 create table unit_measures (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   name text not null unique,
   abbreviation text not null unique,
   type text not null, -- 'weight', 'volume', 'length', 'unit', etc.
@@ -13,7 +13,7 @@ create table unit_measures (
 
 -- Create product brands table
 create table product_brands (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   name text not null,
   description text,
   logo_url text,
@@ -24,7 +24,7 @@ create table product_brands (
 
 -- Create product categories table
 create table product_categories (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   name text not null,
   description text,
   parent_id uuid references product_categories(id) on delete cascade,
@@ -35,7 +35,7 @@ create table product_categories (
 
 -- Create service categories table
 create table service_categories (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   name text not null,
   description text,
   parent_id uuid references service_categories(id) on delete cascade,
@@ -46,7 +46,7 @@ create table service_categories (
 
 -- Create products table
 create table products (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   tenant_id uuid references tenants(id) on delete cascade not null,
   name text not null,
   brand_id uuid references product_brands(id) on delete set null,
@@ -82,7 +82,7 @@ alter table services add column if not exists requires_appointment boolean defau
 
 -- Create product images table (for multiple images per product)
 create table product_images (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   product_id uuid references products(id) on delete cascade not null,
   image_url text not null,
   alt_text text,
@@ -93,7 +93,7 @@ create table product_images (
 
 -- Create service images table (for multiple images per service)
 create table service_images (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   service_id uuid references services(id) on delete cascade not null,
   image_url text not null,
   alt_text text,

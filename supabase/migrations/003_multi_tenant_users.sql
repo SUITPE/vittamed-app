@@ -3,7 +3,7 @@
 
 -- Create user_tenant_roles table for many-to-many relationship between users and tenants
 create table user_tenant_roles (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users(id) on delete cascade not null,
   tenant_id uuid references tenants(id) on delete cascade not null,
   role text check (role in ('admin_tenant', 'doctor', 'patient', 'staff')) not null default 'patient',

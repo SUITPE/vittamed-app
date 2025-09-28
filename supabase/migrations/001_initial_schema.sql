@@ -6,7 +6,7 @@ create type tenant_type as enum ('clinic', 'spa', 'consultorio');
 
 -- Create tenants table
 create table tenants (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   name text not null,
   tenant_type tenant_type not null,
   address text,
@@ -18,7 +18,7 @@ create table tenants (
 
 -- Create doctors table
 create table doctors (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   first_name text not null,
   last_name text not null,
   email text unique not null,
@@ -31,7 +31,7 @@ create table doctors (
 
 -- Create doctor_tenants table (many-to-many relationship)
 create table doctor_tenants (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   doctor_id uuid references doctors(id) on delete cascade not null,
   tenant_id uuid references tenants(id) on delete cascade not null,
   is_active boolean default true,
@@ -42,7 +42,7 @@ create table doctor_tenants (
 
 -- Create patients table
 create table patients (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   first_name text not null,
   last_name text not null,
   email text,
@@ -58,7 +58,7 @@ create table patients (
 
 -- Create services table
 create table services (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   tenant_id uuid references tenants(id) on delete cascade not null,
   name text not null,
   description text,
@@ -74,7 +74,7 @@ create type appointment_status as enum ('pending', 'confirmed', 'cancelled', 'co
 
 -- Create appointments table
 create table appointments (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   tenant_id uuid references tenants(id) on delete cascade not null,
   doctor_id uuid references doctors(id) on delete cascade not null,
   patient_id uuid references patients(id) on delete cascade not null,
@@ -94,7 +94,7 @@ create table appointments (
 
 -- Create doctor availability table
 create table doctor_availability (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   doctor_tenant_id uuid references doctor_tenants(id) on delete cascade not null,
   day_of_week integer not null check (day_of_week >= 0 and day_of_week <= 6), -- 0 = Sunday, 6 = Saturday
   start_time time not null,
@@ -106,7 +106,7 @@ create table doctor_availability (
 
 -- Create doctor breaks table (for lunch breaks, etc.)
 create table doctor_breaks (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   doctor_tenant_id uuid references doctor_tenants(id) on delete cascade not null,
   day_of_week integer not null check (day_of_week >= 0 and day_of_week <= 6),
   start_time time not null,
@@ -118,7 +118,7 @@ create table doctor_breaks (
 
 -- Create notifications table
 create table notifications (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   appointment_id uuid references appointments(id) on delete cascade not null,
   type text not null, -- 'confirmation', 'reminder', 'cancellation'
   channel text not null, -- 'email', 'whatsapp', 'sms'

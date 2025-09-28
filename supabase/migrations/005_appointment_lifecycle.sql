@@ -3,7 +3,7 @@
 
 -- Create appointment lifecycle tracking table
 create table appointment_status_history (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   appointment_id uuid references appointments(id) on delete cascade not null,
   tenant_id uuid references tenants(id) on delete cascade not null,
   status appointment_status not null,

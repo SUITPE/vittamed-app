@@ -12,7 +12,7 @@ export default defineConfig({
     timeout: 15 * 1000, // 15 seconds for assertions
   },
   use: {
-    baseURL: 'http://localhost:3005',
+    baseURL: 'http://localhost:3007',
     trace: 'on-first-retry',
     actionTimeout: 30 * 1000, // 30 seconds for actions
     navigationTimeout: 60 * 1000, // 60 seconds for navigation

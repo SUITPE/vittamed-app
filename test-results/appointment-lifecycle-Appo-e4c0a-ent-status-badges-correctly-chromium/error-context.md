@@ -1,0 +1,75 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - link "VittaMed" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img [ref=e8] [cursor=pointer]
+        - generic [ref=e10] [cursor=pointer]: VittaMed
+      - generic [ref=e12]:
+        - link "Reservar Cita" [ref=e13] [cursor=pointer]:
+          - /url: /booking
+          - img [ref=e14] [cursor=pointer]
+          - generic [ref=e16] [cursor=pointer]: Reservar Cita
+        - link "Mis Citas" [ref=e17] [cursor=pointer]:
+          - /url: /my-appointments
+          - img [ref=e18] [cursor=pointer]
+          - generic [ref=e22] [cursor=pointer]: Mis Citas
+        - link "Pacientes" [ref=e23] [cursor=pointer]:
+          - /url: /patients
+          - img [ref=e24] [cursor=pointer]
+          - generic [ref=e29] [cursor=pointer]: Pacientes
+      - generic [ref=e31]:
+        - generic [ref=e32]:
+          - generic [ref=e33]:
+            - generic [ref=e34]: Juan Pérez
+            - generic [ref=e35]: Paciente
+          - img [ref=e37]
+        - button "Salir" [ref=e40] [cursor=pointer]:
+          - img [ref=e41] [cursor=pointer]
+          - text: Salir
+  - generic [ref=e44]:
+    - generic [ref=e45]:
+      - heading "Iniciar Sesión en VittaMed" [level=2] [ref=e46]
+      - paragraph [ref=e47]:
+        - text: ¿No tienes cuenta?
+        - link "Regístrate aquí" [ref=e48] [cursor=pointer]:
+          - /url: /auth/signup
+    - generic [ref=e50]:
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]: Email
+          - textbox "Email" [ref=e55]: patient@example.com
+        - generic [ref=e56]:
+          - generic [ref=e57]: Contraseña
+          - textbox "Contraseña" [ref=e59]: password
+        - button "Iniciando sesión..." [disabled] [ref=e61]
+      - generic [ref=e62]:
+        - generic [ref=e67]: O continúa con
+        - generic [ref=e68]:
+          - button "Google" [disabled] [ref=e69]:
+            - img [ref=e70]
+            - generic [ref=e75]: Google
+          - button "Facebook" [disabled] [ref=e76]:
+            - img [ref=e77]
+            - generic [ref=e79]: Facebook
+          - button "Apple" [disabled] [ref=e80]:
+            - img [ref=e81]
+            - generic [ref=e83]: Apple
+        - generic [ref=e89]: Usuarios de Demo
+        - generic [ref=e91]:
+          - paragraph [ref=e92]:
+            - strong [ref=e93]: "Admin:"
+            - text: admin@clinicasanrafael.com / password
+          - paragraph [ref=e94]:
+            - strong [ref=e95]: "Doctor:"
+            - text: ana.rodriguez@email.com / password
+          - paragraph [ref=e96]:
+            - strong [ref=e97]: "Paciente:"
+            - text: patient@example.com / password
+  - button "Open Next.js Dev Tools" [ref=e103] [cursor=pointer]:
+    - img [ref=e104] [cursor=pointer]
+  - alert [ref=e107]
+```
