@@ -46,8 +46,55 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   })
 }
 
-export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey)
+// Log final configuration for debugging
+console.log('🔧 Supabase Client Initialization:', {
+  url: supabaseUrl,
+  keyPrefix: supabaseAnonKey.substring(0, 20) + '...',
+  urlValid: isValidUrl(supabaseUrl),
+  keyValid: supabaseAnonKey.length > 100,
+  timestamp: new Date().toISOString()
+})
+
+export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  },
+  global: {
+    headers: {
+      'x-client-info': 'vittamed@1.0.0'
+    }
+  }
+})
 
 export function createClient() {
-  return createBrowserClient(supabaseUrl, supabaseAnonKey)
+  // Enhanced client creation with better error handling
+  try {
+    console.log('🚀 Creating Supabase browser client with:', {
+      url: supabaseUrl,
+      keyLength: supabaseAnonKey.length,
+      isProduction: typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    })
+
+    const client = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      },
+      global: {
+        headers: {
+          'x-client-info': 'vittamed-browser@1.0.0'
+        }
+      }
+    })
+
+    console.log('✅ Supabase browser client created successfully')
+    return client
+
+  } catch (error) {
+    console.error('❌ Failed to create Supabase client:', error)
+    throw new Error(`Supabase client creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
 }
