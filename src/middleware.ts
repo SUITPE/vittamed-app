@@ -15,10 +15,10 @@ export async function middleware(request: NextRequest) {
       return response
     }
 
-    // Temporary bypass for auth-bypass sessions in Vercel
+    // Optimized bypass for auth-bypass sessions in Vercel
     const hasAuthBypassCookie = request.cookies.has('sb-mvvxeqhsatkqtsrulcil-auth-token')
     if (hasAuthBypassCookie && (request.nextUrl.hostname.includes('vercel.app') || process.env.VERCEL)) {
-      console.log('🚀 Middleware: Bypassing auth check for auth-bypass session')
+      // Skip expensive Supabase auth validation for bypass sessions
 
       // For authenticated users trying to access auth pages, redirect appropriately
       if (request.nextUrl.pathname.startsWith('/auth/')) {
