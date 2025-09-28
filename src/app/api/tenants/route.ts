@@ -4,9 +4,11 @@ import { BusinessType, getBusinessTypeConfig, BUSINESS_TYPE_CONFIGS } from '@/ty
 
 export async function GET(request: NextRequest) {
   try {
-    // Check for debug parameter
+    // Check for debug parameter - force debug mode first
     const url = new URL(request.url)
     const debug = url.searchParams.get('debug')
+
+    console.log('Debug parameter:', debug) // Log for verification
 
     if (debug === 'true') {
       // Return debug information
