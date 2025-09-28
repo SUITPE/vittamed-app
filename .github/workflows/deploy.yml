@@ -1,0 +1,178 @@
+name: 🚀 Deploy VittaMed to DigitalOcean
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📦 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: 📥 Install dependencies
+      run: npm ci
+
+    - name: 🔧 Create production environment
+      run: |
+        echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" > .env.production
+        echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env.production
+        echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env.production
+        echo "NODE_ENV=production" >> .env.production
+        echo "NEXT_TELEMETRY_DISABLED=1" >> .env.production
+
+    - name: 🏗️ Build application
+      run: npm run build
+
+    - name: 📦 Create deployment package
+      run: |
+        mkdir -p deployment-package
+        cp -r .next deployment-package/
+        cp -r public deployment-package/
+        cp next.config.mjs deployment-package/
+        cp .env.production deployment-package/.env.local
+
+        # Create production package.json
+        cat > deployment-package/package.json << 'EOF'
+        {
+          "name": "vittamed-app",
+          "version": "0.1.0",
+          "private": true,
+          "scripts": {
+            "start": "next start",
+            "pm2:start": "pm2 start ecosystem.config.js",
+            "pm2:stop": "pm2 stop vittamed-app",
+            "pm2:restart": "pm2 restart vittamed-app",
+            "pm2:status": "pm2 status vittamed-app"
+          },
+          "dependencies": {
+            "@next/third-parties": "^15.5.3",
+            "@stripe/stripe-js": "^4.0.0",
+            "@supabase/ssr": "^0.5.2",
+            "@supabase/supabase-js": "^2.39.7",
+            "framer-motion": "^11.0.28",
+            "lucide-react": "^0.263.1",
+            "next": "15.5.3",
+            "react": "^19.0.0",
+            "react-dom": "^19.0.0",
+            "stripe": "^17.0.0"
+          }
+        }
+        EOF
+
+        # Create PM2 ecosystem file
+        cat > deployment-package/ecosystem.config.js << 'EOF'
+        module.exports = {
+          apps: [{
+            name: 'vittamed-app',
+            script: 'node_modules/.bin/next',
+            args: 'start',
+            cwd: '/apps/prod/vittamed-app',
+            instances: 1,
+            autorestart: true,
+            watch: false,
+            max_memory_restart: '1G',
+            env: {
+              NODE_ENV: 'production',
+              PORT: 3000,
+              HOSTNAME: '0.0.0.0'
+            },
+            error_file: '/apps/prod/vittamed-app/logs/err.log',
+            out_file: '/apps/prod/vittamed-app/logs/out.log',
+            log_file: '/apps/prod/vittamed-app/logs/combined.log',
+            time: true,
+            log_date_format: 'YYYY-MM-DD HH:mm Z'
+          }]
+        }
+        EOF
+
+    - name: 📤 Deploy to DigitalOcean
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.DO_HOST }}
+        username: ${{ secrets.DO_USERNAME }}
+        key: ${{ secrets.DO_SSH_KEY }}
+        port: ${{ secrets.DO_PORT || 22 }}
+        script: |
+          # Create directories
+          sudo mkdir -p /apps/prod/vittamed-app/logs
+          sudo chown -R $USER:$USER /apps/prod/vittamed-app
+
+          # Stop current application
+          cd /apps/prod/vittamed-app
+          pm2 stop vittamed-app || true
+
+          # Backup current deployment
+          if [ -d "/apps/prod/vittamed-app/.next" ]; then
+            sudo mv /apps/prod/vittamed-app /apps/prod/vittamed-app-backup-$(date +%Y%m%d_%H%M%S) || true
+            sudo mkdir -p /apps/prod/vittamed-app/logs
+            sudo chown -R $USER:$USER /apps/prod/vittamed-app
+          fi
+
+    - name: 📁 Upload deployment package
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.DO_HOST }}
+        username: ${{ secrets.DO_USERNAME }}
+        key: ${{ secrets.DO_SSH_KEY }}
+        port: ${{ secrets.DO_PORT || 22 }}
+        source: "deployment-package/*"
+        target: "/apps/prod/vittamed-app/"
+        strip_components: 1
+
+    - name: 🎯 Install dependencies and start application
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.DO_HOST }}
+        username: ${{ secrets.DO_USERNAME }}
+        key: ${{ secrets.DO_SSH_KEY }}
+        port: ${{ secrets.DO_PORT || 22 }}
+        script: |
+          cd /apps/prod/vittamed-app
+
+          # Install production dependencies
+          npm install --production
+
+          # Start application with PM2
+          pm2 start ecosystem.config.js
+          pm2 save
+
+          # Setup PM2 startup (only if not already setup)
+          pm2 startup systemd -u $USER --hp /home/$USER || true
+
+          # Wait for application to start
+          sleep 10
+
+          # Health check
+          if curl -f http://localhost:3000/api/health > /dev/null 2>&1; then
+            echo "✅ VittaMed deployed successfully!"
+            pm2 status vittamed-app
+          else
+            echo "❌ Health check failed"
+            pm2 logs vittamed-app --lines 20
+            exit 1
+          fi
+
+    - name: 📊 Deployment Status
+      if: always()
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.DO_HOST }}
+        username: ${{ secrets.DO_USERNAME }}
+        key: ${{ secrets.DO_SSH_KEY }}
+        port: ${{ secrets.DO_PORT || 22 }}
+        script: |
+          echo "📊 Final deployment status:"
+          pm2 status vittamed-app
+          echo ""
+          echo "🌐 Application should be available at: http://${{ secrets.DO_HOST }}:3000"
+          echo "🔍 Health check: http://${{ secrets.DO_HOST }}:3000/api/health"
