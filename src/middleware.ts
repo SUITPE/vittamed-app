@@ -15,46 +15,6 @@ export async function middleware(request: NextRequest) {
       return response
     }
 
-    // Optimized bypass for auth-bypass sessions in Vercel
-    const hasAuthBypassCookie = request.cookies.has('sb-mvvxeqhsatkqtsrulcil-auth-token')
-    if (hasAuthBypassCookie && (request.nextUrl.hostname.includes('vercel.app') || process.env.VERCEL)) {
-      // Skip expensive Supabase auth validation for bypass sessions
-
-      // For authenticated users trying to access auth pages, redirect appropriately
-      if (request.nextUrl.pathname.startsWith('/auth/')) {
-        const redirectTo = request.nextUrl.searchParams.get('redirectTo')
-        if (redirectTo) {
-          return NextResponse.redirect(new URL(redirectTo, request.url))
-        }
-        // Get user's default tenant dynamically
-        try {
-          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-          const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-          // Fetch first available tenant for redirect
-          const tenantsResponse = await fetch(`${supabaseUrl}/rest/v1/tenants?select=id&limit=1`, {
-            headers: {
-              'apikey': supabaseKey,
-              'Authorization': `Bearer ${supabaseKey}`
-            }
-          })
-
-          if (tenantsResponse.ok) {
-            const tenants = await tenantsResponse.json()
-            if (tenants && tenants.length > 0) {
-              return NextResponse.redirect(new URL(`/dashboard/${tenants[0].id}`, request.url))
-            }
-          }
-        } catch (error) {
-          console.warn('Could not fetch tenant for redirect')
-        }
-
-        // Fallback to generic dashboard
-        return NextResponse.redirect(new URL('/dashboard', request.url))
-      }
-
-      return response
-    }
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,

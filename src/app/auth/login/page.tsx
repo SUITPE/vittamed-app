@@ -1,18 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useAuth } from '@/contexts/AuthContext'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  const { signIn, signInWithOAuth } = useAuth()
-  const router = useRouter()
 
   // Get redirect URL from query params
   const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
@@ -24,54 +19,36 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      console.log('🚀 Starting authentication for:', email)
-      const { error, data } = await signIn(email, password)
-
-      if (error) {
-        console.error('❌ Authentication error:', error)
-        setError(error.message || 'Error al iniciar sesión')
+      if (!email || !password) {
+        setError('Email y contraseña son requeridos')
         setLoading(false)
         return
       }
 
-      console.log('✅ Authentication successful:', data?.user?.email)
+      // Call API route for authentication
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
 
-      // Use redirectTo parameter if present, otherwise determine by email
-      let redirectPath = redirectTo || '/dashboard'
-
-      if (!redirectTo) {
-        // Use dynamic auth service to determine redirect path
-        try {
-          const { dynamicAuthService } = await import('@/lib/auth-dynamic')
-          const user = await dynamicAuthService.getCurrentUser()
-          if (user) {
-            redirectPath = await dynamicAuthService.getDefaultRedirectPath(user)
-          }
-        } catch (error) {
-          console.warn('Could not determine dynamic redirect path, using default')
-          redirectPath = '/dashboard'
-        }
-      }
-
-      console.log('🔄 Redirecting to:', redirectPath)
-      console.log('📋 RedirectTo param:', redirectTo)
-
-      // Small delay to ensure auth state is updated
-      await new Promise(resolve => setTimeout(resolve, 500))
-
-      // Use window.location.href for more reliable navigation in production
-      console.log('🔄 Navigating to:', redirectPath)
-
-      if (typeof window !== 'undefined') {
-        window.location.href = redirectPath
-      } else {
-        // Fallback for SSR
-        router.push(redirectPath)
+      if (!response.ok) {
+        const errorData = await response.json()
+        setError(errorData.error || 'Error al iniciar sesión')
         setLoading(false)
+        return
       }
+
+      const { redirectPath } = await response.json()
+
+      // Redirect to the appropriate page
+      window.location.href = redirectPath || '/dashboard'
+
     } catch (err) {
       console.error('Login error:', err)
-      setError('Error inesperado')
+      setError('Error al conectar con el servidor')
       setLoading(false)
     }
   }
@@ -81,12 +58,8 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const { error } = await signInWithOAuth(provider)
-
-      if (error) {
-        setError(`Error al conectar con ${provider}: ${error.message}`)
-      }
-      // OAuth redirect will handle navigation
+      // OAuth placeholder - not implemented in simplified auth
+      setError(`OAuth with ${provider} is not yet implemented in simplified auth mode`)
     } catch (err) {
       setError(`Error inesperado con ${provider}`)
     } finally {

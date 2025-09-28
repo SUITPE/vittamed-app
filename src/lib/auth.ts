@@ -62,18 +62,6 @@ class AuthService {
   }
 
   async signIn(email: string, password: string) {
-    // Use bypass in Vercel and for development testing (localhost any port)
-    if (typeof window !== 'undefined' &&
-        (window.location.hostname.includes('vercel.app') ||
-         process.env.VERCEL ||
-         window.location.hostname === 'localhost')) {
-      console.log('🚀 Using auth bypass for testing')
-
-      // Import and use the bypass function
-      const { signInWithPasswordBypass } = await import('./auth-bypass')
-      return await signInWithPasswordBypass(email, password)
-    }
-
     if (!this.supabase) {
       return { data: null, error: { message: 'Supabase client not available during SSR' } }
     }
@@ -137,31 +125,17 @@ class AuthService {
 
     if (!user) return null
 
-    // Always create a fallback profile first based on email for demo users
+    // Simple fallback profile - role determination will be done based on database profile
     let fallbackProfile = null
     if (user.email) {
-      let defaultRole: 'admin_tenant' | 'doctor' | 'patient' = 'patient'
-      let defaultTenantId = null
-      let defaultDoctorId = null
-
-      if (user.email === 'admin@clinicasanrafael.com') {
-        defaultRole = 'admin_tenant'
-        defaultTenantId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
-      } else if (user.email === 'ana.rodriguez@email.com') {
-        defaultRole = 'doctor'
-        defaultDoctorId = '550e8400-e29b-41d4-a716-446655440001'
-      } else if (user.email === 'patient@example.com') {
-        defaultRole = 'patient'
-      }
-
       fallbackProfile = {
         id: user.id,
         email: user.email,
         first_name: user.user_metadata?.first_name || user.email.split('@')[0],
         last_name: user.user_metadata?.last_name || 'User',
-        role: defaultRole,
-        tenant_id: defaultTenantId,
-        doctor_id: defaultDoctorId,
+        role: 'patient' as UserRole, // Default role, will be overridden by database profile
+        tenant_id: null,
+        doctor_id: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
