@@ -2,8 +2,28 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { BusinessType, getBusinessTypeConfig, BUSINESS_TYPE_CONFIGS } from '@/types/business'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Check for debug parameter
+    const url = new URL(request.url)
+    const debug = url.searchParams.get('debug')
+
+    if (debug === 'true') {
+      // Return debug information
+      return NextResponse.json({
+        debug: true,
+        timestamp: new Date().toISOString(),
+        environment: {
+          NODE_ENV: process.env.NODE_ENV || 'undefined',
+          VERCEL: process.env.VERCEL || 'undefined',
+          NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || 'undefined',
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.substring(0, 20) + '...' : 'undefined'
+        },
+        status: 'API working'
+      })
+    }
+
     const supabase = await createClient()
 
     const { data: tenants, error } = await supabase
