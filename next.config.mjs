@@ -67,8 +67,8 @@ const nextConfig = {
     return config
   },
 
-  // Output configuration for Vercel (serverless)
-  output: 'standalone',
+  // Output configuration - removed standalone for PM2 compatibility
+  // output: 'standalone', // Only needed for Vercel/serverless
 
   // ESLint configuration for builds
   eslint: {
