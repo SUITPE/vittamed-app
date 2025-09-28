@@ -1,6 +1,12 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createBrowserClient } from '@supabase/ssr'
 import './fetch-wrapper' // Import fetch wrapper for debugging
+import { debugSupabaseAuth } from './supabase-auth-debug' // Import auth debugging
+
+// Enable auth debugging in browser
+if (typeof window !== 'undefined') {
+  debugSupabaseAuth()
+}
 
 // Validate URL format
 function isValidUrl(url: string): boolean {
@@ -20,9 +26,18 @@ function getSupabaseConfig() {
   let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || defaultUrl
   let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || defaultKey
 
-  // Validate URL format
+  // Enhanced URL validation and cleaning
   if (!isValidUrl(supabaseUrl)) {
     console.warn('Invalid Supabase URL detected, using default')
+    supabaseUrl = defaultUrl
+  }
+
+  // Remove trailing slash if present (this can cause issues)
+  supabaseUrl = supabaseUrl.replace(/\/$/, '')
+
+  // Ensure URL ends with supabase.co (validate it's a real Supabase URL)
+  if (!supabaseUrl.includes('supabase.co')) {
+    console.warn('URL does not appear to be a valid Supabase URL, using default')
     supabaseUrl = defaultUrl
   }
 
@@ -31,6 +46,16 @@ function getSupabaseConfig() {
     console.warn('Invalid Supabase key detected, using default')
     supabaseAnonKey = defaultKey
   }
+
+  // Additional debugging for production
+  console.log('🔧 Final Supabase configuration:', {
+    url: supabaseUrl,
+    urlLength: supabaseUrl.length,
+    hasProtocol: supabaseUrl.startsWith('https://'),
+    endsWithSupabase: supabaseUrl.includes('supabase.co'),
+    keyLength: supabaseAnonKey.length,
+    keyIsJWT: supabaseAnonKey.includes('.') && supabaseAnonKey.split('.').length === 3
+  })
 
   return { supabaseUrl, supabaseAnonKey }
 }
@@ -71,22 +96,30 @@ export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
 export function createClient() {
   // Enhanced client creation with better error handling
   try {
+    // Force explicit values to prevent undefined issues
+    const cleanUrl = supabaseUrl || 'https://mvvxeqhsatkqtsrulcil.supabase.co'
+    const cleanKey = supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12dnhlcWhzYXRrcXRzcnVsY2lsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxNzk2NzcsImV4cCI6MjA3Mzc1NTY3N30.-LxDF04CO66mJrg4rVpHHJLmNnTgNu_lFyfL-qZKsdw'
+
     console.log('🚀 Creating Supabase browser client with:', {
-      url: supabaseUrl,
-      keyLength: supabaseAnonKey.length,
+      url: cleanUrl,
+      keyLength: cleanKey.length,
       isProduction: typeof window !== 'undefined' && window.location.hostname !== 'localhost'
     })
 
-    const client = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+    // Create with minimal configuration to avoid undefined values
+    const client = createBrowserClient(cleanUrl, cleanKey, {
       auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
+        autoRefreshToken: false, // Disable to prevent additional requests that might fail
+        persistSession: false,   // Disable to avoid localStorage issues
+        detectSessionInUrl: false, // Disable URL detection that might cause issues
+        flowType: 'implicit'     // Use implicit flow which is simpler
       },
       global: {
         headers: {
-          'x-client-info': 'vittamed-browser@1.0.0'
-        }
+          'x-client-info': 'vittamed-browser@1.0.0',
+          'apikey': cleanKey  // Explicitly set the API key header
+        },
+        fetch: globalThis.fetch // Use our wrapped fetch explicitly
       }
     })
 
