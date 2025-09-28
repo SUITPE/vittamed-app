@@ -62,10 +62,12 @@ class AuthService {
   }
 
   async signIn(email: string, password: string) {
-    // In production (Vercel), use bypass to avoid fetch issues
+    // Use bypass in Vercel and for development testing (localhost any port)
     if (typeof window !== 'undefined' &&
-        (window.location.hostname.includes('vercel.app') || process.env.VERCEL)) {
-      console.log('🚀 Using Vercel auth bypass')
+        (window.location.hostname.includes('vercel.app') ||
+         process.env.VERCEL ||
+         window.location.hostname === 'localhost')) {
+      console.log('🚀 Using auth bypass for testing')
 
       // Import and use the bypass function
       const { signInWithPasswordBypass } = await import('./auth-bypass')

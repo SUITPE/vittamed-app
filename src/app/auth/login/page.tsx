@@ -14,37 +14,57 @@ export default function LoginPage() {
   const { signIn, signInWithOAuth } = useAuth()
   const router = useRouter()
 
+  // Get redirect URL from query params
+  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
+  const redirectTo = searchParams.get('redirectTo')
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
 
     try {
-      const { error } = await signIn(email, password)
+      console.log('🚀 Starting authentication for:', email)
+      const { error, data } = await signIn(email, password)
 
       if (error) {
+        console.error('❌ Authentication error:', error)
         setError(error.message || 'Error al iniciar sesión')
         setLoading(false)
         return
       }
 
-      // Determine redirect path based on email (since we know these work)
-      let redirectPath = '/dashboard'
-      if (email === 'admin@clinicasanrafael.com') {
-        redirectPath = '/dashboard/f47ac10b-58cc-4372-a567-0e02b2c3d479'
-      } else if (email === 'ana.rodriguez@email.com') {
-        redirectPath = '/agenda'
-      } else if (email === 'patient@example.com') {
-        redirectPath = '/my-appointments'
+      console.log('✅ Authentication successful:', data?.user?.email)
+
+      // Use redirectTo parameter if present, otherwise determine by email
+      let redirectPath = redirectTo || '/dashboard'
+
+      if (!redirectTo) {
+        if (email === 'admin@clinicasanrafael.com') {
+          redirectPath = '/dashboard/f47ac10b-58cc-4372-a567-0e02b2c3d479'
+        } else if (email === 'ana.rodriguez@email.com') {
+          redirectPath = '/agenda'
+        } else if (email === 'patient@example.com') {
+          redirectPath = '/my-appointments'
+        }
       }
 
       console.log('🔄 Redirecting to:', redirectPath)
+      console.log('📋 RedirectTo param:', redirectTo)
 
       // Small delay to ensure auth state is updated
       await new Promise(resolve => setTimeout(resolve, 500))
 
-      // Force redirect using window.location for reliability in Vercel
-      window.location.href = redirectPath
+      // Use window.location.href for more reliable navigation in production
+      console.log('🔄 Navigating to:', redirectPath)
+
+      if (typeof window !== 'undefined') {
+        window.location.href = redirectPath
+      } else {
+        // Fallback for SSR
+        router.push(redirectPath)
+        setLoading(false)
+      }
     } catch (err) {
       console.error('Login error:', err)
       setError('Error inesperado')

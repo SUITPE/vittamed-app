@@ -19,24 +19,40 @@ test.describe('Authentication Tests', () => {
   })
 
   test('should login successfully with admin credentials', async ({ page }) => {
+    // Capture console logs for debugging
+    page.on('console', msg => console.log('PAGE LOG:', msg.text()))
+
     await page.fill('[data-testid="email-input"]', 'admin@clinicasanrafael.com')
     await page.fill('[data-testid="password-input"]', 'password')
     await page.click('[data-testid="login-submit"]')
 
-    // Wait for navigation with extended timeout and multiple URL patterns
-    try {
-      await page.waitForURL('/dashboard/**', { timeout: 60000 })
-    } catch (e) {
-      // Fallback: check if we're on any dashboard-related page
-      await page.waitForFunction(() => {
-        return window.location.pathname.includes('/dashboard') ||
-               window.location.pathname.includes('/agenda') ||
-               document.title.includes('Dashboard')
-      }, { timeout: 30000 })
-    }
+    // Wait for either success (navigation) or error message
+    await Promise.race([
+      // Success: navigation to dashboard
+      page.waitForURL('/dashboard/**', { timeout: 15000 }).then(() => 'navigated'),
 
-    // Wait for page to load completely with extended timeout
-    await page.waitForLoadState('networkidle', { timeout: 30000 })
+      // Error: error message appears
+      page.waitForSelector('[data-testid="login-error"]', { timeout: 15000 }).then(() => {
+        throw new Error('Login failed - error message appeared')
+      }),
+
+      // Fallback: check current URL after timeout
+      page.waitForTimeout(10000).then(async () => {
+        const currentUrl = page.url()
+        const buttonText = await page.textContent('[data-testid="login-submit"]')
+        console.log('Current URL:', currentUrl)
+        console.log('Button text:', buttonText)
+
+        if (currentUrl.includes('/dashboard') || currentUrl.includes('/agenda')) {
+          return 'navigated'
+        } else {
+          throw new Error(`Still on login page. URL: ${currentUrl}, Button: ${buttonText}`)
+        }
+      })
+    ])
+
+    // Wait for page to load completely
+    await page.waitForLoadState('networkidle', { timeout: 10000 })
 
     // Check for dashboard content with more flexible matching
     await expect(page.locator('h1, h2, [data-testid="dashboard"], .dashboard-title')).toBeVisible({ timeout: 20000 })
