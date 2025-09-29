@@ -25,6 +25,11 @@ export async function GET(
       return NextResponse.json({ error: 'Date parameter is required' }, { status: 400 })
     }
 
+    console.log('🔍 Fetching appointments for:', {
+      doctorId,
+      date
+    })
+
     const { data: appointments, error } = await supabase
       .from('appointments')
       .select(`
@@ -37,8 +42,7 @@ export async function GET(
         services!inner(name)
       `)
       .eq('doctor_id', doctorId)
-      .gte('start_time', `${date}T00:00:00`)
-      .lt('start_time', `${date}T23:59:59`)
+      .eq('appointment_date', date)
       .order('start_time', { ascending: true })
 
     if (error) {

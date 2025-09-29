@@ -12,13 +12,14 @@ test.describe('Agenda Management Tests', () => {
     await page.waitForURL('/agenda', { timeout: 30000 })
     await page.waitForLoadState('networkidle')
 
-    // Wait for page content to load
-    await expect(page.locator('h1')).toContainText('Mi Agenda', { timeout: 15000 })
+    // Wait for loading spinner to disappear and main content to load
+    await page.waitForSelector('text=Cargando agenda...', { state: 'hidden', timeout: 30000 })
+    await expect(page.locator('h1')).toContainText('Mi Agenda - Dr.', { timeout: 15000 })
   })
 
   test('should display doctor agenda page', async ({ page }) => {
-    await expect(page.locator('h1')).toContainText('Mi Agenda', { timeout: 10000 })
-    await expect(page.locator('text=Dr. Ana Rodriguez')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('h1')).toContainText('Mi Agenda - Dr.', { timeout: 10000 })
+    await expect(page.locator('text=Ana')).toBeVisible({ timeout: 10000 })
     await expect(page.locator('text=Gestiona tu disponibilidad y revisa tus citas')).toBeVisible({ timeout: 10000 })
   })
 

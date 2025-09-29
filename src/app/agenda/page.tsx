@@ -43,22 +43,103 @@ export default function AgendaPage() {
 
   async function fetchDoctorData() {
     try {
-      const [availabilityResponse, appointmentsResponse] = await Promise.all([
-        fetch(`/api/doctors/${user?.id}/availability`),
-        fetch(`/api/doctors/${user?.id}/appointments?date=${selectedDate}`)
-      ])
+      // Debug user context
+      console.log('🔍 fetchDoctorData called with user:', {
+        userId: user?.id,
+        userEmail: user?.email,
+        userRole: user?.profile?.role,
+        selectedDate,
+        loading
+      })
 
-      if (availabilityResponse.ok) {
-        const availabilityData = await availabilityResponse.json()
-        setAvailability(availabilityData)
+      if (!user?.id) {
+        console.error('❌ No user ID available, skipping API calls')
+        setLoadingData(false)
+        return
       }
 
+      // Create AbortController for timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+      // Fetch options with credentials for authentication
+      const fetchOptions = {
+        signal: controller.signal,
+        credentials: 'include' as RequestCredentials,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+
+      const availabilityUrl = `/api/doctors/${user.id}/availability`
+      const appointmentsUrl = `/api/doctors/${user.id}/appointments?date=${selectedDate}`
+
+      console.log('🌐 Making API calls to:', {
+        availabilityUrl,
+        appointmentsUrl
+      })
+
+      const [availabilityResponse, appointmentsResponse] = await Promise.all([
+        fetch(availabilityUrl, fetchOptions),
+        fetch(appointmentsUrl, fetchOptions)
+      ])
+
+      clearTimeout(timeoutId)
+
+      // Handle availability response
+      if (availabilityResponse.ok) {
+        const availabilityData = await availabilityResponse.json()
+        setAvailability(availabilityData || [])
+      } else {
+        const errorText = await availabilityResponse.text()
+        console.error('Availability API failed:', {
+          status: availabilityResponse.status,
+          statusText: availabilityResponse.statusText,
+          error: errorText
+        })
+
+        // Handle authentication errors
+        if (availabilityResponse.status === 401) {
+          console.error('Authentication required for availability API')
+          router.push('/auth/login')
+          return
+        }
+
+        setAvailability([])
+      }
+
+      // Handle appointments response
       if (appointmentsResponse.ok) {
         const appointmentsData = await appointmentsResponse.json()
-        setAppointments(appointmentsData)
+        setAppointments(appointmentsData || [])
+      } else {
+        const errorText = await appointmentsResponse.text()
+        console.error('Appointments API failed:', {
+          status: appointmentsResponse.status,
+          statusText: appointmentsResponse.statusText,
+          error: errorText
+        })
+
+        // Handle authentication errors
+        if (appointmentsResponse.status === 401) {
+          console.error('Authentication required for appointments API')
+          router.push('/auth/login')
+          return
+        }
+
+        setAppointments([])
       }
     } catch (error) {
       console.error('Error fetching doctor data:', error)
+
+      // Handle abort/timeout errors
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error('Request timed out after 10 seconds')
+      }
+
+      // Set empty data to continue with UI rendering
+      setAvailability([])
+      setAppointments([])
     } finally {
       setLoadingData(false)
     }
@@ -68,6 +149,7 @@ export default function AgendaPage() {
     try {
       const response = await fetch(`/api/doctors/${user?.id}/availability`, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -79,6 +161,17 @@ export default function AgendaPage() {
 
       if (response.ok) {
         fetchDoctorData()
+      } else {
+        const errorText = await response.text()
+        console.error('Failed to update availability:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText
+        })
+
+        if (response.status === 401) {
+          router.push('/auth/login')
+        }
       }
     } catch (error) {
       console.error('Error updating availability:', error)

@@ -12,7 +12,7 @@ export default defineConfig({
     timeout: 15 * 1000, // 15 seconds for assertions
   },
   use: {
-    baseURL: 'http://localhost:3007',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
     actionTimeout: 30 * 1000, // 30 seconds for actions
     navigationTimeout: 60 * 1000, // 60 seconds for navigation

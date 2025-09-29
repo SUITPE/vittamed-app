@@ -23,14 +23,27 @@ class AuthService {
 
   private get supabase() {
     if (!this._supabase) {
-      // Only initialize if environment variables are available
-      if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        this._supabase = createBrowserClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        )
+      // Only initialize if we're in browser and environment variables are available
+      if (typeof window !== 'undefined') {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mvvxeqhsatkqtsrulcil.supabase.co'
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12dnhlcWhzYXRrcXRzcnVsY2lsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxNzk2NzcsImV4cCI6MjA3Mzc1NTY3N30.-LxDF04CO66mJrg4rVpHHJLmNnTgNu_lFyfL-qZKsdw'
+
+        console.log('🔧 Initializing Supabase client:', {
+          url: supabaseUrl,
+          hasKey: !!supabaseKey,
+          keyLength: supabaseKey.length
+        })
+
+        try {
+          this._supabase = createBrowserClient(supabaseUrl, supabaseKey)
+          console.log('✅ Supabase client initialized successfully')
+        } catch (error) {
+          console.error('❌ Failed to initialize Supabase client:', error)
+          return null as any
+        }
       } else {
-        // During SSR or when env vars are not available, return a mock client
+        // During SSR, return null but don't error
+        console.log('🔄 SSR detected, Supabase client will be initialized on client side')
         return null as any
       }
     }
@@ -117,59 +130,161 @@ class AuthService {
   }
 
   async getCurrentUser(): Promise<AuthUser | null> {
-    if (!this.supabase) {
-      return null
-    }
+    try {
+      // Enhanced client availability check
+      if (!this.supabase) {
+        console.log('⚠️ getCurrentUser: Supabase client not available')
 
-    const { data: { user } } = await this.supabase.auth.getUser()
+        // Try to reinitialize client if in browser
+        if (typeof window !== 'undefined') {
+          console.log('🔄 Attempting to reinitialize Supabase client...')
+          const tempClient = this.supabase // This triggers the getter
+          if (!tempClient) {
+            console.error('❌ Failed to reinitialize Supabase client')
+            return null
+          }
+        } else {
+          console.log('🔄 SSR environment detected, returning null')
+          return null
+        }
+      }
 
-    if (!user) return null
+      console.log('🔍 getCurrentUser: Fetching user from Supabase')
 
-    // Simple fallback profile - role determination will be done based on database profile
-    let fallbackProfile = null
-    if (user.email) {
-      fallbackProfile = {
+      // Enhanced timeout handling for auth calls
+      const authPromise = this.supabase!.auth.getUser()
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Auth request timeout')), 5000)
+      })
+
+      const { data: { user }, error } = await Promise.race([authPromise, timeoutPromise])
+
+      if (error) {
+        console.error('❌ getCurrentUser: Supabase auth error:', {
+          message: error.message,
+          status: error.status,
+          code: error.code || 'unknown'
+        })
+        return null
+      }
+
+      if (!user) {
+        console.log('👤 getCurrentUser: No authenticated user found')
+        return null
+      }
+
+      console.log('👤 getCurrentUser: Found user:', {
         id: user.id,
         email: user.email,
-        first_name: user.user_metadata?.first_name || user.email.split('@')[0],
-        last_name: user.user_metadata?.last_name || 'User',
-        role: 'patient' as UserRole, // Default role, will be overridden by database profile
-        tenant_id: null,
-        doctor_id: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        hasMetadata: !!user.user_metadata,
+        emailConfirmed: user.email_confirmed_at ? 'Yes' : 'No'
+      })
+
+      // Create robust fallback profile
+      let fallbackProfile = null
+      if (user.email) {
+        const emailPrefix = user.email.split('@')[0]
+        fallbackProfile = {
+          id: user.id,
+          email: user.email,
+          first_name: user.user_metadata?.first_name || emailPrefix,
+          last_name: user.user_metadata?.last_name || 'User',
+          role: 'patient' as UserRole,
+          tenant_id: null,
+          doctor_id: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+        console.log('📋 Created fallback profile:', {
+          role: fallbackProfile.role,
+          name: `${fallbackProfile.first_name} ${fallbackProfile.last_name}`
+        })
       }
-    }
 
-    // Try to get user profile from database, but don't fail if it doesn't work
-    let dbProfile = undefined
-    try {
-      const { data, error } = await this.supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
+      // Enhanced database profile fetch with better error handling
+      let dbProfile = undefined
+      try {
+        console.log('🔍 Fetching user profile from database...')
 
-      if (!error && data) {
-        dbProfile = data
-        console.log('✅ Successfully fetched user profile from database:', data.role)
+        const profilePromise = this.supabase!
+          .from('user_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+
+        const profileTimeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Profile fetch timeout')), 3000)
+        })
+
+        const { data, error } = await Promise.race([profilePromise, profileTimeoutPromise])
+
+        if (error) {
+          if (error.code === 'PGRST116') {
+            console.log('📝 No user profile found in database (new user)')
+          } else {
+            console.warn('⚠️ Database profile fetch error:', {
+              message: error.message,
+              code: error.code,
+              details: error.details
+            })
+          }
+        } else if (data) {
+          dbProfile = data
+          console.log('✅ Successfully fetched user profile from database:', {
+            role: data.role,
+            tenantId: data.tenant_id,
+            doctorId: data.doctor_id
+          })
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          if (error.message === 'Profile fetch timeout') {
+            console.error('⏱️ Database profile fetch timed out')
+          } else {
+            console.warn('🚨 Exception fetching user profile:', error.message)
+          }
+        } else {
+          console.warn('🚨 Unknown error fetching user profile:', error)
+        }
+      }
+
+      // Select best available profile
+      const profile = dbProfile || fallbackProfile
+
+      if (profile) {
+        console.log(`👤 User profile resolved:`, {
+          source: dbProfile ? 'database' : 'fallback',
+          role: profile.role,
+          email: profile.email,
+          hasTenant: !!profile.tenant_id,
+          hasDoctor: !!profile.doctor_id
+        })
       } else {
-        console.warn('Could not fetch user profile from database, using fallback. Error:', error?.message || 'Unknown')
+        console.error('❌ No profile available for user')
       }
+
+      const authUser = {
+        ...user,
+        profile: profile || undefined
+      }
+
+      console.log('✅ getCurrentUser completed successfully')
+      return authUser
+
     } catch (error) {
-      console.warn('Exception fetching user profile, using fallback:', error)
-    }
-
-    // Use database profile if available, otherwise use fallback
-    const profile = dbProfile || fallbackProfile
-
-    if (profile) {
-      console.log(`👤 User role determined: ${profile.role} for ${profile.email}`)
-    }
-
-    return {
-      ...user,
-      profile: profile || undefined
+      if (error instanceof Error) {
+        if (error.message === 'Auth request timeout') {
+          console.error('⏱️ Auth request timed out after 15 seconds')
+        } else {
+          console.error('❌ getCurrentUser: Unexpected error:', {
+            message: error.message,
+            stack: error.stack?.split('\n')[0]
+          })
+        }
+      } else {
+        console.error('❌ getCurrentUser: Unknown error type:', error)
+      }
+      return null
     }
   }
 
