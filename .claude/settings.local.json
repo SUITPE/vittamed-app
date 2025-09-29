@@ -99,7 +99,8 @@
       "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/authentication.spec.ts --timeout=30000)",
       "Bash(xargs:*)",
       "Bash(timeout 10 curl http://localhost:3000/api/tenants)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git filter-branch:*)"
     ],
     "deny": [],
     "ask": []
