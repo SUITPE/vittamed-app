@@ -1,12 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createBrowserClient } from '@supabase/ssr'
 
 export default function NewPatientPage() {
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const [supabase, setSupabase] = useState<any>(null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const client = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+      setSupabase(client)
+    }
+  }, [])
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     first_name: '',
@@ -24,6 +34,12 @@ export default function NewPatientPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!supabase) {
+      console.error('Supabase client not initialized')
+      return
+    }
+
     setIsLoading(true)
 
     try {
