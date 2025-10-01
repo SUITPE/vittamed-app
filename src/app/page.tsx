@@ -1,12 +1,50 @@
 'use client'
 
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Icons } from '@/components/ui/Icons'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Home() {
+  const router = useRouter()
+  const { user, loading } = useAuth()
+
+  useEffect(() => {
+    // Redirect authenticated users to their dashboard
+    if (!loading && user?.profile) {
+      const role = user.profile.role
+      const tenantId = user.profile.tenant_id
+
+      if (role === 'admin_tenant' || role === 'staff' || role === 'receptionist') {
+        router.push(`/dashboard/${tenantId}`)
+      } else if (role === 'doctor') {
+        router.push('/agenda')
+      } else if (role === 'patient') {
+        router.push('/my-appointments')
+      }
+    }
+  }, [user, loading, router])
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Only show landing page if not authenticated
+  if (user?.profile) {
+    return null // Will redirect in useEffect
+  }
   const services = [
     {
       icon: 'calendarDays',

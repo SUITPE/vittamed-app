@@ -13,8 +13,8 @@ interface ClientProvidersProps {
 export default function ClientProviders({ children }: ClientProvidersProps) {
   const pathname = usePathname()
 
-  // Hide ModernNavigation on admin routes (they use AdminSidebar)
-  const hideModernNav = pathname?.startsWith('/dashboard/') || pathname?.startsWith('/admin/')
+  // Hide ModernNavigation on admin routes (they use AdminSidebar) and root (will redirect)
+  const hideModernNav = pathname === '/' || pathname?.startsWith('/dashboard/') || pathname?.startsWith('/admin/') || pathname?.startsWith('/receptionist/')
 
   useEffect(() => {
     // Global error handler for unhandled promise rejections and runtime errors

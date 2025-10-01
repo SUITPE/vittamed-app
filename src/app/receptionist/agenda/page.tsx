@@ -409,7 +409,7 @@ export default function ReceptionistAgendaPage() {
       <div className="min-h-screen bg-gray-50">
         <AdminSidebar tenantId={currentTenantId} />
         <AdminHeader />
-        <div className="ml-64 pt-16">
+        <div className="ml-64 pt-16 p-6">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -445,16 +445,16 @@ export default function ReceptionistAgendaPage() {
     <div className="min-h-screen bg-gray-50">
       <AdminSidebar tenantId={currentTenantId} />
       <AdminHeader />
-
-      <div className="ml-64 pt-16 p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  📅 Agendas de Doctores
-                </h1>
+      <div className="ml-64 pt-16">
+        <div className="p-6">
+          <div className="max-w-7xl mx-auto">
+            {/* Header - UPDATED NAVIGATION */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    📅 Agendas de Doctores
+                  </h1>
                 <p className="text-gray-600 mt-1">
                   Visualiza horarios y gestiona citas de todos los doctores
                 </p>
@@ -767,6 +767,7 @@ export default function ReceptionistAgendaPage() {
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
 
