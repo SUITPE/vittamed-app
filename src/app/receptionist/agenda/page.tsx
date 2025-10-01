@@ -7,6 +7,10 @@ import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
 import CalendarView from '@/components/calendar/CalendarView'
 import WeeklyCalendarView from '@/components/calendar/WeeklyCalendarView'
+import AppointmentQuickMenu from '@/components/calendar/AppointmentQuickMenu'
+import ServiceSelectorPanel from '@/components/calendar/ServiceSelectorPanel'
+import ClientSelectorPanel from '@/components/calendar/ClientSelectorPanel'
+import AppointmentSummaryPanel from '@/components/calendar/AppointmentSummaryPanel'
 import { Icons } from '@/components/ui/Icons'
 
 interface Doctor {
@@ -48,6 +52,23 @@ export default function ReceptionistAgendaPage() {
   const [selectedDoctor, setSelectedDoctor] = useState<string>('')
   const [loadingData, setLoadingData] = useState(true)
   const [viewMode, setViewMode] = useState<'week' | 'month' | 'list'>('week')
+
+  // Appointment creation flow
+  const [quickMenuPosition, setQuickMenuPosition] = useState<{ x: number; y: number } | null>(null)
+  const [showServiceSelector, setShowServiceSelector] = useState(false)
+  const [showClientSelector, setShowClientSelector] = useState(false)
+  const [showSummaryPanel, setShowSummaryPanel] = useState(false)
+  const [appointmentDraft, setAppointmentDraft] = useState<{
+    doctor_id: string | null
+    datetime: Date | null
+    services: any[]
+    client: any | null
+  }>({
+    doctor_id: null,
+    datetime: null,
+    services: [],
+    client: null
+  })
 
   // Check if user is receptionist or staff
   const isReceptionist = user?.profile?.role === 'receptionist' || user?.profile?.role === 'staff'
@@ -160,6 +181,93 @@ export default function ReceptionistAgendaPage() {
       }
     } catch (error) {
       console.error('Error updating appointment:', error)
+    }
+  }
+
+  // Appointment creation flow handlers
+  const handleTimeSlotClick = (event: React.MouseEvent, doctorId: string, time: Date) => {
+    const rect = (event.target as HTMLElement).getBoundingClientRect()
+    setQuickMenuPosition({ x: rect.left, y: rect.top + rect.height / 2 })
+    setAppointmentDraft({
+      doctor_id: doctorId,
+      datetime: time,
+      services: [],
+      client: null
+    })
+  }
+
+  const handleAddAppointment = () => {
+    setShowServiceSelector(true)
+  }
+
+  const handleServiceSelected = (service: any) => {
+    setAppointmentDraft(prev => ({
+      ...prev,
+      services: [...prev.services, service]
+    }))
+    setShowServiceSelector(false)
+    setShowSummaryPanel(true)
+
+    // If no client selected yet, show client selector
+    if (!appointmentDraft.client) {
+      setTimeout(() => setShowClientSelector(true), 300)
+    }
+  }
+
+  const handleClientSelected = (client: any) => {
+    setAppointmentDraft(prev => ({
+      ...prev,
+      client
+    }))
+  }
+
+  const handleSaveAppointment = async () => {
+    if (!appointmentDraft.doctor_id || !appointmentDraft.datetime || appointmentDraft.services.length === 0) {
+      alert('Please complete all required fields')
+      return
+    }
+
+    try {
+      const service = appointmentDraft.services[0]
+      const endTime = new Date(appointmentDraft.datetime)
+      endTime.setMinutes(endTime.getMinutes() + service.duration_minutes)
+
+      const response = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tenant_id: currentTenantId,
+          doctor_id: appointmentDraft.doctor_id,
+          service_id: service.id,
+          patient_name: appointmentDraft.client === 'walk-in' ? 'Walk-In' : `${appointmentDraft.client.first_name} ${appointmentDraft.client.last_name}`,
+          patient_email: appointmentDraft.client !== 'walk-in' ? appointmentDraft.client.email : null,
+          patient_phone: appointmentDraft.client !== 'walk-in' ? appointmentDraft.client.phone : null,
+          start_time: appointmentDraft.datetime.toISOString(),
+          end_time: endTime.toISOString(),
+          status: 'pending',
+          notes: ''
+        })
+      })
+
+      if (response.ok) {
+        // Reset draft and close panels
+        setAppointmentDraft({
+          doctor_id: null,
+          datetime: null,
+          services: [],
+          client: null
+        })
+        setShowSummaryPanel(false)
+        // Refresh appointments
+        fetchDoctorsAndAgenda()
+      } else {
+        alert('Error creating appointment')
+      }
+    } catch (error) {
+      console.error('Error creating appointment:', error)
+      alert('Error creating appointment')
     }
   }
 
@@ -308,10 +416,7 @@ export default function ReceptionistAgendaPage() {
                 onDateChange={(date) => {
                   setSelectedDate(date.toISOString().split('T')[0])
                 }}
-                onTimeSlotClick={(doctorId, time) => {
-                  console.log('Time slot clicked:', doctorId, time)
-                  // TODO: Open appointment modal
-                }}
+                onTimeSlotClick={handleTimeSlotClick}
                 onAppointmentClick={(appointment) => {
                   console.log('Appointment clicked:', appointment)
                   // TODO: Open appointment details modal
@@ -522,6 +627,54 @@ export default function ReceptionistAgendaPage() {
           </div>
         </div>
       </div>
+
+      {/* Appointment creation flow modals */}
+      {quickMenuPosition && (
+        <AppointmentQuickMenu
+          position={quickMenuPosition}
+          onClose={() => setQuickMenuPosition(null)}
+          onAddAppointment={handleAddAppointment}
+          onAddGroupAppointment={() => console.log('Add group appointment')}
+          onAddBlockedTime={() => console.log('Add blocked time')}
+        />
+      )}
+
+      <ServiceSelectorPanel
+        isOpen={showServiceSelector}
+        onClose={() => setShowServiceSelector(false)}
+        onSelectService={handleServiceSelected}
+        tenantId={currentTenantId || ''}
+      />
+
+      <ClientSelectorPanel
+        isOpen={showClientSelector}
+        onClose={() => setShowClientSelector(false)}
+        onSelectClient={handleClientSelected}
+        tenantId={currentTenantId || ''}
+      />
+
+      {appointmentDraft.datetime && (
+        <AppointmentSummaryPanel
+          isOpen={showSummaryPanel}
+          onClose={() => {
+            setShowSummaryPanel(false)
+            setAppointmentDraft({
+              doctor_id: null,
+              datetime: null,
+              services: [],
+              client: null
+            })
+          }}
+          selectedDate={appointmentDraft.datetime}
+          selectedDoctor={doctors.find(d => d.id === appointmentDraft.doctor_id) || null}
+          services={appointmentDraft.services}
+          client={appointmentDraft.client}
+          onAddService={() => setShowServiceSelector(true)}
+          onSelectClient={() => setShowClientSelector(true)}
+          onSave={handleSaveAppointment}
+          onCheckout={() => console.log('Checkout')}
+        />
+      )}
     </div>
   )
 }

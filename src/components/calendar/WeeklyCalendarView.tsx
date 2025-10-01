@@ -26,7 +26,7 @@ interface WeeklyCalendarViewProps {
   appointments: Appointment[]
   selectedDate: Date
   onDateChange: (date: Date) => void
-  onTimeSlotClick: (doctorId: string, time: Date) => void
+  onTimeSlotClick: (event: React.MouseEvent, doctorId: string, time: Date) => void
   onAppointmentClick: (appointment: Appointment) => void
 }
 
@@ -221,11 +221,11 @@ export default function WeeklyCalendarView({
                   <div
                     key={`${doctor.id}-${timeSlot}`}
                     className="border-r border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors relative min-h-[80px]"
-                    onClick={() => {
+                    onClick={(e) => {
                       const clickDate = new Date(selectedDate)
                       const [hours] = timeSlot.split(':').map(Number)
                       clickDate.setHours(hours, 0, 0, 0)
-                      onTimeSlotClick(doctor.id, clickDate)
+                      onTimeSlotClick(e, doctor.id, clickDate)
                     }}
                   >
                     {/* Current time indicator */}
