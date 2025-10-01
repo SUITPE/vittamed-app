@@ -8,6 +8,7 @@ export interface UserProfile {
   first_name?: string;
   last_name?: string;
   current_tenant_id?: string;
+  schedulable?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -58,6 +59,7 @@ export interface UserRoleView {
   tenant_type: string;
   role: UserRole;
   is_active: boolean;
+  schedulable?: boolean;
   doctor_id?: string;
   doctor_first_name?: string;
   doctor_last_name?: string;

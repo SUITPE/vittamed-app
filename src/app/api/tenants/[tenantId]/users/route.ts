@@ -42,6 +42,7 @@ export async function GET(
 
     // Get all users for this tenant from the view (when multi-tenant is active)
     // For now, we'll use a simpler query until the migration is applied
+    // Note: We include admin_tenant in the list as they manage the tenant
     let query = supabase
       .from('user_profiles')
       .select(`
@@ -51,6 +52,7 @@ export async function GET(
         last_name,
         role,
         tenant_id,
+        schedulable,
         created_at,
         updated_at
       `)
@@ -79,6 +81,7 @@ export async function GET(
       tenant_type: '',
       role: user.role,
       is_active: true, // Default for current system
+      schedulable: user.schedulable || false,
       doctor_id: null,
       doctor_first_name: null,
       doctor_last_name: null,
