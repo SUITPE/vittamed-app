@@ -8,11 +8,11 @@ interface RouteParams {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: RouteParams }
+  { params }: { params: Promise<RouteParams> }
 ) {
+  const { tenantId } = await params
   try {
     const supabase = await createClient()
-    const { tenantId } = params
 
     // Get current user using custom JWT auth
     const user = await customAuth.getCurrentUser()
@@ -46,11 +46,11 @@ export async function GET(
         first_name,
         last_name,
         role,
-        tenantId,
+        tenant_id,
         created_at,
         updated_at
       `)
-      .eq('tenantId', tenantId)
+      .eq('tenant_id', tenantId)
 
     if (usersError) {
       console.error('Error fetching tenant users:', usersError)
@@ -63,7 +63,7 @@ export async function GET(
       email: user.email,
       first_name: user.first_name,
       last_name: user.last_name,
-      tenantId: user.tenantId,
+      tenant_id: user.tenant_id,
       tenant_name: '', // Will be filled by frontend if needed
       tenant_type: '',
       role: user.role,

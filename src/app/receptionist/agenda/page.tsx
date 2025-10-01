@@ -86,6 +86,11 @@ export default function ReceptionistAgendaPage() {
   }, [user, loading, router, isReceptionist, currentTenantId])
 
   async function fetchDoctorsAndAgenda() {
+    if (!currentTenantId) {
+      console.warn('No tenant ID available')
+      return
+    }
+
     try {
       setLoadingData(true)
 

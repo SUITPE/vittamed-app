@@ -53,21 +53,7 @@ export async function GET(
     // Get availability for all doctors in this tenant
     const { data: availability, error } = await supabase
       .from('doctor_availability')
-      .select(`
-        id,
-        doctor_id,
-        day_of_week,
-        start_time,
-        end_time,
-        lunch_start,
-        lunch_end,
-        doctors (
-          id,
-          first_name,
-          last_name,
-          specialty
-        )
-      `)
+      .select('id, doctor_id, day_of_week, start_time, end_time, lunch_start, lunch_end')
       .in('doctor_id', doctorIds)
 
     if (error) {
@@ -75,19 +61,7 @@ export async function GET(
       return NextResponse.json({ error: 'Failed to fetch availability' }, { status: 500 })
     }
 
-    // Transform the data to include doctor info
-    const transformedAvailability = availability?.map((avail: any) => ({
-      id: avail.id,
-      doctor_id: avail.doctor_id,
-      day_of_week: avail.day_of_week,
-      start_time: avail.start_time,
-      end_time: avail.end_time,
-      lunch_start: avail.lunch_start,
-      lunch_end: avail.lunch_end,
-      doctor: avail.doctors
-    })) || []
-
-    return NextResponse.json({ availability: transformedAvailability })
+    return NextResponse.json({ availability: availability || [] })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
