@@ -106,9 +106,14 @@ export default function ManageUsersPage() {
 
       if (response.ok) {
         await fetchTenantUsers()
+        setError('') // Clear any previous errors
       } else {
         const errorData = await response.json()
-        setError(errorData.error || 'Failed to update user')
+        if (errorData.migration_required) {
+          setError(`⚠️ Migración requerida: ${errorData.error}`)
+        } else {
+          setError(errorData.error || 'Failed to update user')
+        }
       }
     } catch (err) {
       setError('Error updating user')
