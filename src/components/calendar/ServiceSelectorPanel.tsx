@@ -41,7 +41,8 @@ export default function ServiceSelectorPanel({
       const response = await fetch(`/api/tenants/${tenantId}/services`)
       if (response.ok) {
         const data = await response.json()
-        setServices(data.services || [])
+        // Handle both formats: { services: [...] } or [...]
+        setServices(Array.isArray(data) ? data : (data.services || []))
       }
     } catch (error) {
       console.error('Error fetching services:', error)
