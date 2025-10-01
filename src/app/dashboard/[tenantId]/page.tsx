@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
 
@@ -24,6 +25,8 @@ interface TodayAppointment {
 
 export default function TenantDashboard() {
   const params = useParams()
+  const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
   const tenantId = params.tenantId as string
 
   const [stats, setStats] = useState<DashboardStats>({
@@ -36,42 +39,20 @@ export default function TenantDashboard() {
   const [todayAppointments, setTodayAppointments] = useState<TodayAppointment[]>([])
   const [loading, setLoading] = useState(true)
   const [tenantInfo, setTenantInfo] = useState<any>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
+  // Check authentication
   useEffect(() => {
-    let mounted = true
-
-    const initDashboard = async () => {
-      if (!tenantId || !mounted) return
-
-      try {
-        // Check authentication only once
-        const hasAuthCookie = document.cookie.includes('sb-mvvxeqhsatkqtsrulcil-auth-token')
-
-        if (!hasAuthCookie) {
-          window.location.href = `/auth/login?redirectTo=${encodeURIComponent(window.location.pathname)}`
-          return
-        }
-
-        if (mounted) {
-          setIsAuthenticated(true)
-          await fetchDashboardData()
-        }
-      } catch (error) {
-        console.error('Dashboard init error:', error)
-        if (mounted) {
-          setLoading(false)
-        }
-      }
+    if (!authLoading && !user) {
+      router.replace(`/auth/login?redirectTo=${encodeURIComponent(window.location.pathname)}`)
     }
+  }, [user, authLoading, router])
 
-    // Only run once when component mounts
-    initDashboard()
-
-    return () => {
-      mounted = false
+  // Fetch dashboard data
+  useEffect(() => {
+    if (!authLoading && user && tenantId) {
+      fetchDashboardData()
     }
-  }, []) // Remove tenantId dependency to prevent re-runs
+  }, [user, authLoading, tenantId])
 
   async function fetchDashboardData() {
     try {
@@ -139,24 +120,32 @@ export default function TenantDashboard() {
     }
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-64 mb-6"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="bg-white p-6 rounded-lg shadow-sm">
-                  <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
-                  <div className="h-8 bg-gray-200 rounded w-16"></div>
-                </div>
-              ))}
+      <div className="min-h-screen bg-gray-50">
+        <AdminSidebar tenantId={tenantId} />
+        <AdminHeader />
+        <div className="ml-64 pt-16 p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-64 mb-6"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="bg-white p-6 rounded-lg shadow-sm">
+                    <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+                    <div className="h-8 bg-gray-200 rounded w-16"></div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
     )
+  }
+
+  if (!user) {
+    return null // Will redirect via useEffect
   }
 
   const getStatusBadge = (status: string) => {
