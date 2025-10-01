@@ -173,6 +173,7 @@ export default function LoginPage() {
             </div>
           </form>
 
+          {/* Social login buttons temporarily hidden
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -223,27 +224,8 @@ export default function LoginPage() {
                 <span className="ml-2">Apple</span>
               </button>
             </div>
-
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Usuarios de Demo</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 space-y-2">
-              <div className="text-xs text-gray-500 space-y-1">
-                <p><strong>Nota:</strong> Los usuarios se determinarán automáticamente por la base de datos</p>
-                <p><strong>Rol admin:</strong> cualquier email con "admin@"</p>
-                <p><strong>Rol doctor:</strong> usuarios registrados en la tabla doctors</p>
-                <p><strong>Rol paciente:</strong> resto de usuarios</p>
-              </div>
-            </div>
           </div>
+          */}
         </div>
       </div>
     </div>

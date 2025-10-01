@@ -81,16 +81,16 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="mt-10 flex items-center justify-center gap-6"
             >
-              <Link href="/booking">
+              <Link href="/auth/register-business">
                 <Button size="lg" className="text-base px-8 py-4 h-auto gradient-primary text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <Icons.calendar className="mr-2 h-5 w-5" />
-                  Reservar Cita Ahora
+                  <Icons.userPlus className="mr-2 h-5 w-5" />
+                  Registra tu Negocio
                 </Button>
               </Link>
               <Link href="/auth/login">
                 <Button variant="outline" size="lg" className="text-base px-8 py-4 h-auto">
                   <Icons.user className="mr-2 h-5 w-5" />
-                  Acceso Profesional
+                  Iniciar Sesión
                 </Button>
               </Link>
             </motion.div>
