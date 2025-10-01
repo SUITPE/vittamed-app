@@ -43,6 +43,7 @@ export async function GET(
     // Get all users for this tenant from the view (when multi-tenant is active)
     // For now, we'll use a simpler query until the migration is applied
     // Note: We include admin_tenant in the list as they manage the tenant
+    // Note: schedulable field may not exist yet if migration hasn't been applied
     let query = supabase
       .from('user_profiles')
       .select(`
@@ -52,7 +53,6 @@ export async function GET(
         last_name,
         role,
         tenant_id,
-        schedulable,
         created_at,
         updated_at
       `)
@@ -71,23 +71,31 @@ export async function GET(
     }
 
     // Transform data to match expected format
-    const users = (tenantUsers || []).map(user => ({
-      user_id: user.id,
-      email: user.email,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      tenant_id: user.tenant_id,
-      tenant_name: '', // Will be filled by frontend if needed
-      tenant_type: '',
-      role: user.role,
-      is_active: true, // Default for current system
-      schedulable: user.schedulable || false,
-      doctor_id: null,
-      doctor_first_name: null,
-      doctor_last_name: null,
-      is_current_tenant: user.tenantId === tenantId,
-      role_assigned_at: user.created_at
-    }))
+    const users = (tenantUsers || []).map(user => {
+      // If schedulable field doesn't exist yet (migration not applied),
+      // infer it from role: doctors and members are schedulable
+      const schedulable = user.schedulable !== undefined
+        ? user.schedulable
+        : (user.role === 'doctor' || user.role === 'member')
+
+      return {
+        user_id: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        tenant_id: user.tenant_id,
+        tenant_name: '', // Will be filled by frontend if needed
+        tenant_type: '',
+        role: user.role,
+        is_active: true, // Default for current system
+        schedulable,
+        doctor_id: null,
+        doctor_first_name: null,
+        doctor_last_name: null,
+        is_current_tenant: user.tenantId === tenantId,
+        role_assigned_at: user.created_at
+      }
+    })
 
     return NextResponse.json({
       users,
