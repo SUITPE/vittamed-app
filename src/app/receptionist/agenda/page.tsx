@@ -5,6 +5,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
+import CalendarView from '@/components/calendar/CalendarView'
+import { Icons } from '@/components/ui/Icons'
 
 interface Doctor {
   id: string
@@ -44,6 +46,7 @@ export default function ReceptionistAgendaPage() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [selectedDoctor, setSelectedDoctor] = useState<string>('')
   const [loadingData, setLoadingData] = useState(true)
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar')
 
   // Check if user is receptionist or staff
   const isReceptionist = user?.profile?.role === 'receptionist' || user?.profile?.role === 'staff'
@@ -205,12 +208,44 @@ export default function ReceptionistAgendaPage() {
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">
-              📅 Agendas de Doctores
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Visualiza horarios y gestiona citas de todos los doctores
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  📅 Agendas de Doctores
+                </h1>
+                <p className="text-gray-600 mt-1">
+                  Visualiza horarios y gestiona citas de todos los doctores
+                </p>
+              </div>
+
+              {/* View Mode Toggle */}
+              <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
+                <button
+                  onClick={() => setViewMode('calendar')}
+                  className={`
+                    flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
+                    ${viewMode === 'calendar'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'}
+                  `}
+                >
+                  <Icons.calendar className="w-4 h-4" />
+                  Calendario
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`
+                    flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
+                    ${viewMode === 'list'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'}
+                  `}
+                >
+                  <Icons.list className="w-4 h-4" />
+                  Lista
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Filters */}
@@ -250,7 +285,24 @@ export default function ReceptionistAgendaPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Calendar View */}
+          {viewMode === 'calendar' && (
+            <CalendarView
+              appointments={appointments}
+              selectedDate={new Date(selectedDate)}
+              onDateChange={(date) => {
+                setSelectedDate(date.toISOString().split('T')[0])
+              }}
+              onAppointmentClick={(appointment) => {
+                // Handle appointment click - could open modal or navigate to edit
+                console.log('Appointment clicked:', appointment)
+              }}
+            />
+          )}
+
+          {/* List View */}
+          {viewMode === 'list' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Doctor Availability */}
             <div className="bg-white rounded-lg shadow-sm">
               <div className="p-6 border-b border-gray-200">
@@ -396,6 +448,7 @@ export default function ReceptionistAgendaPage() {
               </div>
             </div>
           </div>
+          )}
 
           {/* Quick Stats */}
           <div className="mt-8 bg-white rounded-lg shadow-sm">
