@@ -32,10 +32,10 @@ export async function GET(
       }, { status: 403 })
     }
 
-    // First, get all doctor IDs for this tenant
+    // First, get all doctor_tenant IDs for this tenant
     const { data: doctorTenants, error: doctorError } = await supabase
       .from('doctor_tenants')
-      .select('doctor_id')
+      .select('id, doctor_id')
       .eq('tenant_id', tenantId)
       .eq('is_active', true)
 
@@ -44,17 +44,17 @@ export async function GET(
       return NextResponse.json({ error: 'Failed to fetch doctor tenants' }, { status: 500 })
     }
 
-    const doctorIds = doctorTenants?.map(dt => dt.doctor_id) || []
+    const doctorTenantIds = doctorTenants?.map(dt => dt.id) || []
 
-    if (doctorIds.length === 0) {
+    if (doctorTenantIds.length === 0) {
       return NextResponse.json({ availability: [] })
     }
 
     // Get availability for all doctors in this tenant
     const { data: availability, error } = await supabase
       .from('doctor_availability')
-      .select('id, doctor_id, day_of_week, start_time, end_time, lunch_start, lunch_end')
-      .in('doctor_id', doctorIds)
+      .select('id, doctor_tenant_id, day_of_week, start_time, end_time')
+      .in('doctor_tenant_id', doctorTenantIds)
 
     if (error) {
       console.error('Error fetching availability:', error)
