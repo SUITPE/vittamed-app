@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { customAuth } from '@/lib/custom-auth'
 
 export async function GET(
   request: Request,
@@ -9,32 +10,44 @@ export async function GET(
   try {
     const supabase = await createClient()
 
-    // Get current user and check permissions
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Get current user using custom JWT auth
+    const user = await customAuth.getCurrentUser()
 
-    if (authError || !user) {
+    if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    // Check if user has access to this tenant (admin or receptionist)
-    const { data: userAccess, error: accessError } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    // Check user role and tenant access
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (accessError || !userAccess) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
-    }
-
-    const isAuthorized = userAccess.role === 'admin_tenant' ||
-                        userAccess.role === 'receptionist' ||
-                        (userAccess.role === 'doctor' && userAccess.tenant_id === tenantId)
+    const isAuthorized = userRole === 'admin_tenant' ||
+                        userRole === 'staff' ||
+                        userRole === 'receptionist' ||
+                        (userRole === 'doctor' && userTenantId === tenantId)
 
     if (!isAuthorized) {
       return NextResponse.json({
-        error: 'Only administrators, receptionists and doctors can view availability'
+        error: 'Only administrators, staff, receptionists and doctors can view availability'
       }, { status: 403 })
+    }
+
+    // First, get all doctor IDs for this tenant
+    const { data: doctorTenants, error: doctorError } = await supabase
+      .from('doctor_tenants')
+      .select('doctor_id')
+      .eq('tenant_id', tenantId)
+      .eq('is_active', true)
+
+    if (doctorError) {
+      console.error('Error fetching doctor tenants:', doctorError)
+      return NextResponse.json({ error: 'Failed to fetch doctor tenants' }, { status: 500 })
+    }
+
+    const doctorIds = doctorTenants?.map(dt => dt.doctor_id) || []
+
+    if (doctorIds.length === 0) {
+      return NextResponse.json({ availability: [] })
     }
 
     // Get availability for all doctors in this tenant
@@ -55,12 +68,7 @@ export async function GET(
           specialty
         )
       `)
-      .in('doctor_id', supabase
-        .from('doctor_tenants')
-        .select('doctor_id')
-        .eq('tenant_id', tenantId)
-        .eq('is_active', true)
-      )
+      .in('doctor_id', doctorIds)
 
     if (error) {
       console.error('Error fetching availability:', error)

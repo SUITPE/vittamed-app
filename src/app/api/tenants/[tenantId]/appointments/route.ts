@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { customAuth } from '@/lib/custom-auth'
 
 export async function GET(
   request: NextRequest,
@@ -13,31 +14,25 @@ export async function GET(
   try {
     const supabase = await createClient()
 
-    // Get current user and check permissions
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Get current user using custom JWT auth
+    const user = await customAuth.getCurrentUser()
 
-    if (authError || !user) {
+    if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    // Check if user has access to this tenant
-    const { data: userAccess, error: accessError } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    // Check user role and tenant access
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (accessError || !userAccess) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
-    }
-
-    const isAuthorized = userAccess.role === 'admin_tenant' ||
-                        userAccess.role === 'receptionist' ||
-                        (userAccess.role === 'doctor' && userAccess.tenant_id === tenantId)
+    const isAuthorized = userRole === 'admin_tenant' ||
+                        userRole === 'staff' ||
+                        userRole === 'receptionist' ||
+                        (userRole === 'doctor' && userTenantId === tenantId)
 
     if (!isAuthorized) {
       return NextResponse.json({
-        error: 'Only administrators, receptionists and doctors can view appointments'
+        error: 'Only administrators, staff, receptionists and doctors can view appointments'
       }, { status: 403 })
     }
 
@@ -46,12 +41,16 @@ export async function GET(
       .from('appointments')
       .select(`
         id,
-        patient_name,
+        appointment_date,
         start_time,
         end_time,
         status,
         service_id,
         doctor_id,
+        patients (
+          first_name,
+          last_name
+        ),
         services (
           name
         ),
@@ -64,9 +63,7 @@ export async function GET(
 
     // Filter by date if provided
     if (date) {
-      const startOfDay = `${date}T00:00:00`
-      const endOfDay = `${date}T23:59:59`
-      query = query.gte('start_time', startOfDay).lte('start_time', endOfDay)
+      query = query.eq('appointment_date', date)
     }
 
     // Filter by doctor if provided
@@ -74,8 +71,8 @@ export async function GET(
       query = query.eq('doctor_id', doctorId)
     }
 
-    // Order by start time
-    query = query.order('start_time', { ascending: true })
+    // Order by appointment_date and start time
+    query = query.order('appointment_date', { ascending: true }).order('start_time', { ascending: true })
 
     const { data: appointments, error } = await query
 
@@ -84,12 +81,14 @@ export async function GET(
       return NextResponse.json({ error: 'Failed to fetch appointments' }, { status: 500 })
     }
 
-    // Transform the data to flatten doctor and service info
+    // Transform the data to flatten patient, doctor and service info
     const transformedAppointments = appointments?.map((appointment: any) => ({
       id: appointment.id,
-      patient_name: appointment.patient_name,
-      start_time: appointment.start_time,
-      end_time: appointment.end_time,
+      patient_name: appointment.patients
+        ? `${appointment.patients.first_name} ${appointment.patients.last_name}`
+        : 'Paciente no especificado',
+      start_time: `${appointment.appointment_date}T${appointment.start_time}`,
+      end_time: `${appointment.appointment_date}T${appointment.end_time}`,
       status: appointment.status,
       service_name: appointment.services?.name || 'Servicio no especificado',
       doctor_name: appointment.doctors
