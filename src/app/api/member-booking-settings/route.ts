@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { customAuth } from '@/lib/custom-auth'
 
 // VT-40: Member booking settings management API
 // Provides overview of all members and their booking availability
@@ -19,21 +20,18 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
 
     // Get current user profile for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile) {
+    if (!userRole) {
       return NextResponse.json(
         { error: 'User profile not found' },
         { status: 404 }
@@ -44,10 +42,10 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('member_booking_settings')
       .select('*', { count: 'exact' })
-      .eq('tenant_id', userProfile.tenant_id)
+      .eq('tenant_id', userTenantId)
 
     // Apply filters
-    if (tenantId && userProfile.role === 'admin_tenant') {
+    if (tenantId && (userRole === 'admin_tenant' || userRole === 'staff')) {
       query = query.eq('tenant_id', tenantId)
     }
 
@@ -89,7 +87,7 @@ export async function GET(request: NextRequest) {
     const { data: summaryData, error: summaryError } = await supabase
       .from('member_booking_settings')
       .select('allow_bookings, assigned_services_count, availability_entries_count, is_active')
-      .eq('tenant_id', userProfile.tenant_id)
+      .eq('tenant_id', userTenantId)
 
     let summary = {
       total_members: 0,
@@ -150,7 +148,7 @@ export async function GET(request: NextRequest) {
         has_previous_page: hasPreviousPage
       },
       filters: {
-        tenant_id: userProfile.tenant_id,
+        tenant_id: userTenantId,
         allow_bookings: allowBookings,
         is_active: isActive,
         has_services: hasServices,
@@ -198,21 +196,18 @@ export async function PUT(request: NextRequest) {
     const supabase = await createClient()
 
     // Get current user profile for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile) {
+    if (!userRole) {
       return NextResponse.json(
         { error: 'User profile not found' },
         { status: 404 }
@@ -220,7 +215,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Only admin tenants can bulk update booking settings
-    if (userProfile.role !== 'admin_tenant') {
+    if (userRole !== 'admin_tenant') {
       return NextResponse.json(
         { error: 'Only admin tenants can bulk update member booking settings' },
         { status: 403 }
@@ -232,7 +227,7 @@ export async function PUT(request: NextRequest) {
       .from('user_profiles')
       .select('id, first_name, last_name, email, allow_bookings')
       .in('id', member_ids)
-      .eq('tenant_id', userProfile.tenant_id)
+      .eq('tenant_id', userTenantId)
       .eq('role', 'member')
 
     if (membersError || !members || members.length !== member_ids.length) {
@@ -250,7 +245,7 @@ export async function PUT(request: NextRequest) {
         updated_at: new Date().toISOString()
       })
       .in('id', member_ids)
-      .eq('tenant_id', userProfile.tenant_id)
+      .eq('tenant_id', userTenantId)
       .eq('role', 'member')
       .select('id, first_name, last_name, email, allow_bookings, updated_at')
 
@@ -266,10 +261,10 @@ export async function PUT(request: NextRequest) {
     console.log('Bulk member booking settings changed:', {
       member_count: member_ids.length,
       member_ids,
-      tenant_id: userProfile.tenant_id,
+      tenant_id: userTenantId,
       new_setting: allow_bookings,
       changed_by: user.id,
-      changed_by_role: userProfile.role,
+      changed_by_role: userRole,
       reason,
       notes,
       timestamp: new Date().toISOString()
@@ -282,7 +277,7 @@ export async function PUT(request: NextRequest) {
       new_setting: allow_bookings,
       updated_by: {
         id: user.id,
-        role: userProfile.role
+        role: userRole
       },
       updated_at: new Date().toISOString(),
       message: `Bulk update completed. ${updatedMembers?.length || 0} members ${allow_bookings ? 'can now' : 'cannot'} receive bookings.`

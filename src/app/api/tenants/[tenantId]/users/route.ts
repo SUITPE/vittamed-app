@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { customAuth } from '@/lib/custom-auth'
 
 interface RouteParams {
   tenantId: string
@@ -13,30 +14,21 @@ export async function GET(
     const supabase = await createClient()
     const { tenantId } = params
 
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Get current user using custom JWT auth
+    const user = await customAuth.getCurrentUser()
 
-    if (authError || !user) {
+    if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    // Check if current user has access to this tenant
-    const { data: userAccess, error: accessError } = await supabase
-      .from('user_profiles')
-      .select('role, tenantId')
-      .eq('id', user.id)
-      .single()
-
-    if (accessError || !userAccess) {
-      return NextResponse.json({
-        error: 'Access denied'
-      }, { status: 403 })
-    }
+    // Check user role and tenant access
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
     // For now, check if user is admin of this tenant or any tenant
     // In production with multi-tenant, you'd check user_tenant_roles table
-    const isAdmin = userAccess.role === 'admin_tenant' &&
-                   (userAccess.tenantId === tenantId || userAccess.role === 'admin_tenant')
+    const isAdmin = (userRole === 'admin_tenant' || userRole === 'staff') &&
+                   (userTenantId === tenantId || userRole === 'admin_tenant')
 
     if (!isAdmin) {
       return NextResponse.json({
@@ -103,21 +95,17 @@ export async function POST(
     const supabase = await createClient()
     const { tenantId } = params
 
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Get current user using custom JWT auth
+    const user = await customAuth.getCurrentUser()
 
-    if (authError || !user) {
+    if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    // Check if current user is admin of this tenant
-    const { data: userAccess, error: accessError } = await supabase
-      .from('user_profiles')
-      .select('role, tenantId')
-      .eq('id', user.id)
-      .single()
+    // Check user role
+    const userRole = user.profile?.role
 
-    if (accessError || !userAccess || userAccess.role !== 'admin_tenant') {
+    if (userRole !== 'admin_tenant' && userRole !== 'staff') {
       return NextResponse.json({
         error: 'Only tenant administrators can add users'
       }, { status: 403 })

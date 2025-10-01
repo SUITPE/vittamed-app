@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { customAuth } from '@/lib/custom-auth'
 
 // Get all members assigned to a specific service
 export async function GET(
@@ -19,24 +20,20 @@ export async function GET(
       )
     }
 
-    // Verify user authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    // Get current user using custom JWT auth
+    const user = await customAuth.getCurrentUser()
 
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    // Get user's tenant and role
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('tenant_id, role')
-      .eq('id', user.id)
-      .single()
+    // Check user tenant
+    const userTenantId = user.profile?.tenant_id
 
-    if (!profile?.tenant_id) {
+    if (!userTenantId) {
       return NextResponse.json(
         { error: 'User not associated with any tenant' },
         { status: 403 }
@@ -48,7 +45,7 @@ export async function GET(
       .from('services')
       .select('id, name, description, duration_minutes, price, is_active, tenant_id')
       .eq('id', serviceId)
-      .eq('tenant_id', profile.tenant_id)
+      .eq('tenant_id', userTenantId)
       .single()
 
     if (serviceError || !service) {
@@ -76,7 +73,7 @@ export async function GET(
         )
       `)
       .eq('service_id', serviceId)
-      .eq('tenant_id', profile.tenant_id)
+      .eq('tenant_id', userTenantId)
       .order('created_at', { ascending: false })
 
     // Filter by active only if requested
@@ -139,31 +136,28 @@ export async function POST(
       )
     }
 
-    // Verify user authentication and permissions
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    // Get current user using custom JWT auth
+    const user = await customAuth.getCurrentUser()
 
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    // Get user profile to check role and tenant
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    // Check user role and tenant
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!profile || !['admin_tenant', 'receptionist'].includes(profile.role)) {
+    if (!userRole || !['admin_tenant', 'receptionist', 'staff'].includes(userRole)) {
       return NextResponse.json(
         { error: 'Forbidden - insufficient permissions' },
         { status: 403 }
       )
     }
 
-    if (!profile.tenant_id) {
+    if (!userTenantId) {
       return NextResponse.json(
         { error: 'User not associated with any tenant' },
         { status: 403 }
@@ -191,7 +185,7 @@ export async function POST(
       .from('services')
       .select('id, tenant_id')
       .eq('id', serviceId)
-      .eq('tenant_id', profile.tenant_id)
+      .eq('tenant_id', userTenantId)
       .single()
 
     if (serviceError || !service) {
@@ -208,7 +202,7 @@ export async function POST(
         .select('id, role, tenant_id')
         .in('id', member_user_ids)
         .eq('role', 'member')
-        .eq('tenant_id', profile.tenant_id)
+        .eq('tenant_id', userTenantId)
 
       if (membersError || !members || members.length !== member_user_ids.length) {
         return NextResponse.json(
@@ -221,7 +215,7 @@ export async function POST(
       const assignments = member_user_ids.map(memberId => ({
         member_user_id: memberId,
         service_id: serviceId,
-        tenant_id: profile.tenant_id,
+        tenant_id: userTenantId,
         is_active: true
       }))
 
@@ -258,7 +252,7 @@ export async function POST(
         .delete()
         .eq('service_id', serviceId)
         .in('member_user_id', member_user_ids)
-        .eq('tenant_id', profile.tenant_id)
+        .eq('tenant_id', userTenantId)
 
       if (deleteError) {
         console.error('Error removing assignments:', deleteError)

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { customAuth } from '@/lib/custom-auth'
 
 export async function POST(request: Request) {
   try {
@@ -338,21 +339,18 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
 
     // Get current user profile for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile) {
+    if (!userRole) {
       return NextResponse.json(
         { error: 'User profile not found' },
         { status: 404 }
@@ -370,10 +368,10 @@ export async function GET(request: NextRequest) {
         service:services(id, name, description, duration_minutes, price),
         assigned_member:user_profiles!appointments_assigned_member_id_fkey(id, first_name, last_name, email)
       `, { count: 'exact' })
-      .eq('tenant_id', userProfile.tenant_id)
+      .eq('tenant_id', userTenantId)
 
     // Apply filters
-    if (tenantId && userProfile.role === 'admin_tenant') {
+    if (tenantId && (userRole === 'admin_tenant' || userRole === 'staff')) {
       query = query.eq('tenant_id', tenantId)
     }
 
@@ -457,7 +455,7 @@ export async function GET(request: NextRequest) {
         has_previous_page: hasPreviousPage
       },
       filters: {
-        tenant_id: userProfile.tenant_id,
+        tenant_id: userTenantId,
         doctor_id: doctorId,
         member_id: memberId,
         patient_id: patientId,

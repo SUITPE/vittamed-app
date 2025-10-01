@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { customAuth } from '@/lib/custom-auth'
 
 // VT-38: General appointment status history API
 // Provides access to status history across multiple appointments
@@ -18,21 +19,18 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
 
     // Get current user profile for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile) {
+    if (!userRole) {
       return NextResponse.json(
         { error: 'User profile not found' },
         { status: 404 }
@@ -43,7 +41,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('appointment_lifecycle_view')
       .select('*', { count: 'exact' })
-      .eq('tenant_id', userProfile.tenant_id) // Always filter by user's tenant
+      .eq('tenant_id', userTenantId) // Always filter by user's tenant
 
     // Apply filters
     if (appointmentId) {
@@ -59,7 +57,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Additional tenant filter if specified (for admin queries)
-    if (tenantId && userProfile.role === 'admin_tenant') {
+    if (tenantId && (userRole === 'admin_tenant' || userRole === 'staff')) {
       query = query.eq('tenant_id', tenantId)
     }
 
@@ -93,7 +91,7 @@ export async function GET(request: NextRequest) {
       },
       filters: {
         appointment_id: appointmentId,
-        tenant_id: userProfile.role === 'admin_tenant' ? tenantId : userProfile.tenant_id,
+        tenant_id: (userRole === 'admin_tenant' || userRole === 'staff') ? tenantId : userTenantId,
         status,
         changed_by_role: changedByRole
       },
@@ -139,21 +137,18 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
 
     // Get current user profile for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile) {
+    if (!userRole) {
       return NextResponse.json(
         { error: 'User profile not found' },
         { status: 404 }
@@ -165,7 +160,7 @@ export async function POST(request: NextRequest) {
       .from('appointments')
       .select('id, tenant_id')
       .eq('id', appointment_id)
-      .eq('tenant_id', userProfile.tenant_id)
+      .eq('tenant_id', userTenantId)
       .single()
 
     if (appointmentError || !appointment) {
@@ -180,11 +175,11 @@ export async function POST(request: NextRequest) {
       .from('appointment_status_history')
       .insert({
         appointment_id,
-        tenant_id: userProfile.tenant_id,
+        tenant_id: userTenantId,
         status,
         previous_status,
         changed_by_user_id: user.id,
-        changed_by_role: userProfile.role,
+        changed_by_role: userRole,
         reason,
         notes,
         automated,

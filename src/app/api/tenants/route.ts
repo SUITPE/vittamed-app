@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { customAuth } from '@/lib/custom-auth'
 import { BusinessType, getBusinessTypeConfig, BUSINESS_TYPE_CONFIGS } from '@/types/business'
 
 export async function GET(request: NextRequest) {
@@ -56,21 +57,17 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
 
-    // Get current user and verify authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Get current user using custom JWT auth
+    const user = await customAuth.getCurrentUser()
 
-    if (authError || !user) {
+    if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    // Check if user is admin
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    // Check user role
+    const userRole = user.profile?.role
 
-    if (!userProfile || userProfile.role !== 'admin_tenant') {
+    if (userRole !== 'admin_tenant' && userRole !== 'staff') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { customAuth } from '@/lib/custom-auth'
 
 export async function PATCH(
   request: NextRequest,
@@ -11,9 +12,9 @@ export async function PATCH(
     const body = await request.json()
 
     // Get current user and check permissions
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const user = await customAuth.getCurrentUser()
 
-    if (authError || !user) {
+    if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
@@ -111,9 +112,9 @@ export async function GET(
     const supabase = await createClient()
 
     // Get current user and check permissions
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const user = await customAuth.getCurrentUser()
 
-    if (authError || !user) {
+    if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 

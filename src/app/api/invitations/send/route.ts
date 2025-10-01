@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { customAuth } from '@/lib/custom-auth'
 import { invitationService, InvitationData } from '@/lib/invitations'
 
 export async function POST(request: NextRequest) {
@@ -7,9 +8,9 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
 
     // Get current user and verify authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const user = await customAuth.getCurrentUser()
 
-    if (authError || !user) {
+    if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    if (!userProfile || userProfile.role !== 'admin_tenant') {
+    if (!userRole || userRole !== 'admin_tenant') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
     const { data: tenant } = await supabase
       .from('tenants')
       .select('name')
-      .eq('id', userProfile.tenant_id)
+      .eq('id', userTenantId)
       .single()
 
     if (!tenant) {
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
       first_name,
       last_name,
       role,
-      tenant_id: userProfile.tenant_id,
+      tenant_id: userTenantId,
       tenant_name: tenant.name,
       inviter_name: `${userProfile.first_name} ${userProfile.last_name}`.trim() || 'Admin',
       temp_password: tempPassword
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
         first_name,
         last_name,
         role,
-        tenant_id: userProfile.tenant_id,
+        tenant_id: userTenantId,
         invited_by: user.id,
         is_invited: true
       }
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
         first_name,
         last_name,
         role,
-        tenant_id: userProfile.tenant_id,
+        tenant_id: userTenantId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })

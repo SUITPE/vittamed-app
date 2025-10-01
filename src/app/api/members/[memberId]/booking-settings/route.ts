@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { customAuth } from '@/lib/custom-auth'
 import { UpdateMemberBookingSettingsData, MemberBookingSettingsUpdateResponse } from '@/types/catalog'
 
 // VT-40: Member booking settings management API
@@ -25,21 +26,18 @@ export async function PUT(
     const supabase = await createClient()
 
     // Get current user profile for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile) {
+    if (!userRole) {
       return NextResponse.json(
         { error: 'User profile not found' },
         { status: 404 }
@@ -47,7 +45,7 @@ export async function PUT(
     }
 
     // Only admin tenants can modify booking settings
-    if (userProfile.role !== 'admin_tenant') {
+    if (userRole !== 'admin_tenant') {
       return NextResponse.json(
         { error: 'Only admin tenants can modify member booking settings' },
         { status: 403 }
@@ -59,7 +57,7 @@ export async function PUT(
       .from('user_profiles')
       .select('id, tenant_id, role, first_name, last_name, email, allow_bookings, is_active')
       .eq('id', memberId)
-      .eq('tenant_id', userProfile.tenant_id)
+      .eq('tenant_id', userTenantId)
       .eq('role', 'member')
       .single()
 
@@ -91,7 +89,7 @@ export async function PUT(
         updated_at: new Date().toISOString()
       })
       .eq('id', memberId)
-      .eq('tenant_id', userProfile.tenant_id)
+      .eq('tenant_id', userTenantId)
       .eq('role', 'member')
       .select(`
         id,
@@ -119,11 +117,11 @@ export async function PUT(
     if (reason || notes) {
       console.log('Member booking settings changed:', {
         member_id: memberId,
-        tenant_id: userProfile.tenant_id,
+        tenant_id: userTenantId,
         previous_setting: previousSetting,
         new_setting: allow_bookings,
         changed_by: user.id,
-        changed_by_role: userProfile.role,
+        changed_by_role: userRole,
         reason,
         notes,
         timestamp: new Date().toISOString()
@@ -137,7 +135,7 @@ export async function PUT(
       new_setting: allow_bookings,
       updated_by: {
         id: user.id,
-        role: userProfile.role
+        role: userRole
       },
       updated_at: updatedMember.updated_at,
       message: `Member booking settings updated successfully. Member ${allow_bookings ? 'can now' : 'cannot'} receive bookings.`
@@ -164,21 +162,18 @@ export async function GET(
     const supabase = await createClient()
 
     // Get current user profile for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile) {
+    if (!userRole) {
       return NextResponse.json(
         { error: 'User profile not found' },
         { status: 404 }
@@ -190,7 +185,7 @@ export async function GET(
       .from('member_booking_settings')
       .select('*')
       .eq('member_user_id', memberId)
-      .eq('tenant_id', userProfile.tenant_id)
+      .eq('tenant_id', userTenantId)
       .single()
 
     if (memberError || !memberSettings) {
@@ -206,7 +201,7 @@ export async function GET(
       .from('appointments')
       .select('id, appointment_date, start_time, status')
       .eq('assigned_member_id', memberId)
-      .eq('tenant_id', userProfile.tenant_id)
+      .eq('tenant_id', userTenantId)
       .gte('appointment_date', new Date().toISOString().split('T')[0])
       .in('status', ['pending', 'confirmed'])
       .order('appointment_date', { ascending: true })

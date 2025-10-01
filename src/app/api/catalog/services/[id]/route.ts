@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { customAuth } from '@/lib/custom-auth'
 import { UpdateServiceData } from '@/types/catalog'
 
 export async function GET(
@@ -20,9 +21,9 @@ export async function GET(
     }
 
     // Verify user authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const user = await customAuth.getCurrentUser()
 
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -113,9 +114,9 @@ export async function PUT(
     }
 
     // Verify user authentication and permissions
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const user = await customAuth.getCurrentUser()
 
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -249,9 +250,9 @@ export async function DELETE(
     }
 
     // Verify user authentication and admin role
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const user = await customAuth.getCurrentUser()
 
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

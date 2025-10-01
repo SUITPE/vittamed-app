@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-api'
+import { customAuth } from '@/lib/custom-auth'
 import { sendReminderNotification } from '@/lib/notifications'
 import type {
   ScheduledReminder,

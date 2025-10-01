@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-api'
+import { customAuth } from '@/lib/custom-auth'
 import type { ScheduledReminder } from '@/types/catalog'
 
 // Get scheduled reminders with filtering and pagination
@@ -24,21 +25,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Get current user for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile || userProfile.tenant_id !== tenant_id) {
+    if (!userRole || userTenantId !== tenant_id) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
@@ -178,21 +176,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current user for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile || userProfile.tenant_id !== tenant_id) {
+    if (!userRole || userTenantId !== tenant_id) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
@@ -200,7 +195,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Only staff and admin_tenant can manually schedule reminders
-    if (!['admin_tenant', 'staff'].includes(userProfile.role)) {
+    if (!['admin_tenant', 'staff'].includes(userRole)) {
       return NextResponse.json(
         { error: 'Insufficient permissions to schedule reminders' },
         { status: 403 }
@@ -306,8 +301,8 @@ export async function PUT(request: NextRequest) {
     }
 
     // Get current user for authorization (system operations might bypass this)
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -328,13 +323,10 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile || userProfile.tenant_id !== existingReminder.tenant_id) {
+    if (!userRole || userTenantId !== existingReminder.tenant_id) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
@@ -394,8 +386,8 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Get current user for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -416,13 +408,10 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile || userProfile.tenant_id !== existingReminder.tenant_id) {
+    if (!userRole || userTenantId !== existingReminder.tenant_id) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }

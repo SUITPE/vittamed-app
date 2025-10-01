@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { customAuth } from '@/lib/custom-auth'
 import { StatusTransitionData, AppointmentStatus } from '@/types/catalog'
 
 // VT-38: Appointment status management API
@@ -49,21 +50,18 @@ export async function PUT(
     const supabase = await createClient()
 
     // Get current user profile for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile) {
+    if (!userRole) {
       return NextResponse.json(
         { error: 'User profile not found' },
         { status: 404 }
@@ -75,7 +73,7 @@ export async function PUT(
       .from('appointments')
       .select('*')
       .eq('id', appointmentId)
-      .eq('tenant_id', userProfile.tenant_id) // Ensure user can only modify appointments in their tenant
+      .eq('tenant_id', userTenantId) // Ensure user can only modify appointments in their tenant
       .single()
 
     if (appointmentError || !appointment) {
@@ -103,10 +101,10 @@ export async function PUT(
     }
 
     // Check if user has required role
-    if (!transitionRules.required_roles.includes(userProfile.role)) {
+    if (!transitionRules.required_roles.includes(userRole)) {
       return NextResponse.json(
         {
-          error: `Role '${userProfile.role}' is not authorized to change appointment status`,
+          error: `Role '${userRole}' is not authorized to change appointment status`,
           required_roles: transitionRules.required_roles
         },
         { status: 403 }
@@ -132,7 +130,7 @@ export async function PUT(
         updated_at: new Date().toISOString()
       })
       .eq('id', appointmentId)
-      .eq('tenant_id', userProfile.tenant_id)
+      .eq('tenant_id', userTenantId)
       .select(`
         *,
         doctor:doctors(id, first_name, last_name, email),
@@ -156,11 +154,11 @@ export async function PUT(
         .from('appointment_status_history')
         .insert({
           appointment_id: appointmentId,
-          tenant_id: userProfile.tenant_id,
+          tenant_id: userTenantId,
           status: new_status,
           previous_status: currentStatus,
           changed_by_user_id: user.id,
-          changed_by_role: userProfile.role,
+          changed_by_role: userRole,
           reason,
           notes,
           automated,
@@ -190,7 +188,7 @@ export async function PUT(
         changed_at: new Date().toISOString(),
         changed_by: {
           id: user.id,
-          role: userProfile.role
+          role: userRole
         },
         reason,
         notes
@@ -220,8 +218,8 @@ export async function GET(
     const supabase = await createClient()
 
     // Get current user profile for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -234,7 +232,7 @@ export async function GET(
       .eq('id', user.id)
       .single()
 
-    if (!userProfile) {
+    if (!userRole) {
       return NextResponse.json(
         { error: 'User profile not found' },
         { status: 404 }
@@ -246,7 +244,7 @@ export async function GET(
       .from('appointments')
       .select('id, status, tenant_id')
       .eq('id', appointmentId)
-      .eq('tenant_id', userProfile.tenant_id)
+      .eq('tenant_id', userTenantId)
       .single()
 
     if (appointmentError || !appointment) {
@@ -261,7 +259,7 @@ export async function GET(
       .from('appointment_lifecycle_view')
       .select('*')
       .eq('appointment_id', appointmentId)
-      .eq('tenant_id', userProfile.tenant_id)
+      .eq('tenant_id', userTenantId)
       .order('status_changed_at', { ascending: false })
 
     if (historyError) {

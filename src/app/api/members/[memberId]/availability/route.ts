@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { customAuth } from '@/lib/custom-auth'
 import type { MemberTimeSlot } from '@/types/catalog'
 
 // Get member's availability for a specific date (with time slot generation)

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-api'
+import { customAuth } from '@/lib/custom-auth'
 import type { TenantBranding } from '@/types/catalog'
 
 // Get tenant branding configuration
@@ -16,22 +17,18 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get current user for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    // Get current user using custom JWT auth
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile || userProfile.tenant_id !== tenant_id) {
+    if (userTenantId !== tenant_id) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
@@ -106,30 +103,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get current user for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    // Get current user using custom JWT auth
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile || userProfile.tenant_id !== tenant_id) {
+    if (userTenantId !== tenant_id) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
       )
     }
 
-    // Only admin_tenant can manage branding
-    if (userProfile.role !== 'admin_tenant') {
+    // Only admin_tenant and staff can manage branding
+    if (userRole !== 'admin_tenant' && userRole !== 'staff') {
       return NextResponse.json(
         { error: 'Only tenant administrators can manage branding' },
         { status: 403 }
@@ -202,30 +196,27 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Get current user for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    // Get current user using custom JWT auth
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile || userProfile.tenant_id !== tenant_id) {
+    if (userTenantId !== tenant_id) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
       )
     }
 
-    // Only admin_tenant can manage branding
-    if (userProfile.role !== 'admin_tenant') {
+    // Only admin_tenant and staff can manage branding
+    if (userRole !== 'admin_tenant' && userRole !== 'staff') {
       return NextResponse.json(
         { error: 'Only tenant administrators can manage branding' },
         { status: 403 }
@@ -283,30 +274,27 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    // Get current user for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    // Get current user using custom JWT auth
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile || userProfile.tenant_id !== tenant_id) {
+    if (userTenantId !== tenant_id) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
       )
     }
 
-    // Only admin_tenant can manage branding
-    if (userProfile.role !== 'admin_tenant') {
+    // Only admin_tenant and staff can manage branding
+    if (userRole !== 'admin_tenant' && userRole !== 'staff') {
       return NextResponse.json(
         { error: 'Only tenant administrators can manage branding' },
         { status: 403 }

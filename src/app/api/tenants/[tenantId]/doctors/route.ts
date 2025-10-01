@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { customAuth } from '@/lib/custom-auth'
 
 export async function GET(
   request: Request,
@@ -8,6 +9,28 @@ export async function GET(
   const { tenantId } = await params
   try {
     const supabase = await createClient()
+
+    // Get current user using custom JWT auth
+    const user = await customAuth.getCurrentUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
+    // Check user role and tenant access
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
+
+    const isAuthorized = userRole === 'admin_tenant' ||
+                        userRole === 'staff' ||
+                        userRole === 'receptionist' ||
+                        (userRole === 'doctor' && userTenantId === tenantId)
+
+    if (!isAuthorized) {
+      return NextResponse.json({
+        error: 'Only administrators, staff, receptionists and doctors can view doctors'
+      }, { status: 403 })
+    }
 
     const { data: doctorTenants, error } = await supabase
       .from('doctor_tenants')

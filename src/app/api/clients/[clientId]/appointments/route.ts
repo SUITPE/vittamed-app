@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-api'
+import { customAuth } from '@/lib/custom-auth'
 
 export async function GET(
   request: NextRequest,
@@ -17,9 +18,9 @@ export async function GET(
     }
 
     // Verify user authentication and that they are requesting their own data
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const user = await customAuth.getCurrentUser()
 
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

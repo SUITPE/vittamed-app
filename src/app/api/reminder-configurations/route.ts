@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-api'
+import { customAuth } from '@/lib/custom-auth'
 import type { ReminderConfiguration } from '@/types/catalog'
 
 // Get effective reminder configuration for a user or tenant defaults
@@ -19,21 +20,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Get current user for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile || userProfile.tenant_id !== tenant_id) {
+    if (!userRole || userTenantId !== tenant_id) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
@@ -150,21 +148,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current user for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile || userProfile.tenant_id !== tenant_id) {
+    if (!userRole || userTenantId !== tenant_id) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
@@ -172,14 +167,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Authorization checks
-    if (applies_to === 'tenant_default' && userProfile.role !== 'admin_tenant') {
+    if (applies_to === 'tenant_default' && userRole !== 'admin_tenant') {
       return NextResponse.json(
         { error: 'Only tenant admins can manage default configurations' },
         { status: 403 }
       )
     }
 
-    if (applies_to === 'user_preference' && user_id !== user.id && userProfile.role !== 'admin_tenant') {
+    if (applies_to === 'user_preference' && user_id !== user.id && userRole !== 'admin_tenant') {
       return NextResponse.json(
         { error: 'Users can only manage their own preferences' },
         { status: 403 }
@@ -257,8 +252,8 @@ export async function PUT(request: NextRequest) {
     }
 
     // Get current user for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -279,13 +274,10 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile || userProfile.tenant_id !== existingConfig.tenant_id) {
+    if (!userRole || userTenantId !== existingConfig.tenant_id) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
@@ -293,7 +285,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Authorization checks
-    if (existingConfig.applies_to === 'tenant_default' && userProfile.role !== 'admin_tenant') {
+    if (existingConfig.applies_to === 'tenant_default' && userRole !== 'admin_tenant') {
       return NextResponse.json(
         { error: 'Only tenant admins can update default configurations' },
         { status: 403 }
@@ -302,7 +294,7 @@ export async function PUT(request: NextRequest) {
 
     if (existingConfig.applies_to === 'user_preference' &&
         existingConfig.user_id !== user.id &&
-        userProfile.role !== 'admin_tenant') {
+        userRole !== 'admin_tenant') {
       return NextResponse.json(
         { error: 'Users can only update their own preferences' },
         { status: 403 }
@@ -362,8 +354,8 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Get current user for authorization
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await customAuth.getCurrentUser()
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -384,13 +376,10 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
-    if (!userProfile || userProfile.tenant_id !== existingConfig.tenant_id) {
+    if (!userRole || userTenantId !== existingConfig.tenant_id) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
@@ -398,7 +387,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Authorization checks
-    if (existingConfig.applies_to === 'tenant_default' && userProfile.role !== 'admin_tenant') {
+    if (existingConfig.applies_to === 'tenant_default' && userRole !== 'admin_tenant') {
       return NextResponse.json(
         { error: 'Only tenant admins can delete default configurations' },
         { status: 403 }
@@ -407,7 +396,7 @@ export async function DELETE(request: NextRequest) {
 
     if (existingConfig.applies_to === 'user_preference' &&
         existingConfig.user_id !== user.id &&
-        userProfile.role !== 'admin_tenant') {
+        userRole !== 'admin_tenant') {
       return NextResponse.json(
         { error: 'Users can only delete their own preferences' },
         { status: 403 }
