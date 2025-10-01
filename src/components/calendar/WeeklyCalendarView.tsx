@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Icons } from '@/components/ui/Icons'
 
 interface Doctor {
@@ -207,9 +207,9 @@ export default function WeeklyCalendarView({
 
           {/* Time Slots */}
           {timeSlots.map((timeSlot, slotIndex) => (
-            <>
+            <React.Fragment key={`slot-${timeSlot}`}>
               {/* Time Label */}
-              <div key={`time-${timeSlot}`} className="border-r border-b border-gray-200 bg-gray-50 px-2 py-4 text-sm text-gray-600 font-medium">
+              <div className="border-r border-b border-gray-200 bg-gray-50 px-2 py-4 text-sm text-gray-600 font-medium">
                 {timeSlot}
               </div>
 
@@ -272,7 +272,7 @@ export default function WeeklyCalendarView({
                   </div>
                 )
               })}
-            </>
+            </React.Fragment>
           ))}
         </div>
       </div>
