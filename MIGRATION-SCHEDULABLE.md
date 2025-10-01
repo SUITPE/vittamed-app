@@ -1,54 +1,65 @@
-# Aplicar Migración: Campo Schedulable
+# Campo Schedulable - Configuración
 
-## ⚠️ Acción Requerida
+## ✅ Estado: Columna Ya Existe
 
-Para habilitar la funcionalidad completa de "Agendable" en la gestión de usuarios, necesitas aplicar una migración a la base de datos.
+La columna `schedulable` ya ha sido agregada a la base de datos. Sin embargo, es posible que necesites actualizar los valores para los usuarios existentes.
 
-## Síntomas
+## Síntomas Posibles
 
-- Al hacer clic en el badge "Agendable" aparece error: _"⚠️ Migración requerida: El campo schedulable no está disponible aún..."_
-- El campo `schedulable` se muestra pero no se puede modificar
+- ❌ Algunos usuarios tienen `schedulable = false` cuando deberían ser agendables
+- ❌ Doctores o miembros del equipo no aparecen como agendables
 
-## Solución: Aplicar Migración desde Supabase Dashboard
+## Solución: Actualizar Valores de Usuarios Existentes
 
-### Opción 1: SQL Editor (Recomendado)
+### Paso 1: Ir a Supabase Dashboard
 
-1. **Ir a Supabase Dashboard**
-   ```
-   https://supabase.com/dashboard/project/mvvxeqhsatkqtsrulcil
-   ```
+```
+https://supabase.com/dashboard/project/mvvxeqhsatkqtsrulcil
+```
 
-2. **Abrir SQL Editor**
-   - En el menú lateral izquierdo, click en "SQL Editor"
-   - Click en "New query"
+### Paso 2: Abrir SQL Editor
 
-3. **Copiar y Pegar el SQL**
-   - Abrir: `supabase/migrations/013_add_schedulable_to_user_profiles.sql`
-   - Copiar todo el contenido
-   - Pegar en el SQL Editor
+- En el menú lateral izquierdo, click en "SQL Editor"
+- Click en "New query"
 
-4. **Ejecutar**
-   - Click en "Run" o presionar `Ctrl+Enter`
-   - Verificar que aparezca "Success"
+### Paso 3: Actualizar Valores Existentes
 
-### Opción 2: SQL Directo
-
-Puedes copiar directamente este SQL:
+Copia y pega este SQL para actualizar los usuarios existentes:
 
 ```sql
--- Add schedulable field to user_profiles
--- This field determines if a user can be scheduled for appointments
+-- Update existing user_profiles to set schedulable based on role
+UPDATE user_profiles
+SET schedulable = true
+WHERE role IN ('doctor', 'member') AND (schedulable IS NULL OR schedulable = false);
 
+-- Verify the update
+SELECT role, schedulable, COUNT(*) as count
+FROM user_profiles
+GROUP BY role, schedulable
+ORDER BY role, schedulable;
+```
+
+### Paso 4: Ejecutar
+
+- Click en "Run" o presionar `Ctrl+Enter`
+- Deberías ver cuántos registros fueron actualizados
+- La segunda query te mostrará un resumen de los estados
+
+### Si la Columna No Existe (Error 42703)
+
+Si recibes un error diciendo que la columna no existe, aplica primero la migración completa:
+
+```sql
+-- Solo si la columna NO existe aún
 ALTER TABLE user_profiles
 ADD COLUMN schedulable BOOLEAN NOT NULL DEFAULT false;
 
--- Update existing records: doctors and members should be schedulable by default
+-- Luego actualiza los valores
 UPDATE user_profiles
 SET schedulable = true
 WHERE role IN ('doctor', 'member');
 
--- Add comment to explain the column
-COMMENT ON COLUMN user_profiles.schedulable IS 'Indicates if this user can be scheduled for appointments (true for doctors, members, etc.)';
+COMMENT ON COLUMN user_profiles.schedulable IS 'Indicates if this user can be scheduled for appointments';
 ```
 
 ## Verificación
