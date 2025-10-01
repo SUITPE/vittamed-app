@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Icons } from '@/components/ui/Icons'
 import { useAuth } from '@/contexts/AuthContext'
+import PublicHeader from '@/components/PublicHeader'
 
 export default function Home() {
   const router = useRouter()
@@ -85,7 +86,9 @@ export default function Home() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
+    <>
+      <PublicHeader />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-green-600/10" />
@@ -234,5 +237,6 @@ export default function Home() {
         </div>
       </section>
     </div>
+    </>
   )
 }

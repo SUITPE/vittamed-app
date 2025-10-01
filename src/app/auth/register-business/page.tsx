@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Icons } from '@/components/ui/Icons'
 import { Button } from '@/components/ui/Button'
+import PublicHeader from '@/components/PublicHeader'
 
 export default function RegisterBusinessPage() {
   const [formData, setFormData] = useState({
@@ -87,19 +88,10 @@ export default function RegisterBusinessPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link href="/" className="flex justify-center mb-6">
-          <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-lg flex items-center justify-center">
-              <Icons.activity className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-              VittaMed
-            </span>
-          </div>
-        </Link>
-
+    <>
+      <PublicHeader />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
           Registra tu Negocio
         </h2>
@@ -264,5 +256,6 @@ export default function RegisterBusinessPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }

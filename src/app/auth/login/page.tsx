@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import PublicHeader from '@/components/PublicHeader'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -100,14 +101,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <>
+      <PublicHeader />
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
           Iniciar Sesión en VittaMed
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           ¿No tienes cuenta?{' '}
-          <Link href="/auth/signup" className="font-medium text-blue-600 hover:text-blue-500">
+          <Link href="/auth/register-business" className="font-medium text-blue-600 hover:text-blue-500">
             Regístrate aquí
           </Link>
         </p>
@@ -229,5 +232,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }
