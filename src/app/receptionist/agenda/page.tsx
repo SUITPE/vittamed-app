@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import ReceptionistNavigation from '@/components/ReceptionistNavigation'
+import AdminSidebar from '@/components/AdminSidebar'
+import AdminHeader from '@/components/AdminHeader'
 
 interface Doctor {
   id: string
@@ -162,11 +163,14 @@ export default function ReceptionistAgendaPage() {
   if (loading || loadingData) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <ReceptionistNavigation currentPath="/receptionist/agenda" tenantId={currentTenantId} />
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Cargando agendas...</p>
+        <AdminSidebar tenantId={currentTenantId} />
+        <AdminHeader />
+        <div className="ml-64 pt-16">
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Cargando agendas...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -195,9 +199,10 @@ export default function ReceptionistAgendaPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ReceptionistNavigation currentPath="/receptionist/agenda" tenantId={currentTenantId} />
+      <AdminSidebar tenantId={currentTenantId} />
+      <AdminHeader />
 
-      <div className="p-6">
+      <div className="ml-64 pt-16 p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">

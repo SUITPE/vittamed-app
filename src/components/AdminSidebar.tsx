@@ -22,6 +22,12 @@ export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
       description: 'Resumen general'
     },
     {
+      name: 'Agenda',
+      href: '/receptionist/agenda',
+      icon: Icons.calendarDays,
+      description: 'Agenda de doctores'
+    },
+    {
       name: 'Servicios',
       href: '/admin/services',
       icon: Icons.stethoscope,
