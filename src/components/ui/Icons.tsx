@@ -50,6 +50,7 @@ import {
   BellRing,
   MessageSquare,
   Shield,
+  List,
 } from "lucide-react"
 
 export const Icons = {
@@ -74,6 +75,7 @@ export const Icons = {
   filter: Filter,
   download: Download,
   upload: Upload,
+  list: List,
 
   // Status
   checkCircle: CheckCircle,
