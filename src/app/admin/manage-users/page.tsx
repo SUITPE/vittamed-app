@@ -13,6 +13,8 @@ export default function ManageUsersPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showAddMemberModal, setShowAddMemberModal] = useState(false)
+  const [editingUser, setEditingUser] = useState<UserRoleView | null>(null)
+  const [editForm, setEditForm] = useState({ first_name: '', last_name: '', phone: '', role: '' })
 
   // Allow admin_tenant, staff, and receptionist roles to manage users
   const canManageUsers = () => {
@@ -142,6 +144,40 @@ export default function ManageUsersPage() {
     } catch (err) {
       setError('Error removing user from tenant')
       console.error('Error removing user:', err)
+    }
+  }
+
+  const handleEditUser = (user: UserRoleView) => {
+    setEditingUser(user)
+    setEditForm({
+      first_name: user.first_name || '',
+      last_name: user.last_name || '',
+      phone: user.phone || '',
+      role: user.role
+    })
+  }
+
+  const handleSaveEdit = async () => {
+    if (!currentTenant?.tenant_id || !editingUser) return
+
+    try {
+      const response = await fetch(`/api/tenants/${currentTenant.tenant_id}/users/${editingUser.user_id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm)
+      })
+
+      if (response.ok) {
+        await fetchTenantUsers()
+        setEditingUser(null)
+        setError('')
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Failed to update user')
+      }
+    } catch (err) {
+      setError('Error updating user')
+      console.error('Error updating user:', err)
     }
   }
 
@@ -280,17 +316,25 @@ export default function ManageUsersPage() {
                           {new Date(user.role_assigned_at).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          {user.role !== 'admin_tenant' && (
+                          <div className="flex items-center justify-end gap-3">
                             <button
-                              onClick={() => handleRemoveUser(user.user_id, user.first_name || user.email)}
-                              className="text-red-600 hover:text-red-900"
+                              onClick={() => handleEditUser(user)}
+                              className="text-blue-600 hover:text-blue-900"
                             >
-                              Remover
+                              Editar
                             </button>
-                          )}
-                          {user.role === 'admin_tenant' && (
-                            <span className="text-gray-400 text-sm">Protegido</span>
-                          )}
+                            {user.role !== 'admin_tenant' && (
+                              <button
+                                onClick={() => handleRemoveUser(user.user_id, user.first_name || user.email)}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                Remover
+                              </button>
+                            )}
+                            {user.role === 'admin_tenant' && (
+                              <span className="text-gray-400 text-sm">Protegido</span>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -319,6 +363,87 @@ export default function ManageUsersPage() {
               tenantId={currentTenant?.tenant_id || ''}
               tenantName={currentTenant?.tenant_name || ''}
             />
+
+            {/* Edit User Modal */}
+            {editingUser && (
+              <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                  <div className="mt-3">
+                    <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+                      Editar Usuario
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Email</label>
+                        <input
+                          type="text"
+                          value={editingUser.email}
+                          disabled
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-100 text-gray-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Nombre</label>
+                        <input
+                          type="text"
+                          value={editForm.first_name}
+                          onChange={(e) => setEditForm({...editForm, first_name: e.target.value})}
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Apellido</label>
+                        <input
+                          type="text"
+                          value={editForm.last_name}
+                          onChange={(e) => setEditForm({...editForm, last_name: e.target.value})}
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Teléfono</label>
+                        <input
+                          type="text"
+                          value={editForm.phone}
+                          onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Rol</label>
+                        <select
+                          value={editForm.role}
+                          onChange={(e) => setEditForm({...editForm, role: e.target.value})}
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+                          disabled={editingUser.role === 'admin_tenant'}
+                        >
+                          <option value="admin_tenant">Admin</option>
+                          <option value="staff">Staff</option>
+                          <option value="receptionist">Recepcionista</option>
+                          <option value="doctor">Doctor</option>
+                          <option value="member">Miembro</option>
+                          <option value="patient">Paciente</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex gap-3 mt-6">
+                      <button
+                        onClick={handleSaveEdit}
+                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      >
+                        Guardar
+                      </button>
+                      <button
+                        onClick={() => setEditingUser(null)}
+                        className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

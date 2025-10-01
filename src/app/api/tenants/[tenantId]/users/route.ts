@@ -40,12 +40,11 @@ export async function GET(
     const url = new URL(request.url)
     const roleFilter = url.searchParams.get('role')
 
-    // Get all users for this tenant from the view (when multi-tenant is active)
-    // For now, we'll use a simpler query until the migration is applied
+    // Get all users for this tenant from custom_users table
     // Note: We include admin_tenant in the list as they manage the tenant
     // Note: schedulable field may not exist yet if migration hasn't been applied
     let query = supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select(`
         id,
         email,
@@ -53,6 +52,7 @@ export async function GET(
         last_name,
         role,
         tenant_id,
+        schedulable,
         created_at,
         updated_at
       `)

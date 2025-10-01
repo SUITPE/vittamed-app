@@ -106,7 +106,15 @@
       "Bash(__NEW_LINE__ curl -s -b /tmp/test-cookies.txt http://localhost:3000/api/auth/me)",
       "Bash(python3:*)",
       "Bash(cat:*)",
-      "Bash(open http://localhost:3001/auth/login)"
+      "Bash(open http://localhost:3001/auth/login)",
+      "Bash(open http://localhost:3001/auth/register-business)",
+      "Bash(git merge:*)",
+      "Bash(git pull:*)",
+      "Bash(./apply-schedulable-migration.sh:*)",
+      "Bash(PGPASSWORD='VittaMed2024!' psql \"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\")",
+      "Bash(export PGPASSWORD='VittaMed2024!')",
+      "Bash(/tmp/apply-schedulable-update.sh:*)",
+      "Bash(\"http://localhost:3000/api/tenants/1323b89d-2d9b-4a81-a412-005c79153370/users/bf75c99c-fca4-40e0-bc72-41741dbae75f\")"
     ],
     "deny": [],
     "ask": []

@@ -37,7 +37,7 @@ export async function PATCH(
     if (schedulable !== undefined) {
       // Try a test query to see if schedulable column exists
       const { error: testError } = await supabase
-        .from('user_profiles')
+        .from('custom_users')
         .select('schedulable')
         .limit(1)
 
@@ -45,7 +45,7 @@ export async function PATCH(
         // Column doesn't exist
         console.warn('schedulable column does not exist:', testError)
         return NextResponse.json({
-          error: 'El campo "schedulable" no está disponible aún. Por favor aplica la migración desde Supabase Dashboard: supabase/migrations/013_add_schedulable_to_user_profiles.sql',
+          error: 'El campo "schedulable" no está disponible aún. Por favor aplica la migración: ALTER TABLE custom_users ADD COLUMN schedulable BOOLEAN NOT NULL DEFAULT false;',
           migration_required: true
         }, { status: 400 })
       }
@@ -61,9 +61,9 @@ export async function PATCH(
     if (phone !== undefined) updates.phone = phone
     updates.updated_at = new Date().toISOString()
 
-    // Update user profile
+    // Update user in custom_users
     const { data, error } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .update(updates)
       .eq('id', userId)
       .eq('tenant_id', tenantId)
@@ -111,7 +111,7 @@ export async function DELETE(
 
     // Check if user is admin_tenant (cannot be deleted)
     const { data: userToDelete, error: fetchError } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('role')
       .eq('id', userId)
       .eq('tenant_id', tenantId)
@@ -130,7 +130,7 @@ export async function DELETE(
     // Delete user (or mark as inactive depending on requirements)
     // For now, we'll just remove the tenant_id to "soft delete" from this tenant
     const { error: deleteError } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .update({ tenant_id: null, updated_at: new Date().toISOString() })
       .eq('id', userId)
       .eq('tenant_id', tenantId)

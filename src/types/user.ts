@@ -54,6 +54,7 @@ export interface UserRoleView {
   email: string;
   first_name?: string;
   last_name?: string;
+  phone?: string;
   tenant_id: string;
   tenant_name: string;
   tenant_type: string;
