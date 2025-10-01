@@ -74,11 +74,12 @@ export default function RegisterBusinessPage() {
       })
 
       if (loginResponse.ok) {
-        // Redirect to tenant creation
-        router.push('/admin/create-tenant')
+        // Use window.location.href to ensure cookies are properly set before navigation
+        // This forces a full page reload which guarantees the auth cookie is available
+        window.location.href = '/admin/create-tenant'
       } else {
         // Registration succeeded but login failed - redirect to login page
-        router.push('/auth/login?message=Cuenta creada. Inicia sesión para continuar.')
+        window.location.href = '/auth/login?message=Cuenta creada. Inicia sesión para continuar.'
       }
     } catch (err) {
       console.error('Registration error:', err)

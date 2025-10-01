@@ -51,6 +51,7 @@ import {
   MessageSquare,
   Shield,
   List,
+  Loader2,
 } from "lucide-react"
 
 export const Icons = {
@@ -127,6 +128,9 @@ export const Icons = {
   bellRing: BellRing,
   messageSquare: MessageSquare,
   shield: Shield,
+
+  // Loading
+  loader: Loader2,
 }
 
 export type IconName = keyof typeof Icons
