@@ -14,8 +14,9 @@ interface Appointment {
   id: string
   patient_name: string
   service_name: string
-  start_time: string
-  end_time: string
+  appointment_date: string // "YYYY-MM-DD"
+  start_time: string // "HH:MM:SS"
+  end_time: string // "HH:MM:SS"
   status: string
   doctor_id: string
   doctor_name?: string
@@ -40,6 +41,22 @@ export default function WeeklyCalendarView({
 }: WeeklyCalendarViewProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
 
+  // DEBUG: Log appointments received
+  useEffect(() => {
+    console.log('[WeeklyCalendar] Component received:', {
+      selectedDate,
+      appointmentsCount: appointments.length,
+      appointments: appointments.map(apt => ({
+        id: apt.id,
+        patient_name: apt.patient_name,
+        appointment_date: apt.appointment_date,
+        start_time: apt.start_time,
+        end_time: apt.end_time,
+        doctor_id: apt.doctor_id
+      }))
+    })
+  }, [appointments, selectedDate])
+
   // Update current time every minute
   useEffect(() => {
     const interval = setInterval(() => {
@@ -55,14 +72,14 @@ export default function WeeklyCalendarView({
   })
 
   const goToPreviousDay = () => {
-    const newDate = new Date(selectedDate)
-    newDate.setDate(newDate.getDate() - 1)
+    const newDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - 1)
+    console.log('[WeeklyCalendar] Previous day clicked. Current:', selectedDate, 'New:', newDate)
     onDateChange(newDate)
   }
 
   const goToNextDay = () => {
-    const newDate = new Date(selectedDate)
-    newDate.setDate(newDate.getDate() + 1)
+    const newDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 1)
+    console.log('[WeeklyCalendar] Next day clicked. Current:', selectedDate, 'New:', newDate)
     onDateChange(newDate)
   }
 
@@ -80,25 +97,74 @@ export default function WeeklyCalendarView({
     })
   }
 
+  // Helper function to create a Date from appointment_date + time string
+  const createAppointmentDateTime = (dateStr: string, timeStr: string): Date => {
+    // dateStr: "2025-09-30", timeStr: "14:00:00"
+    const [year, month, day] = dateStr.split('-').map(Number)
+    const [hours, minutes, seconds] = timeStr.split(':').map(Number)
+    return new Date(year, month - 1, day, hours, minutes, seconds || 0)
+  }
+
   const getAppointmentsForDoctorAtTime = (doctorId: string, timeSlot: string) => {
     const slotDate = new Date(selectedDate)
     const [hours] = timeSlot.split(':').map(Number)
     slotDate.setHours(hours, 0, 0, 0)
 
-    return appointments.filter(apt => {
-      if (apt.doctor_id !== doctorId) return false
+    // Build the selected date string for comparison
+    const selectedDateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
 
-      const aptStart = new Date(apt.start_time)
-      const aptEnd = new Date(apt.end_time)
+    const filtered = appointments.filter(apt => {
+      // Check doctor
+      if (apt.doctor_id !== doctorId) {
+        return false
+      }
 
-      // Check if appointment overlaps with this time slot
-      return aptStart <= slotDate && aptEnd > slotDate
+      // Check if appointment is on the same date as selected date
+      if (apt.appointment_date !== selectedDateStr) {
+        return false
+      }
+
+      // Create proper Date objects by combining appointment_date + time
+      const aptStart = createAppointmentDateTime(apt.appointment_date, apt.start_time)
+      const aptEnd = createAppointmentDateTime(apt.appointment_date, apt.end_time)
+
+      // Check if appointment overlaps with this time slot (slot is 1 hour)
+      const slotEnd = new Date(slotDate.getTime() + 60 * 60 * 1000)
+      const overlaps = aptStart < slotEnd && aptEnd > slotDate
+
+      return overlaps
     })
+
+    // DEBUG: Log filtering details for first few slots
+    if (timeSlot === '14:00' || timeSlot === '19:00') {
+      console.log(`[WeeklyCalendar] Filtering for doctor=${doctorId}, slot=${timeSlot}:`)
+      console.log('  - selectedDateStr:', selectedDateStr)
+      console.log('  - totalAppointments:', appointments.length)
+      console.log('  - filteredCount:', filtered.length)
+      console.log('  - slotDate:', slotDate.toISOString())
+      console.log('  - doctor we are looking for:', doctorId)
+
+      appointments.forEach((apt, index) => {
+        console.log(`  Appointment ${index + 1}:`, {
+          id: apt.id,
+          patient: apt.patient_name,
+          doctor_id: apt.doctor_id,
+          doctor_match: apt.doctor_id === doctorId,
+          appointment_date: apt.appointment_date,
+          date_match: apt.appointment_date === selectedDateStr,
+          start_time: apt.start_time,
+          end_time: apt.end_time
+        })
+      })
+    }
+
+    return filtered
   }
 
   const calculateAppointmentPosition = (appointment: Appointment, timeSlot: string) => {
-    const aptStart = new Date(appointment.start_time)
-    const aptEnd = new Date(appointment.end_time)
+    // Create proper Date objects by combining appointment_date + time
+    const aptStart = createAppointmentDateTime(appointment.appointment_date, appointment.start_time)
+    const aptEnd = createAppointmentDateTime(appointment.appointment_date, appointment.end_time)
     const [slotHour] = timeSlot.split(':').map(Number)
 
     const startHour = aptStart.getHours()
@@ -258,7 +324,7 @@ export default function WeeklyCalendarView({
                           }}
                         >
                           <div className="text-xs font-semibold text-gray-900 truncate">
-                            {new Date(apt.start_time).toLocaleTimeString('es-ES', {
+                            {createAppointmentDateTime(apt.appointment_date, apt.start_time).toLocaleTimeString('es-ES', {
                               hour: '2-digit',
                               minute: '2-digit'
                             })} - {apt.patient_name}

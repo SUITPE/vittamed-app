@@ -42,13 +42,28 @@ interface Appointment {
   doctor_id: string
 }
 
+// Helper function to get local date in YYYY-MM-DD format
+function getLocalDateString(date: Date = new Date()): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+// Helper function to get local time in HH:MM format
+function getLocalTimeString(date: Date): string {
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
+}
+
 export default function ReceptionistAgendaPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [availability, setAvailability] = useState<DoctorAvailability[]>([])
   const [appointments, setAppointments] = useState<Appointment[]>([])
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [selectedDate, setSelectedDate] = useState(getLocalDateString())
   const [selectedDoctor, setSelectedDoctor] = useState<string>('')
   const [loadingData, setLoadingData] = useState(true)
   const [viewMode, setViewMode] = useState<'week' | 'month' | 'list'>('week')
@@ -84,6 +99,35 @@ export default function ReceptionistAgendaPage() {
       fetchDoctorsAndAgenda()
     }
   }, [user, loading, router, isReceptionist, currentTenantId])
+
+  // Reload appointments when date or doctor changes
+  useEffect(() => {
+    if (currentTenantId && selectedDate) {
+      console.log('[Calendar] Date changed to:', selectedDate)
+      // Fetch only appointments, not doctors again
+      const fetchAppointmentsForDate = async () => {
+        const appointmentsUrl = selectedDoctor
+          ? `/api/tenants/${currentTenantId}/appointments?date=${selectedDate}&doctor_id=${selectedDoctor}`
+          : `/api/tenants/${currentTenantId}/appointments?date=${selectedDate}`
+
+        const appointmentsResponse = await fetch(appointmentsUrl)
+
+        if (appointmentsResponse.ok) {
+          const appointmentsData = await appointmentsResponse.json()
+          console.log('[Calendar] Appointments fetched:', {
+            count: appointmentsData.appointments?.length || 0,
+            date: selectedDate,
+            appointments: appointmentsData.appointments
+          })
+          setAppointments(appointmentsData.appointments || [])
+        } else {
+          console.error('[Calendar] Failed to fetch appointments:', appointmentsResponse.status)
+        }
+      }
+
+      fetchAppointmentsForDate()
+    }
+  }, [selectedDate, selectedDoctor, currentTenantId])
 
   async function fetchDoctorsAndAgenda() {
     if (!currentTenantId) {
@@ -246,13 +290,12 @@ export default function ReceptionistAgendaPage() {
           tenant_id: currentTenantId,
           doctor_id: appointmentDraft.doctor_id,
           service_id: service.id,
-          patient_name: appointmentDraft.client === 'walk-in' ? 'Walk-In' : `${appointmentDraft.client.first_name} ${appointmentDraft.client.last_name}`,
-          patient_email: appointmentDraft.client !== 'walk-in' ? appointmentDraft.client.email : null,
-          patient_phone: appointmentDraft.client !== 'walk-in' ? appointmentDraft.client.phone : null,
-          start_time: appointmentDraft.datetime.toISOString(),
-          end_time: endTime.toISOString(),
-          status: 'pending',
-          notes: ''
+          patient_first_name: !appointmentDraft.client || appointmentDraft.client === 'walk-in' ? 'Walk' : appointmentDraft.client.first_name,
+          patient_last_name: !appointmentDraft.client || appointmentDraft.client === 'walk-in' ? 'In' : appointmentDraft.client.last_name,
+          patient_email: appointmentDraft.client && appointmentDraft.client !== 'walk-in' && appointmentDraft.client.email ? appointmentDraft.client.email : 'walkin@clinic.local',
+          patient_phone: appointmentDraft.client && appointmentDraft.client !== 'walk-in' && appointmentDraft.client.phone ? appointmentDraft.client.phone : null,
+          appointment_date: getLocalDateString(appointmentDraft.datetime),
+          start_time: getLocalTimeString(appointmentDraft.datetime)
         })
       })
 
@@ -415,11 +458,18 @@ export default function ReceptionistAgendaPage() {
           {viewMode === 'week' && (
             <div className="h-[calc(100vh-300px)]">
               <WeeklyCalendarView
+                key={selectedDate} // Force re-render when date changes
                 doctors={doctors}
                 appointments={appointments}
-                selectedDate={new Date(selectedDate)}
+                selectedDate={(() => {
+                  // Parse YYYY-MM-DD as local date (not UTC)
+                  const [year, month, day] = selectedDate.split('-').map(Number)
+                  return new Date(year, month - 1, day)
+                })()}
                 onDateChange={(date) => {
-                  setSelectedDate(date.toISOString().split('T')[0])
+                  const newDateString = getLocalDateString(date)
+                  console.log('[Page] Date changing from', selectedDate, 'to', newDateString)
+                  setSelectedDate(newDateString)
                 }}
                 onTimeSlotClick={handleTimeSlotClick}
                 onAppointmentClick={(appointment) => {
@@ -436,7 +486,7 @@ export default function ReceptionistAgendaPage() {
               appointments={appointments}
               selectedDate={new Date(selectedDate)}
               onDateChange={(date) => {
-                setSelectedDate(date.toISOString().split('T')[0])
+                setSelectedDate(getLocalDateString(date))
               }}
               onAppointmentClick={(appointment) => {
                 console.log('Appointment clicked:', appointment)
@@ -511,7 +561,7 @@ export default function ReceptionistAgendaPage() {
                   Citas del Día
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  {selectedDate === new Date().toISOString().split('T')[0]
+                  {selectedDate === getLocalDateString()
                     ? 'Citas de hoy'
                     : `Citas del ${new Date(selectedDate).toLocaleDateString('es-ES')}`
                   }

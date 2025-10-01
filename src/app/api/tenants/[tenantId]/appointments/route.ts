@@ -84,11 +84,12 @@ export async function GET(
     // Transform the data to flatten patient, doctor and service info
     const transformedAppointments = appointments?.map((appointment: any) => ({
       id: appointment.id,
+      appointment_date: appointment.appointment_date, // Add the date field separately
       patient_name: appointment.patients
         ? `${appointment.patients.first_name} ${appointment.patients.last_name}`
         : 'Paciente no especificado',
-      start_time: `${appointment.appointment_date}T${appointment.start_time}`,
-      end_time: `${appointment.appointment_date}T${appointment.end_time}`,
+      start_time: appointment.start_time, // Keep as time only (HH:MM:SS)
+      end_time: appointment.end_time, // Keep as time only (HH:MM:SS)
       status: appointment.status,
       service_name: appointment.services?.name || 'Servicio no especificado',
       doctor_name: appointment.doctors
