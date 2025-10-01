@@ -90,6 +90,32 @@ export default function ManageUsersPage() {
     )
   }
 
+  const handleToggleSchedulable = async (userId: string, currentSchedulable: boolean) => {
+    if (!currentTenant?.tenant_id) return
+
+    try {
+      const response = await fetch(`/api/tenants/${currentTenant.tenant_id}/users/${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          schedulable: !currentSchedulable
+        })
+      })
+
+      if (response.ok) {
+        await fetchTenantUsers()
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Failed to update user')
+      }
+    } catch (err) {
+      setError('Error updating user')
+      console.error('Error updating user:', err)
+    }
+  }
+
   const handleRemoveUser = async (userId: string, userName: string) => {
     if (!currentTenant?.tenant_id) return
 
@@ -98,15 +124,8 @@ export default function ManageUsersPage() {
     }
 
     try {
-      const response = await fetch('/api/user/tenants/remove', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          tenant_id: currentTenant.tenant_id
-        })
+      const response = await fetch(`/api/tenants/${currentTenant.tenant_id}/users/${userId}`, {
+        method: 'DELETE'
       })
 
       if (response.ok) {
@@ -240,11 +259,17 @@ export default function ManageUsersPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            user.schedulable ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                          }`}>
+                          <button
+                            onClick={() => handleToggleSchedulable(user.user_id, user.schedulable || false)}
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-colors ${
+                              user.schedulable
+                                ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                            }`}
+                            title="Click para cambiar"
+                          >
                             {user.schedulable ? 'Sí' : 'No'}
-                          </span>
+                          </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(user.role_assigned_at).toLocaleDateString()}
