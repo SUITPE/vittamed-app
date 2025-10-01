@@ -89,11 +89,11 @@ export async function GET(
 // Add user to specific tenant (alternative to general assign endpoint)
 export async function POST(
   request: NextRequest,
-  { params }: { params: RouteParams }
+  { params }: { params: Promise<RouteParams> }
 ) {
+  const { tenantId } = await params
   try {
     const supabase = await createClient()
-    const { tenantId } = params
 
     // Get current user using custom JWT auth
     const user = await customAuth.getCurrentUser()
@@ -105,17 +105,24 @@ export async function POST(
     // Check user role
     const userRole = user.profile?.role
 
-    if (userRole !== 'admin_tenant' && userRole !== 'staff') {
+    if (userRole !== 'admin_tenant' && userRole !== 'staff' && userRole !== 'receptionist') {
       return NextResponse.json({
-        error: 'Only tenant administrators can add users'
+        error: 'Only administrators, staff and receptionists can add users'
       }, { status: 403 })
     }
 
     const body = await request.json()
-    const { email, first_name, last_name, role = 'patient', send_invitation = true } = body
+    const { email, first_name, last_name, phone, role = 'patient', send_invitation = false } = body
 
     // Validate required fields
-    if (!email) {
+    if (!first_name || !last_name) {
+      return NextResponse.json({
+        error: 'First name and last name are required'
+      }, { status: 400 })
+    }
+
+    // For patients, email is optional
+    if (!email && role !== 'patient') {
       return NextResponse.json({
         error: 'Email is required'
       }, { status: 400 })
@@ -133,6 +140,7 @@ export async function POST(
         email,
         first_name,
         last_name,
+        phone,
         role,
         tenantId,
         send_invitation

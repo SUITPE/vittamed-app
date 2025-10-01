@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Icons } from '@/components/ui/Icons'
+import NewClientModal from './NewClientModal'
 
 interface Client {
   id: string
@@ -28,6 +29,7 @@ export default function ClientSelectorPanel({
   const [clients, setClients] = useState<Client[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showNewClientModal, setShowNewClientModal] = useState(false)
 
   useEffect(() => {
     if (isOpen && tenantId) {
@@ -105,10 +107,7 @@ export default function ClientSelectorPanel({
           <div className="p-6 space-y-3">
             {/* Add new client */}
             <button
-              onClick={() => {
-                // TODO: Open new client modal
-                console.log('Add new client')
-              }}
+              onClick={() => setShowNewClientModal(true)}
               className="w-full p-4 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-3 border border-gray-200"
             >
               <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
@@ -181,6 +180,20 @@ export default function ClientSelectorPanel({
           </div>
         </div>
       </div>
+
+      {/* New Client Modal */}
+      <NewClientModal
+        isOpen={showNewClientModal}
+        onClose={() => setShowNewClientModal(false)}
+        onClientCreated={(newClient) => {
+          // Add new client to the list
+          setClients([newClient, ...clients])
+          // Select the new client
+          onSelectClient(newClient)
+          onClose()
+        }}
+        tenantId={tenantId}
+      />
     </>
   )
 }
