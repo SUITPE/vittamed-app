@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { authService, AuthUser } from '@/lib/auth'
+import { AuthUser } from '@/lib/auth'
 
 interface AuthContextType {
   user: AuthUser | null
@@ -22,13 +22,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Get current user from API
+  const getCurrentUser = async (): Promise<AuthUser | null> => {
+    try {
+      const response = await fetch('/api/auth/me', {
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        return data.user
+      } else {
+        return null
+      }
+    } catch (error) {
+      console.error('Error fetching current user:', error)
+      return null
+    }
+  }
+
   useEffect(() => {
     let mounted = true
 
-    // Get initial user with error handling
+    // Get initial user
     const initializeAuth = async () => {
       try {
-        const currentUser = await authService.getCurrentUser()
+        const currentUser = await getCurrentUser()
         if (mounted) {
           setUser(currentUser)
         }
@@ -46,42 +65,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initializeAuth()
 
-    // Listen for auth changes with error handling
-    let subscription: any
-    try {
-      const result = authService.onAuthStateChange((authUser) => {
-        if (mounted) {
-          setUser(authUser)
-          setLoading(false)
-        }
-      })
-      subscription = result?.data?.subscription
-    } catch (error) {
-      console.error('Error setting up auth state listener:', error)
-      if (mounted) {
-        setLoading(false)
-      }
-    }
-
     return () => {
       mounted = false
-      if (subscription?.unsubscribe) {
-        subscription.unsubscribe()
-      }
     }
   }, [])
 
   const signIn = async (email: string, password: string) => {
     setLoading(true)
-    const { error } = await authService.signIn(email, password)
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include'
+      })
 
-    if (!error) {
-      const user = await authService.getCurrentUser()
-      setUser(user)
+      if (response.ok) {
+        const data = await response.json()
+        // Fetch updated user data
+        const currentUser = await getCurrentUser()
+        setUser(currentUser)
+        setLoading(false)
+        return { error: null }
+      } else {
+        const errorData = await response.json()
+        setLoading(false)
+        return { error: new Error(errorData.error || 'Login failed') }
+      }
+    } catch (error) {
+      console.error('SignIn error:', error)
+      setLoading(false)
+      return { error: error as Error }
     }
-
-    setLoading(false)
-    return { error }
   }
 
   const signUp = async (email: string, password: string, userData: {
@@ -90,50 +107,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role?: 'admin_tenant' | 'doctor' | 'patient'
   }) => {
     setLoading(true)
-    const { error } = await authService.signUp(email, password, userData)
-
-    if (!error) {
-      // Note: User might need to verify email before getting profile
-      const user = await authService.getCurrentUser()
-      setUser(user)
+    try {
+      // For now, signUp is not implemented
+      setLoading(false)
+      return { error: new Error('SignUp not implemented yet') }
+    } catch (error) {
+      console.error('SignUp error:', error)
+      setLoading(false)
+      return { error: error as Error }
     }
-
-    setLoading(false)
-    return { error }
   }
 
   const signInWithOAuth = async (provider: 'google' | 'facebook' | 'apple') => {
     setLoading(true)
-    const { error } = await authService.signInWithOAuth(provider)
-    setLoading(false)
-    return { error }
+    try {
+      // OAuth not implemented yet
+      setLoading(false)
+      return { error: new Error(`OAuth with ${provider} not implemented yet`) }
+    } catch (error) {
+      console.error('OAuth error:', error)
+      setLoading(false)
+      return { error: error as Error }
+    }
   }
 
   const signOut = async () => {
     setLoading(true)
     try {
-      const { error } = await authService.signOut()
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      })
 
-      if (!error) {
+      if (response.ok) {
         setUser(null)
-        // Clear any cached data
-        localStorage.removeItem('supabase.auth.token')
         // Redirect to login page
         window.location.href = '/auth/login'
+        return { error: null }
       } else {
-        console.error('Error signing out:', error)
+        console.error('Logout failed')
+        // Force logout even if server request fails
+        setUser(null)
+        window.location.href = '/auth/login'
+        return { error: new Error('Logout failed') }
       }
-
-      setLoading(false)
-      return { error }
     } catch (err) {
       console.error('Unexpected error during signout:', err)
       // Force logout even if there's an error
       setUser(null)
-      localStorage.clear()
       window.location.href = '/auth/login'
+      return { error: err as Error }
+    } finally {
       setLoading(false)
-      return { error: err }
     }
   }
 
