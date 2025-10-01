@@ -29,6 +29,7 @@ interface WeeklyCalendarViewProps {
   onDateChange: (date: Date) => void
   onTimeSlotClick: (event: React.MouseEvent, doctorId: string, time: Date) => void
   onAppointmentClick: (appointment: Appointment) => void
+  onAppointmentMove?: (appointmentId: string, newDoctorId: string, newStartTime: Date) => void
 }
 
 export default function WeeklyCalendarView({
@@ -37,9 +38,12 @@ export default function WeeklyCalendarView({
   selectedDate,
   onDateChange,
   onTimeSlotClick,
-  onAppointmentClick
+  onAppointmentClick,
+  onAppointmentMove
 }: WeeklyCalendarViewProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [draggedAppointment, setDraggedAppointment] = useState<Appointment | null>(null)
+  const [dragOverCell, setDragOverCell] = useState<{ doctorId: string; timeSlot: string } | null>(null)
 
   // DEBUG: Log appointments received
   useEffect(() => {
@@ -217,6 +221,57 @@ export default function WeeklyCalendarView({
 
   const currentTimePosition = getCurrentTimePosition()
 
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, appointment: Appointment) => {
+    setDraggedAppointment(appointment)
+    e.dataTransfer.effectAllowed = 'move'
+    // Add a visual cue
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.5'
+    }
+  }
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    setDraggedAppointment(null)
+    setDragOverCell(null)
+    // Restore opacity
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1'
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent, doctorId: string, timeSlot: string) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverCell({ doctorId, timeSlot })
+  }
+
+  const handleDragLeave = () => {
+    setDragOverCell(null)
+  }
+
+  const handleDrop = (e: React.DragEvent, doctorId: string, timeSlot: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (!draggedAppointment || !onAppointmentMove) {
+      setDraggedAppointment(null)
+      setDragOverCell(null)
+      return
+    }
+
+    // Calculate new start time
+    const newDate = new Date(selectedDate)
+    const [hours] = timeSlot.split(':').map(Number)
+    newDate.setHours(hours, 0, 0, 0)
+
+    // Call the move handler
+    onAppointmentMove(draggedAppointment.id, doctorId, newDate)
+
+    setDraggedAppointment(null)
+    setDragOverCell(null)
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-sm h-full flex flex-col">
       {/* Header */}
@@ -282,17 +337,23 @@ export default function WeeklyCalendarView({
               {/* Doctor Columns */}
               {doctors.map((doctor) => {
                 const appointmentsAtTime = getAppointmentsForDoctorAtTime(doctor.id, timeSlot)
+                const isDropTarget = dragOverCell?.doctorId === doctor.id && dragOverCell?.timeSlot === timeSlot
 
                 return (
                   <div
                     key={`${doctor.id}-${timeSlot}`}
-                    className="border-r border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors relative min-h-[80px]"
+                    className={`border-r border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors relative min-h-[80px] ${
+                      isDropTarget ? 'bg-blue-100 ring-2 ring-blue-400' : ''
+                    }`}
                     onClick={(e) => {
                       const clickDate = new Date(selectedDate)
                       const [hours] = timeSlot.split(':').map(Number)
                       clickDate.setHours(hours, 0, 0, 0)
                       onTimeSlotClick(e, doctor.id, clickDate)
                     }}
+                    onDragOver={(e) => handleDragOver(e, doctor.id, timeSlot)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, doctor.id, timeSlot)}
                   >
                     {/* Current time indicator */}
                     {slotIndex === 0 && currentTimePosition !== null && (
@@ -312,12 +373,15 @@ export default function WeeklyCalendarView({
                       return (
                         <div
                           key={apt.id}
-                          className={`absolute left-1 right-1 ${getStatusColor(apt.status)} border-l-4 rounded-md p-2 shadow-sm hover:shadow-md transition-shadow cursor-pointer overflow-hidden z-10`}
+                          draggable
+                          className={`absolute left-1 right-1 ${getStatusColor(apt.status)} border-l-4 rounded-md p-2 shadow-sm hover:shadow-md transition-shadow cursor-move overflow-hidden z-10`}
                           style={{
                             top: position.top,
                             height: position.height,
                             minHeight: '60px'
                           }}
+                          onDragStart={(e) => handleDragStart(e, apt)}
+                          onDragEnd={handleDragEnd}
                           onClick={(e) => {
                             e.stopPropagation()
                             onAppointmentClick(apt)

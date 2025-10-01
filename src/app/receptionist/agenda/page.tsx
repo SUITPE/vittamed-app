@@ -11,6 +11,7 @@ import AppointmentQuickMenu from '@/components/calendar/AppointmentQuickMenu'
 import ServiceSelectorPanel from '@/components/calendar/ServiceSelectorPanel'
 import ClientSelectorPanel from '@/components/calendar/ClientSelectorPanel'
 import AppointmentSummaryPanel from '@/components/calendar/AppointmentSummaryPanel'
+import AppointmentEditModal from '@/components/calendar/AppointmentEditModal'
 import { Icons } from '@/components/ui/Icons'
 
 interface Doctor {
@@ -33,13 +34,15 @@ interface DoctorAvailability {
 
 interface Appointment {
   id: string
+  appointment_date: string
   patient_name: string
   service_name: string
   start_time: string
   end_time: string
   status: string
-  doctor_name: string
+  doctor_name?: string
   doctor_id: string
+  total_amount?: number
 }
 
 // Helper function to get local date in YYYY-MM-DD format
@@ -84,6 +87,10 @@ export default function ReceptionistAgendaPage() {
     services: [],
     client: null
   })
+
+  // Appointment edit modal
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
 
   // Check if user is receptionist or staff
   const isReceptionist = user?.profile?.role === 'receptionist' || user?.profile?.role === 'staff'
@@ -319,6 +326,84 @@ export default function ReceptionistAgendaPage() {
     }
   }
 
+  const handleUpdateAppointment = async (appointmentId: string, updates: any) => {
+    try {
+      const response = await fetch(`/api/appointments/${appointmentId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates)
+      })
+
+      if (response.ok) {
+        // Refresh appointments
+        fetchDoctorsAndAgenda()
+        // Close modal if status was updated
+        if (updates.status) {
+          setShowEditModal(false)
+          setSelectedAppointment(null)
+        }
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error al actualizar la cita')
+      }
+    } catch (error) {
+      console.error('Error updating appointment:', error)
+      throw error
+    }
+  }
+
+  const handleAddServiceToAppointment = (appointmentId: string) => {
+    // TODO: Implement adding services to existing appointment
+    // This would open the service selector and allow adding more services
+    console.log('Add service to appointment:', appointmentId)
+    alert('Funcionalidad de agregar servicios en desarrollo')
+  }
+
+  const handleAppointmentMove = async (appointmentId: string, newDoctorId: string, newStartTime: Date) => {
+    try {
+      // Find the appointment to get its duration
+      const appointment = appointments.find(apt => apt.id === appointmentId)
+      if (!appointment) {
+        console.error('Appointment not found')
+        return
+      }
+
+      // Calculate duration and new end time
+      const startDate = new Date(`${appointment.appointment_date}T${appointment.start_time}`)
+      const endDate = new Date(`${appointment.appointment_date}T${appointment.end_time}`)
+      const durationMs = endDate.getTime() - startDate.getTime()
+
+      const newEndTime = new Date(newStartTime.getTime() + durationMs)
+
+      // Update the appointment
+      const response = await fetch(`/api/appointments/${appointmentId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          doctor_id: newDoctorId,
+          appointment_date: getLocalDateString(newStartTime),
+          start_time: getLocalTimeString(newStartTime),
+          end_time: getLocalTimeString(newEndTime)
+        })
+      })
+
+      if (response.ok) {
+        // Refresh appointments
+        fetchDoctorsAndAgenda()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error al mover la cita')
+      }
+    } catch (error) {
+      console.error('Error moving appointment:', error)
+      alert('Error al mover la cita')
+    }
+  }
+
   if (loading || loadingData) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -473,9 +558,10 @@ export default function ReceptionistAgendaPage() {
                 }}
                 onTimeSlotClick={handleTimeSlotClick}
                 onAppointmentClick={(appointment) => {
-                  console.log('Appointment clicked:', appointment)
-                  // TODO: Open appointment details modal
+                  setSelectedAppointment(appointment)
+                  setShowEditModal(true)
                 }}
+                onAppointmentMove={handleAppointmentMove}
               />
             </div>
           )}
@@ -489,7 +575,8 @@ export default function ReceptionistAgendaPage() {
                 setSelectedDate(getLocalDateString(date))
               }}
               onAppointmentClick={(appointment) => {
-                console.log('Appointment clicked:', appointment)
+                setSelectedAppointment(appointment)
+                setShowEditModal(true)
               }}
             />
           )}
@@ -730,6 +817,19 @@ export default function ReceptionistAgendaPage() {
           onCheckout={() => console.log('Checkout')}
         />
       )}
+
+      {/* Appointment Edit Modal */}
+      <AppointmentEditModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false)
+          setSelectedAppointment(null)
+        }}
+        appointment={selectedAppointment}
+        onUpdate={handleUpdateAppointment}
+        onAddService={handleAddServiceToAppointment}
+        tenantId={currentTenantId || ''}
+      />
     </div>
   )
 }
