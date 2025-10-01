@@ -36,9 +36,13 @@ export async function GET(
       }, { status: 403 })
     }
 
+    // Get query params
+    const url = new URL(request.url)
+    const roleFilter = url.searchParams.get('role')
+
     // Get all users for this tenant from the view (when multi-tenant is active)
     // For now, we'll use a simpler query until the migration is applied
-    const { data: tenantUsers, error: usersError } = await supabase
+    let query = supabase
       .from('user_profiles')
       .select(`
         id,
@@ -51,6 +55,13 @@ export async function GET(
         updated_at
       `)
       .eq('tenant_id', tenantId)
+
+    // Apply role filter if provided
+    if (roleFilter) {
+      query = query.eq('role', roleFilter)
+    }
+
+    const { data: tenantUsers, error: usersError } = await query
 
     if (usersError) {
       console.error('Error fetching tenant users:', usersError)
@@ -142,7 +153,7 @@ export async function POST(
         last_name,
         phone,
         role,
-        tenantId,
+        tenant_id: tenantId,
         send_invitation
       })
     })

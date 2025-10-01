@@ -7,6 +7,7 @@ interface CreateUserRequest {
   email: string
   first_name?: string
   last_name?: string
+  phone?: string
   temp_password?: string
   role?: UserRole
   tenant_id?: string
@@ -24,16 +25,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    // Check if current user is admin of any tenant
-    const { data: adminRoles, error: rolesError } = await supabase
-      .from('user_profiles')
-      .select('role, tenant_id')
-      .eq('id', user.id)
-      .single()
+    // Check if current user is admin, staff or receptionist
+    const userRole = user.profile?.role
 
-    if (rolesError || !adminRoles || adminRoles.role !== 'admin_tenant') {
+    if (!userRole) {
       return NextResponse.json({
-        error: 'Only tenant administrators can create users'
+        error: 'User profile not found'
+      }, { status: 403 })
+    }
+
+    const allowedRoles = ['admin_tenant', 'staff', 'receptionist']
+
+    if (!allowedRoles.includes(userRole)) {
+      return NextResponse.json({
+        error: 'Only administrators, staff and receptionists can create users'
       }, { status: 403 })
     }
 
@@ -42,6 +47,7 @@ export async function POST(request: NextRequest) {
       email,
       first_name,
       last_name,
+      phone,
       temp_password = 'VittaMed2024!',
       role = 'patient',
       tenant_id,
@@ -62,24 +68,21 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      return NextResponse.json({
-        error: 'Invalid email format'
-      }, { status: 400 })
-    }
+    // Validate email format if provided
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email)) {
+        return NextResponse.json({
+          error: 'Invalid email format'
+        }, { status: 400 })
+      }
 
-    // Check if user already exists
-    const { data: existingAuth } = await supabase.auth.admin.getUserByEmail(email)
-
-    if (existingAuth.user) {
-      // User exists in auth, check if they have a profile
+      // Check if user already exists by email
       const { data: existingProfile } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('email', email)
-        .single()
+        .maybeSingle()
 
       if (existingProfile) {
         return NextResponse.json({
@@ -94,45 +97,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create user in Supabase Auth
-    const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-      email,
-      password: temp_password,
-      email_confirm: !send_invitation, // If sending invitation, don't auto-confirm
-      user_metadata: {
-        first_name: first_name || '',
-        last_name: last_name || '',
-        role: role
-      }
-    })
+    // Generate new UUID for user
+    const { randomUUID } = await import('crypto')
+    const userId = randomUUID()
 
-    if (createError) {
-      console.error('Error creating user in auth:', createError)
-
-      // Handle specific error cases
-      if (createError.message?.includes('already registered')) {
-        return NextResponse.json({
-          error: 'User with this email already exists'
-        }, { status: 409 })
-      }
-
-      return NextResponse.json({ error: 'Failed to create user account' }, { status: 500 })
-    }
-
-    if (!newUser.user) {
-      return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
-    }
-
-    // Create user profile
+    // Create user profile with tenant_id directly
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .insert({
-        id: newUser.user.id,
-        email,
+        id: userId,
+        email: email || null,
         first_name: first_name || null,
         last_name: last_name || null,
-        role: 'patient', // Default role, will be overridden by tenant assignment
-        tenant_id: null, // Will be set when assigned to tenant
+        phone: phone || null,
+        role: role, // Use the role provided in the request
+        tenant_id: tenant_id || null, // Set tenant_id directly
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -141,35 +120,7 @@ export async function POST(request: NextRequest) {
 
     if (profileError) {
       console.error('Error creating user profile:', profileError)
-
-      // If profile creation fails, try to clean up the auth user
-      try {
-        await supabase.auth.admin.deleteUser(newUser.user.id)
-      } catch (cleanupError) {
-        console.error('Error cleaning up auth user after profile creation failure:', cleanupError)
-      }
-
       return NextResponse.json({ error: 'Failed to create user profile' }, { status: 500 })
-    }
-
-    // If tenant_id is provided, assign user to that tenant
-    if (tenant_id) {
-      try {
-        const { data: roleId, error: assignError } = await supabase
-          .rpc('add_user_to_tenant', {
-            user_uuid: newUser.user.id,
-            tenant_uuid: tenant_id,
-            user_role: role,
-            doctor_uuid: null
-          })
-
-        if (assignError) {
-          console.error('Error assigning user to tenant:', assignError)
-          // Don't fail the whole operation, user is created but not assigned
-        }
-      } catch (assignError) {
-        console.error('Error in tenant assignment:', assignError)
-      }
     }
 
     // TODO: Send invitation email if requested
@@ -185,7 +136,7 @@ export async function POST(request: NextRequest) {
         .from('tenants')
         .select('name')
         .eq('id', tenant_id)
-        .single()
+        .maybeSingle()
 
       tenantName = tenant?.name || tenantName
     }
@@ -193,7 +144,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       user: {
-        id: newUser.user.id,
+        id: userId,
         email,
         first_name,
         last_name,

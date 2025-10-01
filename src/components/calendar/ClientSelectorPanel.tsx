@@ -144,7 +144,7 @@ export default function ClientSelectorPanel({
               <>
                 {filteredClients.map((client) => (
                   <button
-                    key={client.id}
+                    key={client.user_id || client.id}
                     onClick={() => {
                       onSelectClient(client)
                       onClose()
