@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
 import CalendarView from '@/components/calendar/CalendarView'
+import WeeklyCalendarView from '@/components/calendar/WeeklyCalendarView'
 import { Icons } from '@/components/ui/Icons'
 
 interface Doctor {
@@ -46,7 +47,7 @@ export default function ReceptionistAgendaPage() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [selectedDoctor, setSelectedDoctor] = useState<string>('')
   const [loadingData, setLoadingData] = useState(true)
-  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar')
+  const [viewMode, setViewMode] = useState<'week' | 'month' | 'list'>('week')
 
   // Check if user is receptionist or staff
   const isReceptionist = user?.profile?.role === 'receptionist' || user?.profile?.role === 'staff'
@@ -221,21 +222,33 @@ export default function ReceptionistAgendaPage() {
               {/* View Mode Toggle */}
               <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
                 <button
-                  onClick={() => setViewMode('calendar')}
+                  onClick={() => setViewMode('week')}
                   className={`
-                    flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
-                    ${viewMode === 'calendar'
+                    flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all
+                    ${viewMode === 'week'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'}
+                  `}
+                >
+                  <Icons.calendarDays className="w-4 h-4" />
+                  Semana
+                </button>
+                <button
+                  onClick={() => setViewMode('month')}
+                  className={`
+                    flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all
+                    ${viewMode === 'month'
                       ? 'bg-white text-blue-600 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'}
                   `}
                 >
                   <Icons.calendar className="w-4 h-4" />
-                  Calendario
+                  Mes
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
                   className={`
-                    flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
+                    flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all
                     ${viewMode === 'list'
                       ? 'bg-white text-blue-600 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'}
@@ -285,8 +298,30 @@ export default function ReceptionistAgendaPage() {
             </div>
           </div>
 
-          {/* Calendar View */}
-          {viewMode === 'calendar' && (
+          {/* Weekly Calendar View (Fresha-style) */}
+          {viewMode === 'week' && (
+            <div className="h-[calc(100vh-300px)]">
+              <WeeklyCalendarView
+                doctors={doctors}
+                appointments={appointments}
+                selectedDate={new Date(selectedDate)}
+                onDateChange={(date) => {
+                  setSelectedDate(date.toISOString().split('T')[0])
+                }}
+                onTimeSlotClick={(doctorId, time) => {
+                  console.log('Time slot clicked:', doctorId, time)
+                  // TODO: Open appointment modal
+                }}
+                onAppointmentClick={(appointment) => {
+                  console.log('Appointment clicked:', appointment)
+                  // TODO: Open appointment details modal
+                }}
+              />
+            </div>
+          )}
+
+          {/* Monthly Calendar View */}
+          {viewMode === 'month' && (
             <CalendarView
               appointments={appointments}
               selectedDate={new Date(selectedDate)}
@@ -294,7 +329,6 @@ export default function ReceptionistAgendaPage() {
                 setSelectedDate(date.toISOString().split('T')[0])
               }}
               onAppointmentClick={(appointment) => {
-                // Handle appointment click - could open modal or navigate to edit
                 console.log('Appointment clicked:', appointment)
               }}
             />
