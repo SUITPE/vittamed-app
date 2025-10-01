@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import AdminNavigation from '@/components/AdminNavigation'
+import AdminSidebar from '@/components/AdminSidebar'
+import AdminHeader from '@/components/AdminHeader'
 
 interface Service {
   id: string
@@ -32,12 +33,15 @@ export default function ServicesPage() {
   })
   const [submitting, setSubmitting] = useState(false)
 
-  // Check if user is admin
-  const isAdmin = () => user?.profile?.role === 'admin_tenant'
+  // Check if user is admin, staff or receptionist
+  const isAuthorized = () => {
+    const role = user?.profile?.role
+    return role === 'admin_tenant' || role === 'staff' || role === 'receptionist'
+  }
   const currentTenantId = user?.profile?.tenant_id
 
   useEffect(() => {
-    if (user && isAdmin()) {
+    if (user && isAuthorized()) {
       fetchServices()
     }
   }, [user])
@@ -147,7 +151,7 @@ export default function ServicesPage() {
     }
   }
 
-  if (!isAdmin()) {
+  if (!isAuthorized()) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -158,7 +162,7 @@ export default function ServicesPage() {
                 Acceso Restringido
               </h2>
               <p className="text-gray-600">
-                Solo los administradores pueden gestionar servicios.
+                Solo el personal administrativo puede gestionar servicios.
               </p>
             </div>
           </div>
@@ -170,11 +174,14 @@ export default function ServicesPage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AdminNavigation currentPath="/admin/services" tenantId={currentTenantId || undefined} />
-        <div className="flex justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Cargando servicios...</p>
+        <AdminSidebar tenantId={currentTenantId || undefined} />
+        <AdminHeader />
+        <div className="ml-64 pt-16">
+          <div className="flex justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Cargando servicios...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -183,9 +190,10 @@ export default function ServicesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AdminNavigation currentPath="/admin/services" tenantId={currentTenantId || undefined} />
+      <AdminSidebar tenantId={currentTenantId || undefined} />
+      <AdminHeader />
 
-      <div className="p-6">
+      <div className="ml-64 pt-16 p-6">
         <div className="max-w-6xl mx-auto">
           <div className="bg-white shadow rounded-lg">
             {/* Header */}
