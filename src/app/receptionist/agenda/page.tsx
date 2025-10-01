@@ -45,13 +45,12 @@ export default function ReceptionistAgendaPage() {
   const [selectedDoctor, setSelectedDoctor] = useState<string>('')
   const [loadingData, setLoadingData] = useState(true)
 
-  // Check if user is receptionist
-  const isReceptionist = user?.profile?.role === 'receptionist'
-  // For testing purposes, use the known tenant ID
-  const currentTenantId = user?.profile?.tenant_id || 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+  // Check if user is receptionist or staff
+  const isReceptionist = user?.profile?.role === 'receptionist' || user?.profile?.role === 'staff'
+  const currentTenantId = user?.profile?.tenant_id
 
   useEffect(() => {
-    if (!loading && (!user || user.profile?.role !== 'receptionist')) {
+    if (!loading && (!user || (user.profile?.role !== 'receptionist' && user.profile?.role !== 'staff'))) {
       router.push('/auth/login')
       return
     }
@@ -188,7 +187,7 @@ export default function ReceptionistAgendaPage() {
                 Acceso Restringido
               </h2>
               <p className="text-gray-600">
-                Solo las recepcionistas pueden acceder a las agendas.
+                Solo el personal administrativo puede acceder a las agendas.
               </p>
             </div>
           </div>
