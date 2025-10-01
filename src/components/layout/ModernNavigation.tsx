@@ -6,12 +6,34 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Icons } from '@/components/ui/Icons'
 import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
 export default function ModernNavigation() {
   const { user, loading, signOut } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [hasActiveSession, setHasActiveSession] = useState(false)
+
+  // Check for active session on component mount and when user changes
+  useEffect(() => {
+    const checkActiveSession = async () => {
+      try {
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include'
+        })
+        setHasActiveSession(response.ok)
+      } catch (error) {
+        setHasActiveSession(false)
+      }
+    }
+
+    // Check if user is available from AuthProvider or check directly via API
+    if (user) {
+      setHasActiveSession(true)
+    } else if (!loading) {
+      checkActiveSession()
+    }
+  }, [user, loading])
 
   if (loading) {
     return (
@@ -73,10 +95,18 @@ export default function ModernNavigation() {
                     Reservar Cita
                   </NavLink>
 
-                  {user.profile?.role === 'admin_tenant' && (
-                    <NavLink href={`/dashboard/${user.profile.tenant_id}`} icon="activity">
-                      Dashboard
-                    </NavLink>
+                  {(user.profile?.role === 'admin_tenant' || user.profile?.role === 'staff' || user.profile?.role === 'receptionist') && (
+                    <>
+                      <NavLink href={`/dashboard/${user.profile.tenant_id}`} icon="activity">
+                        Dashboard
+                      </NavLink>
+                      <NavLink href="/admin/services" icon="stethoscope">
+                        Servicios
+                      </NavLink>
+                      <NavLink href="/appointments" icon="clock3">
+                        Citas
+                      </NavLink>
+                    </>
                   )}
 
                   {user.profile?.role === 'doctor' && (
@@ -157,6 +187,28 @@ export default function ModernNavigation() {
                     Registrarse
                   </Button>
                 </Link>
+                {/* Logout button - only show if there's an active session but no user in AuthProvider */}
+                {hasActiveSession && !user && (
+                  <Button
+                    onClick={async () => {
+                      try {
+                        await fetch('/api/auth/clear-cookies', { method: 'POST' })
+                        setHasActiveSession(false)
+                        window.location.href = '/'
+                      } catch (error) {
+                        console.error('Error clearing cookies:', error)
+                        window.location.href = '/'
+                      }
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="text-sm text-gray-600 hover:text-red-600 border-gray-300"
+                    title="Cerrar sesión activa"
+                  >
+                    <Icons.logOut className="w-4 h-4 mr-2" />
+                    Cerrar Sesión
+                  </Button>
+                )}
               </div>
             )}
 
@@ -192,10 +244,18 @@ export default function ModernNavigation() {
                   Reservar Cita
                 </MobileNavLink>
 
-                {user.profile?.role === 'admin_tenant' && (
-                  <MobileNavLink href={`/dashboard/${user.profile.tenant_id}`} icon="activity">
-                    Dashboard
-                  </MobileNavLink>
+                {(user.profile?.role === 'admin_tenant' || user.profile?.role === 'staff' || user.profile?.role === 'receptionist') && (
+                  <>
+                    <MobileNavLink href={`/dashboard/${user.profile.tenant_id}`} icon="activity">
+                      Dashboard
+                    </MobileNavLink>
+                    <MobileNavLink href="/admin/services" icon="stethoscope">
+                      Servicios
+                    </MobileNavLink>
+                    <MobileNavLink href="/appointments" icon="clock3">
+                      Citas
+                    </MobileNavLink>
+                  </>
                 )}
 
                 {user.profile?.role === 'doctor' && (
@@ -219,6 +279,29 @@ export default function ModernNavigation() {
                   Pacientes
                 </MobileNavLink>
               </>
+            )}
+
+            {/* Logout button - only show if there's an active session in mobile */}
+            {hasActiveSession && !user && (
+              <div className="pt-4 border-t border-gray-200">
+                <button
+                  onClick={async () => {
+                    try {
+                      await fetch('/api/auth/clear-cookies', { method: 'POST' })
+                      setHasActiveSession(false)
+                      window.location.href = '/'
+                    } catch (error) {
+                      console.error('Error clearing cookies:', error)
+                      window.location.href = '/'
+                    }
+                  }}
+                  className="flex items-center space-x-3 w-full rounded-xl px-3 py-3 text-base font-medium transition-all duration-200 text-gray-600 hover:text-red-600 hover:bg-red-50"
+                  title="Cerrar sesión activa"
+                >
+                  <Icons.logOut className="w-5 h-5 transition-colors" />
+                  <span>Cerrar Sesión</span>
+                </button>
+              </div>
             )}
           </div>
         </motion.div>

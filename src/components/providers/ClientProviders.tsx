@@ -1,6 +1,7 @@
 'use client'
 
 import { ReactNode, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { AuthProvider } from '@/contexts/AuthContext'
 import ModernNavigation from '@/components/layout/ModernNavigation'
 import ErrorBoundary from '@/components/ErrorBoundary'
@@ -10,6 +11,11 @@ interface ClientProvidersProps {
 }
 
 export default function ClientProviders({ children }: ClientProvidersProps) {
+  const pathname = usePathname()
+
+  // Hide ModernNavigation on admin routes (they use AdminSidebar)
+  const hideModernNav = pathname?.startsWith('/dashboard/') || pathname?.startsWith('/admin/')
+
   useEffect(() => {
     // Global error handler for unhandled promise rejections and runtime errors
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
@@ -59,7 +65,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <ModernNavigation />
+        {!hideModernNav && <ModernNavigation />}
         {children}
       </AuthProvider>
     </ErrorBoundary>

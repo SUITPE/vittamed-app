@@ -13,8 +13,12 @@ export default function DashboardPage() {
       // Redirect based on user role
       switch (user.profile.role) {
         case 'admin_tenant':
+        case 'staff':
+        case 'receptionist':
           if (user.profile.tenant_id) {
             router.push(`/dashboard/${user.profile.tenant_id}`)
+          } else {
+            router.push('/auth/login')
           }
           break
         case 'doctor':

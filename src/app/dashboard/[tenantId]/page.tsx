@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import AdminNavigation from '@/components/AdminNavigation'
+import AdminSidebar from '@/components/AdminSidebar'
+import AdminHeader from '@/components/AdminHeader'
 
 interface DashboardStats {
   todayAppointments: number
@@ -175,11 +176,10 @@ export default function TenantDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AdminNavigation
-        currentPath={`/dashboard/${tenantId}`}
-        tenantId={tenantId}
-      />
-      <div className="p-6">
+      <AdminSidebar tenantId={tenantId} />
+      <AdminHeader />
+      <div className="ml-64 pt-16">
+        <div className="p-6">
         <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -296,6 +296,7 @@ export default function TenantDashboard() {
               </div>
             </div>
           </div>
+        </div>
         </div>
         </div>
       </div>
