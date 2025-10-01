@@ -33,16 +33,28 @@ export async function PATCH(
     const body = await request.json()
     const { schedulable, role, first_name, last_name, phone } = body
 
+    // If trying to update schedulable, check if column exists first
+    if (schedulable !== undefined) {
+      // Try a test query to see if schedulable column exists
+      const { error: testError } = await supabase
+        .from('user_profiles')
+        .select('schedulable')
+        .limit(1)
+
+      if (testError) {
+        // Column doesn't exist
+        console.warn('schedulable column does not exist:', testError)
+        return NextResponse.json({
+          error: 'El campo "schedulable" no está disponible aún. Por favor aplica la migración desde Supabase Dashboard: supabase/migrations/013_add_schedulable_to_user_profiles.sql',
+          migration_required: true
+        }, { status: 400 })
+      }
+    }
+
     // Build update object
     const updates: any = {}
 
-    // Note: schedulable field update requires migration to be applied first
-    // For now, we skip it and return a message if requested
-    if (schedulable !== undefined) {
-      // Try to include it, will error if column doesn't exist
-      updates.schedulable = schedulable
-    }
-
+    if (schedulable !== undefined) updates.schedulable = schedulable
     if (role !== undefined) updates.role = role
     if (first_name !== undefined) updates.first_name = first_name
     if (last_name !== undefined) updates.last_name = last_name
@@ -60,15 +72,6 @@ export async function PATCH(
 
     if (error) {
       console.error('Error updating user:', error)
-
-      // If error is about missing column, provide helpful message
-      if (error.message?.includes('column') || error.code === '42703') {
-        return NextResponse.json({
-          error: 'El campo "schedulable" no está disponible aún. Por favor aplica la migración desde Supabase Dashboard: supabase/migrations/013_add_schedulable_to_user_profiles.sql',
-          migration_required: true
-        }, { status: 400 })
-      }
-
       return NextResponse.json({ error: 'Failed to update user', details: error.message }, { status: 500 })
     }
 
