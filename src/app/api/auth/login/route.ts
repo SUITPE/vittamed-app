@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { authService } from '@/lib/auth'
+import { customAuth } from '@/lib/custom-auth'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,53 +12,58 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Authenticate using authService
-    const { error } = await authService.signIn(email, password)
+    // Authenticate using custom auth
+    const userProfile = await customAuth.authenticateUser(email, password)
 
-    if (error) {
+    if (!userProfile) {
       return NextResponse.json(
-        { error: error.message || 'Error al iniciar sesión' },
+        { error: 'Email o contraseña incorrectos' },
         { status: 401 }
       )
     }
 
-    // Get current user
-    const user = await authService.getCurrentUser()
+    // Generate JWT token
+    const token = customAuth.generateToken({
+      userId: userProfile.id,
+      email: userProfile.email,
+      role: userProfile.role,
+      tenantId: userProfile.tenant_id || undefined
+    })
 
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Usuario no encontrado' },
-        { status: 401 }
-      )
-    }
+    // Determine redirect path
+    const redirectPath = customAuth.getRedirectPath(userProfile)
 
-    // Determine redirect path based on role
-    let redirectPath = '/dashboard'
+    console.log('✅ Custom auth login successful:', {
+      userId: userProfile.id,
+      email: userProfile.email,
+      role: userProfile.role,
+      redirectPath
+    })
 
-    if (user.profile) {
-      const role = user.profile.role
-      const tenantId = user.profile.tenant_id
+    // Remove password_hash from response for security
+    const { password_hash, ...safeProfile } = userProfile
 
-      if (role === 'admin_tenant' || role === 'staff' || role === 'receptionist') {
-        if (tenantId) {
-          redirectPath = `/dashboard/${tenantId}`
-        }
-      } else if (role === 'doctor') {
-        redirectPath = '/agenda'
-      } else if (role === 'patient') {
-        redirectPath = '/my-appointments'
-      }
-    }
-
-    return NextResponse.json({
+    // Create response with cookie
+    const response = NextResponse.json({
       success: true,
       redirectPath,
       user: {
-        id: user.id,
-        email: user.email,
-        profile: user.profile
+        id: userProfile.id,
+        email: userProfile.email,
+        profile: safeProfile
       }
     })
+
+    // Set authentication cookie in response
+    response.cookies.set('vittamed-auth-token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: '/'
+    })
+
+    return response
 
   } catch (error) {
     console.error('Login API error:', error)

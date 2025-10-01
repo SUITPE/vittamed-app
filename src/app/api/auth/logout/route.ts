@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { authService } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const { error } = await authService.signOut()
+    // Create response
+    const response = NextResponse.json({ success: true })
 
-    if (error) {
-      return NextResponse.json(
-        { error: 'Logout failed' },
-        { status: 500 }
-      )
-    }
+    // Clear authentication cookie
+    response.cookies.delete('vittamed-auth-token')
 
-    return NextResponse.json({ success: true })
+    return response
   } catch (error) {
     console.error('Error in /api/auth/logout:', error)
     return NextResponse.json(

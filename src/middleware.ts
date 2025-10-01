@@ -1,5 +1,8 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { jwtVerify } from 'jose'
+
+const JWT_SECRET = process.env.JWT_SECRET || 'vittamed-dev-secret-key-2024'
+const COOKIE_NAME = 'vittamed-auth-token'
 
 export async function middleware(request: NextRequest) {
   try {
@@ -9,41 +12,20 @@ export async function middleware(request: NextRequest) {
       },
     })
 
-    // Check if environment variables are available
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.error('Supabase environment variables not available in middleware')
-      return response
-    }
-
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-            response = NextResponse.next({
-              request,
-            })
-            cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options)
-            )
-          },
-        },
-      }
-    )
-
-    // Check if user is authenticated for protected routes
+    // Check if user is authenticated using custom JWT auth
     let user = null
     try {
-      const { data } = await supabase.auth.getUser()
-      user = data.user
+      // Get custom auth token from cookie
+      const token = request.cookies.get(COOKIE_NAME)?.value
+
+      if (token) {
+        // Verify JWT token using jose (Edge Runtime compatible)
+        const secret = new TextEncoder().encode(JWT_SECRET)
+        const { payload } = await jwtVerify(token, secret)
+        user = payload ? { id: payload.userId as string, role: payload.role as string, tenantId: payload.tenantId as string | undefined } : null
+      }
     } catch (authError) {
-      console.error('Error getting user in middleware:', authError)
+      console.error('Error verifying token in middleware:', authError)
       // Continue without authentication check if there's an error
     }
 
@@ -62,42 +44,20 @@ export async function middleware(request: NextRequest) {
 
     // If authenticated user tries to access auth pages, redirect based on role
     if (user && (request.nextUrl.pathname.startsWith('/auth/'))) {
-      try {
-        // Get user profile to determine redirect
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('role, tenant_id')
-          .eq('id', user.id)
-          .single()
-
-        if (profile?.role === 'admin_tenant') {
-          if (profile.tenant_id) {
-            return NextResponse.redirect(new URL(`/dashboard/${profile.tenant_id}`, request.url))
-          } else {
-            // Get first available tenant dynamically
-            try {
-              const { data: tenants } = await supabase
-                .from('tenants')
-                .select('id')
-                .limit(1)
-
-              if (tenants && tenants.length > 0) {
-                return NextResponse.redirect(new URL(`/dashboard/${tenants[0].id}`, request.url))
-              }
-            } catch (tenantError) {
-              console.warn('Could not fetch tenant for admin redirect')
-            }
-            return NextResponse.redirect(new URL('/dashboard', request.url))
-          }
-        } else if (profile?.role === 'doctor') {
-          return NextResponse.redirect(new URL('/agenda', request.url))
-        } else if (profile?.role === 'patient') {
-          return NextResponse.redirect(new URL('/my-appointments', request.url))
+      // Redirect based on user role from JWT payload
+      if (user.role === 'super_admin') {
+        return NextResponse.redirect(new URL('/admin/global', request.url))
+      } else if (user.role === 'admin_tenant' || user.role === 'staff' || user.role === 'receptionist') {
+        if (user.tenantId) {
+          return NextResponse.redirect(new URL(`/dashboard/${user.tenantId}`, request.url))
         } else {
           return NextResponse.redirect(new URL('/dashboard', request.url))
         }
-      } catch (profileError) {
-        console.error('Error fetching user profile in middleware:', profileError)
+      } else if (user.role === 'doctor') {
+        return NextResponse.redirect(new URL('/agenda', request.url))
+      } else if (user.role === 'patient') {
+        return NextResponse.redirect(new URL('/my-appointments', request.url))
+      } else {
         return NextResponse.redirect(new URL('/dashboard', request.url))
       }
     }

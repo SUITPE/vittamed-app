@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { authService } from '@/lib/auth'
+import { customAuth } from '@/lib/custom-auth'
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await authService.getCurrentUser()
+    const user = await customAuth.getCurrentUser()
 
     if (!user) {
       return NextResponse.json(
@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // getCurrentUser() already returns AuthUser with safe profile (no password_hash)
     return NextResponse.json({ success: true, user })
   } catch (error) {
     console.error('Error in /api/auth/me:', error)
