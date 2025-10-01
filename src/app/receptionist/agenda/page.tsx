@@ -72,7 +72,7 @@ export default function ReceptionistAgendaPage() {
 
   // Check if user is receptionist or staff
   const isReceptionist = user?.profile?.role === 'receptionist' || user?.profile?.role === 'staff'
-  const currentTenantId = user?.profile?.tenant_id
+  const currentTenantId = user?.profile?.tenant_id || undefined
 
   useEffect(() => {
     if (!loading && (!user || (user.profile?.role !== 'receptionist' && user.profile?.role !== 'staff'))) {

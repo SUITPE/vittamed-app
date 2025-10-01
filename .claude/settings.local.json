@@ -100,7 +100,13 @@
       "Bash(xargs:*)",
       "Bash(timeout 10 curl http://localhost:3000/api/tenants)",
       "Bash(git reset:*)",
-      "Bash(git filter-branch:*)"
+      "Bash(git filter-branch:*)",
+      "Bash(./fix-staff-password.sh:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMzZjZDI3YS00MzVmLTQ4Y2EtOGZjNC1kMmZmNzliYWNiNGIiLCJlbWFpbCI6InNlY3JlQGNsaW5pY2FzYW5yYWZhZWwuY29tIiwicm9sZSI6InN0YWZmIiwidGVuYW50SWQiOiIxMzIzYjg5ZC0yZDliLTRhODEtYTQxMi0wMDVjNzkxNTMzNzAiLCJpYXQiOjE3NTkyOTI0ODcsImV4cCI6MTc1OTg5NzI4N30.iJYBzdjJ_BNcL3v_rrwdREzMX20PbxcMO63fSN0dEUo\")",
+      "Bash(__NEW_LINE__ curl -s -b /tmp/test-cookies.txt http://localhost:3000/api/auth/me)",
+      "Bash(python3:*)",
+      "Bash(cat:*)",
+      "Bash(open http://localhost:3001/auth/login)"
     ],
     "deny": [],
     "ask": []
