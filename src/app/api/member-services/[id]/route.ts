@@ -32,7 +32,7 @@ export async function GET(
 
     // Get user's tenant
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('tenant_id, role')
       .eq('id', user.id)
       .single()
@@ -59,7 +59,7 @@ export async function GET(
 
     if (includeRelations) {
       selectQuery += `,
-        user_profiles!member_services_member_user_id_fkey(
+        custom_users!member_services_member_user_id_fkey(
           id,
           first_name,
           last_name,
@@ -128,7 +128,7 @@ export async function PUT(
 
     // Get user profile to check role and tenant
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('role, tenant_id')
       .eq('id', user.id)
       .single()
@@ -167,7 +167,7 @@ export async function PUT(
           duration_minutes,
           price
         ),
-        user_profiles!member_services_member_user_id_fkey(
+        custom_users!member_services_member_user_id_fkey(
           id,
           first_name,
           last_name,
@@ -229,7 +229,7 @@ export async function DELETE(
 
     // Get user profile to check role and tenant
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('role, tenant_id')
       .eq('id', user.id)
       .single()

@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     // Get user's tenant
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('tenant_id, role')
       .eq('id', user.id)
       .single()
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
 
     // Get user profile to check role and tenant
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('role, tenant_id')
       .eq('id', user.id)
       .single()

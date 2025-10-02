@@ -48,9 +48,9 @@ class TenantUtils {
 
   async getUserTenantId(userId: string): Promise<string | null> {
     try {
-      // First check user_profiles
+      // First check custom_users
       const { data: profile } = await this.supabase
-        .from('user_profiles')
+        .from('custom_users')
         .select('tenant_id')
         .eq('id', userId)
         .single()

@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     if (member_id) {
       // VT-40: First check if member allows bookings
       const { data: memberProfile, error: memberProfileError } = await supabase
-        .from('user_profiles')
+        .from('custom_users')
         .select('allow_bookings, is_active, role')
         .eq('id', member_id)
         .eq('tenant_id', tenant_id)
@@ -366,7 +366,7 @@ export async function GET(request: NextRequest) {
         doctor:doctors(id, first_name, last_name, email, phone),
         patient:patients(id, first_name, last_name, email, phone),
         service:services(id, name, description, duration_minutes, price),
-        assigned_member:user_profiles!appointments_assigned_member_id_fkey(id, first_name, last_name, email)
+        assigned_member:custom_users!appointments_assigned_member_id_fkey(id, first_name, last_name, email)
       `, { count: 'exact' })
       .eq('tenant_id', userTenantId)
 

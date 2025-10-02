@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
     // Check if user is admin
     const { data: userProfile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('role, tenant_id, first_name, last_name')
       .eq('id', user.id)
       .single()
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     // Check if user already exists
     const { data: existingUser } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('id, email')
       .eq('email', email)
       .single()
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
 
     // Create user profile
     const { error: profileError } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .insert({
         id: newUser.user.id,
         email,

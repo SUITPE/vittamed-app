@@ -37,7 +37,7 @@ export async function GET(
 
     // Get user profile data
     const { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('*')
       .eq('id', clientId)
       .single()
@@ -101,7 +101,7 @@ export async function PUT(
 
     // Update the profile
     const { data: updatedProfile, error: updateError } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .update({
         ...allowedUpdates,
         updated_at: new Date().toISOString()

@@ -604,7 +604,7 @@ export async function sendBookingConfirmation(
         patient:patients(id, first_name, last_name, email, phone),
         service:services(id, name, description, duration_minutes, price),
         doctor:doctors(id, first_name, last_name),
-        assigned_member:user_profiles!appointments_assigned_member_id_fkey(id, first_name, last_name)
+        assigned_member:custom_users!appointments_assigned_member_id_fkey(id, first_name, last_name)
       `)
       .eq('id', appointmentId)
       .single()

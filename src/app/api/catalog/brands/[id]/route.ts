@@ -86,7 +86,7 @@ export async function PUT(
 
     // Get user profile to check role
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('role')
       .eq('id', user.id)
       .single()
@@ -180,7 +180,7 @@ export async function DELETE(
 
     // Get user profile to check role
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('role')
       .eq('id', user.id)
       .single()

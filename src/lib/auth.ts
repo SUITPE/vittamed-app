@@ -207,7 +207,7 @@ class AuthService {
         console.log('🔍 Fetching user profile from database...')
 
         const profilePromise = this.supabase!
-          .from('user_profiles')
+          .from('custom_users')
           .select('*')
           .eq('id', user.id)
           .single()
@@ -294,7 +294,7 @@ class AuthService {
     }
 
     const { data, error } = await this.supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('*')
       .eq('id', userId)
       .single()
@@ -313,7 +313,7 @@ class AuthService {
     }
 
     const { data, error } = await this.supabase
-      .from('user_profiles')
+      .from('custom_users')
       .update(updates)
       .eq('id', userId)
       .select()

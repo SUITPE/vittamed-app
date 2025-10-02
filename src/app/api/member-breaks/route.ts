@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     // Get user profile to check permissions
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('tenant_id, role')
       .eq('id', user.id)
       .single()
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
         is_active,
         created_at,
         updated_at,
-        user_profiles!member_breaks_member_user_id_fkey(
+        custom_users!member_breaks_member_user_id_fkey(
           id,
           first_name,
           last_name,
@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
     const response = {
       breaks: breaks?.map(b => ({
         ...b,
-        member: b.user_profiles
+        member: b.custom_users
       })) || [],
       pagination: {
         page,
@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
 
     // Get user profile to check permissions
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('tenant_id, role')
       .eq('id', user.id)
       .single()
@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
 
     // Verify the member exists and belongs to the tenant
     const { data: memberExists, error: memberError } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('id, role, tenant_id')
       .eq('id', member_user_id)
       .eq('role', 'member')
@@ -309,7 +309,7 @@ export async function POST(request: NextRequest) {
       })
       .select(`
         *,
-        user_profiles!member_breaks_member_user_id_fkey(
+        custom_users!member_breaks_member_user_id_fkey(
           id,
           first_name,
           last_name,
@@ -330,9 +330,9 @@ export async function POST(request: NextRequest) {
     // Format response
     const response = {
       ...memberBreak,
-      member: memberBreak.user_profiles
+      member: memberBreak.custom_users
     }
-    delete response.user_profiles
+    delete response.custom_users
 
     return NextResponse.json(response, { status: 201 })
 

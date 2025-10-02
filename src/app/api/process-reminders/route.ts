@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
           patient:patients(id, first_name, last_name, email, phone),
           service:services(id, name, description, duration_minutes, price),
           doctor:doctors(id, first_name, last_name, email, phone),
-          assigned_member:user_profiles!appointments_assigned_member_id_fkey(id, first_name, last_name, email)
+          assigned_member:custom_users!appointments_assigned_member_id_fkey(id, first_name, last_name, email)
         )
       `)
       .eq('status', 'scheduled')

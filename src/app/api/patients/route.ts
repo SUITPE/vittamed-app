@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase-server'
 
 async function getUserProfile(supabase: any, userId: string) {
   const { data: profile, error } = await supabase
-    .from('user_profiles')
+    .from('custom_users')
     .select('role, tenant_id')
     .eq('id', userId)
     .single()

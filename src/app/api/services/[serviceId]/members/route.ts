@@ -64,7 +64,7 @@ export async function GET(
         is_active,
         created_at,
         updated_at,
-        user_profiles!member_services_member_user_id_fkey(
+        custom_users!member_services_member_user_id_fkey(
           id,
           first_name,
           last_name,
@@ -105,7 +105,7 @@ export async function GET(
         id: sm.id,
         member_user_id: sm.member_user_id,
         is_active: sm.is_active,
-        member: sm.user_profiles
+        member: sm.custom_users
       })) || []
     }
 
@@ -198,7 +198,7 @@ export async function POST(
     if (action === 'assign') {
       // Verify all members exist and belong to this tenant
       const { data: members, error: membersError } = await supabase
-        .from('user_profiles')
+        .from('custom_users')
         .select('id, role, tenant_id')
         .in('id', member_user_ids)
         .eq('role', 'member')
@@ -224,7 +224,7 @@ export async function POST(
         .upsert(assignments, { onConflict: 'member_user_id, service_id, tenant_id' })
         .select(`
           *,
-          user_profiles!member_services_member_user_id_fkey(
+          custom_users!member_services_member_user_id_fkey(
             id,
             first_name,
             last_name,

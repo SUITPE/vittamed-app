@@ -54,7 +54,7 @@ export async function PUT(
 
     // Get current member to verify it exists and is in the same tenant
     const { data: currentMember, error: memberError } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('id, tenant_id, role, first_name, last_name, email, allow_bookings, is_active')
       .eq('id', memberId)
       .eq('tenant_id', userTenantId)
@@ -83,7 +83,7 @@ export async function PUT(
 
     // Update member booking settings
     const { data: updatedMember, error: updateError } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .update({
         allow_bookings,
         updated_at: new Date().toISOString()

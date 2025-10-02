@@ -32,7 +32,7 @@ export async function GET(
 
     // Get user's tenant and role
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('tenant_id, role')
       .eq('id', user.id)
       .single()
@@ -46,7 +46,7 @@ export async function GET(
 
     // Verify the member exists and belongs to this tenant
     const { data: member, error: memberError } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('id, first_name, last_name, email, role, tenant_id')
       .eq('id', memberId)
       .eq('role', 'member')

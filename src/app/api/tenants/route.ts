@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
 
     // Update user profile to assign as admin of new tenant
     const { error: updateError } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .update({ tenant_id: tenant.id })
       .eq('id', user.id)
 

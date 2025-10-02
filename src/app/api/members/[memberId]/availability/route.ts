@@ -33,7 +33,7 @@ export async function GET(
     // Verify member exists and belongs to tenant
     // VT-40: Include allow_bookings flag in member verification
     const { data: member, error: memberError } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('id, first_name, last_name, email, role, tenant_id, allow_bookings, is_active')
       .eq('id', memberId)
       .eq('role', 'member')

@@ -34,7 +34,7 @@ export async function GET(
       .from('member_availability')
       .select(`
         *,
-        user_profiles!member_availability_member_user_id_fkey(
+        custom_users!member_availability_member_user_id_fkey(
           id,
           first_name,
           last_name,
@@ -54,7 +54,7 @@ export async function GET(
 
     // Check permissions
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('tenant_id, role')
       .eq('id', user.id)
       .single()
@@ -74,9 +74,9 @@ export async function GET(
     // Format response
     const response = {
       ...availability,
-      member: availability.user_profiles
+      member: availability.custom_users
     }
-    delete response.user_profiles
+    delete response.custom_users
 
     return NextResponse.json(response)
 
@@ -132,7 +132,7 @@ export async function PUT(
 
     // Check permissions
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('tenant_id, role')
       .eq('id', user.id)
       .single()
@@ -249,7 +249,7 @@ export async function PUT(
       .eq('id', id)
       .select(`
         *,
-        user_profiles!member_availability_member_user_id_fkey(
+        custom_users!member_availability_member_user_id_fkey(
           id,
           first_name,
           last_name,
@@ -270,9 +270,9 @@ export async function PUT(
     // Format response
     const response = {
       ...updated,
-      member: updated.user_profiles
+      member: updated.custom_users
     }
-    delete response.user_profiles
+    delete response.custom_users
 
     return NextResponse.json(response)
 
@@ -327,7 +327,7 @@ export async function DELETE(
 
     // Check permissions
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('tenant_id, role')
       .eq('id', user.id)
       .single()

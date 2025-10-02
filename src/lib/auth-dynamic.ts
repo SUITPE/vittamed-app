@@ -51,9 +51,9 @@ class DynamicAuthService {
     last_name: string
   }> {
     try {
-      // First, check if user already exists in user_profiles
+      // First, check if user already exists in custom_users
       const { data: existingProfile } = await this.supabase
-        .from('user_profiles')
+        .from('custom_users')
         .select('*')
         .eq('email', email)
         .single()
@@ -68,7 +68,7 @@ class DynamicAuthService {
         }
       }
 
-      // If not in user_profiles, check if they're in doctors table
+      // If not in custom_users, check if they're in doctors table
       const { data: doctorRecord } = await this.supabase
         .from('doctors')
         .select('id, tenant_id, first_name, last_name')
@@ -201,7 +201,7 @@ class DynamicAuthService {
       let dbProfile: UserProfile | null = null
       try {
         const { data, error } = await this.supabase
-          .from('user_profiles')
+          .from('custom_users')
           .select('*')
           .eq('id', user.id)
           .single()

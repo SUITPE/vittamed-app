@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
 
       // Check if user already exists by email
       const { data: existingProfile } = await supabase
-        .from('user_profiles')
+        .from('custom_users')
         .select('*')
         .eq('email', email)
         .maybeSingle()
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     // Create user profile with tenant_id directly
     const { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .insert({
         id: userId,
         email: email || null,
@@ -182,7 +182,7 @@ export async function GET(request: NextRequest) {
 
     // Check if user exists in profiles
     const { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('id, email, first_name, last_name, role, tenant_id')
       .eq('email', email)
       .single()

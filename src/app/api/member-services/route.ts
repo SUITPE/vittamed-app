@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
     // Get user's tenant and role
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('tenant_id, role')
       .eq('id', user.id)
       .single()
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
 
     if (includeRelations) {
       selectQuery += `,
-        user_profiles!member_services_member_user_id_fkey(
+        custom_users!member_services_member_user_id_fkey(
           id,
           first_name,
           last_name,
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
 
     // Search in member name or service name
     if (filters.search) {
-      query = query.or(`services.name.ilike.%${filters.search}%,user_profiles.first_name.ilike.%${filters.search}%,user_profiles.last_name.ilike.%${filters.search}%`)
+      query = query.or(`services.name.ilike.%${filters.search}%,custom_users.first_name.ilike.%${filters.search}%,custom_users.last_name.ilike.%${filters.search}%`)
     }
 
     // Apply pagination
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
 
     // Get user profile to check role and tenant
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('role, tenant_id')
       .eq('id', user.id)
       .single()
@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
 
     // Verify the member exists and has role 'member' in this tenant
     const { data: member, error: memberError } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('id, role, tenant_id')
       .eq('id', data.member_user_id)
       .eq('role', 'member')
@@ -237,7 +237,7 @@ export async function POST(request: NextRequest) {
           duration_minutes,
           price
         ),
-        user_profiles!member_services_member_user_id_fkey(
+        custom_users!member_services_member_user_id_fkey(
           id,
           first_name,
           last_name,

@@ -29,7 +29,7 @@ export async function GET(
 
     // Get user profile to check role and permissions
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('role, tenant_id')
       .eq('id', user.id)
       .single()
@@ -60,7 +60,7 @@ export async function GET(
       .from('appointments')
       .select(`
         patient_id,
-        user_profiles!appointments_patient_id_fkey (
+        custom_users!appointments_patient_id_fkey (
           id,
           first_name,
           last_name,
@@ -89,8 +89,8 @@ export async function GET(
     const uniquePatientsMap = new Map()
 
     appointments?.forEach(appointment => {
-      if (appointment.user_profiles && appointment.patient_id) {
-        uniquePatientsMap.set(appointment.patient_id, appointment.user_profiles)
+      if (appointment.custom_users && appointment.patient_id) {
+        uniquePatientsMap.set(appointment.patient_id, appointment.custom_users)
       }
     })
 

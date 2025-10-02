@@ -224,7 +224,7 @@ export async function PUT(request: NextRequest) {
 
     // Verify all members exist and belong to this tenant
     const { data: members, error: membersError } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('id, first_name, last_name, email, allow_bookings')
       .in('id', member_ids)
       .eq('tenant_id', userTenantId)
@@ -239,7 +239,7 @@ export async function PUT(request: NextRequest) {
 
     // Update all members' booking settings
     const { data: updatedMembers, error: updateError } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .update({
         allow_bookings,
         updated_at: new Date().toISOString()

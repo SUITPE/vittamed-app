@@ -227,7 +227,7 @@ export async function GET(
     }
 
     const { data: userProfile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('tenant_id')
       .eq('id', user.id)
       .single()

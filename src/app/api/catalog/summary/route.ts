@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     // Get user's tenant
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('custom_users')
       .select('tenant_id, role')
       .eq('id', user.id)
       .single()
