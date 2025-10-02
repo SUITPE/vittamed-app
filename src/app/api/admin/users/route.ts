@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { customAuth } from '@/lib/custom-auth'
 import { UserRole, isValidUserRole } from '@/types/user'
+import { sendEmailNotification } from '@/lib/notifications'
 
 interface CreateUserRequest {
   email: string
@@ -101,6 +102,9 @@ export async function POST(request: NextRequest) {
     const { randomUUID } = await import('crypto')
     const userId = randomUUID()
 
+    // Hash the password
+    const passwordHash = await customAuth.hashPassword(temp_password)
+
     // Create user profile with tenant_id directly
     const { data: profile, error: profileError } = await supabase
       .from('custom_users')
@@ -110,6 +114,7 @@ export async function POST(request: NextRequest) {
         first_name: first_name || null,
         last_name: last_name || null,
         phone: phone || null,
+        password_hash: passwordHash,
         role: role, // Use the role provided in the request
         tenant_id: tenant_id || null, // Set tenant_id directly
         created_at: new Date().toISOString(),
@@ -119,17 +124,28 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (profileError) {
-      console.error('Error creating user profile:', profileError)
-      return NextResponse.json({ error: 'Failed to create user profile' }, { status: 500 })
+      console.error('Error creating user profile:', {
+        error: profileError,
+        message: profileError.message,
+        code: profileError.code,
+        details: profileError.details,
+        hint: profileError.hint,
+        requestData: {
+          email,
+          first_name,
+          last_name,
+          role,
+          tenant_id
+        }
+      })
+      return NextResponse.json({
+        error: 'Failed to create user profile',
+        details: profileError.message,
+        code: profileError.code
+      }, { status: 500 })
     }
 
-    // TODO: Send invitation email if requested
-    if (send_invitation) {
-      // For now, we'll log this. In production, you'd integrate with an email service
-      console.log(`TODO: Send invitation email to ${email} with temp password: ${temp_password}`)
-    }
-
-    // Get tenant info for response
+    // Get tenant info for response and email
     let tenantName = 'VittaMed'
     if (tenant_id) {
       const { data: tenant } = await supabase
@@ -139,6 +155,34 @@ export async function POST(request: NextRequest) {
         .maybeSingle()
 
       tenantName = tenant?.name || tenantName
+    }
+
+    // Send invitation email if requested
+    if (send_invitation && email) {
+      const roleNames: Record<UserRole, string> = {
+        admin_tenant: 'Administrador',
+        doctor: 'Doctor/a',
+        staff: 'Personal',
+        receptionist: 'Recepcionista',
+        patient: 'Paciente',
+        member: 'Miembro'
+      }
+
+      await sendEmailNotification({
+        recipientEmail: email,
+        subject: `Invitación a ${tenantName}`,
+        content: `Has sido invitado/a como ${roleNames[role]} a ${tenantName}. Puedes acceder a la plataforma usando las credenciales proporcionadas abajo.`,
+        type: 'user_invitation',
+        metadata: {
+          tempPassword: temp_password,
+          tenantName: tenantName,
+          firstName: first_name || '',
+          role: roleNames[role]
+        }
+      }).catch(error => {
+        console.error('Error sending invitation email:', error)
+        // No bloqueamos la creación del usuario si falla el email
+      })
     }
 
     return NextResponse.json({
@@ -156,8 +200,15 @@ export async function POST(request: NextRequest) {
     }, { status: 201 })
 
   } catch (error) {
-    console.error('Unexpected error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Unexpected error in POST /api/admin/users:', {
+      error,
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    })
+    return NextResponse.json({
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
 

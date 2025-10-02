@@ -23,7 +23,13 @@ export interface NotificationData {
   recipientPhone?: string
   subject: string
   content: string
-  type: 'appointment_confirmation' | 'appointment_reminder' | 'payment_success' | 'payment_failed' | 'appointment_cancelled'
+  type: 'appointment_confirmation' | 'appointment_reminder' | 'payment_success' | 'payment_failed' | 'appointment_cancelled' | 'user_invitation'
+  metadata?: {
+    tempPassword?: string
+    tenantName?: string
+    firstName?: string
+    role?: string
+  }
 }
 
 export interface ReminderNotificationData {
@@ -147,6 +153,23 @@ function getContentByType(data: NotificationData): string {
         <p>${data.content}</p>
         <p>Si necesitas reagendar, puedes hacerlo a través de nuestra plataforma.</p>
         <a href="#" class="button">Reagendar cita</a>
+      `
+    case 'user_invitation':
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vittamed.abp.pe'
+      return `
+        <h2>¡Bienvenido a ${data.metadata?.tenantName || 'VittaMed'}!</h2>
+        <p>Hola ${data.metadata?.firstName || ''},</p>
+        <p>${data.content}</p>
+        ${data.metadata?.tempPassword ? `
+          <div style="background: #f3f4f6; padding: 15px; border-radius: 6px; margin: 20px 0;">
+            <p style="margin: 0;"><strong>Tus credenciales de acceso:</strong></p>
+            <p style="margin: 10px 0 0 0;">Email: <strong>${data.recipientEmail}</strong></p>
+            <p style="margin: 5px 0 0 0;">Contraseña temporal: <strong>${data.metadata.tempPassword}</strong></p>
+          </div>
+          <p style="color: #dc2626; font-size: 14px;">⚠️ Por seguridad, te recomendamos cambiar tu contraseña después de tu primer inicio de sesión.</p>
+        ` : ''}
+        <a href="${appUrl}/auth/login" class="button">Iniciar Sesión</a>
+        <p style="margin-top: 20px; font-size: 14px; color: #6b7280;">O copia este enlace en tu navegador: <br/><a href="${appUrl}/auth/login" style="color: #2563eb;">${appUrl}/auth/login</a></p>
       `
     default:
       return `<p>${data.content}</p>`
