@@ -66,8 +66,18 @@ export async function GET(
     const { data: tenantUsers, error: usersError } = await query
 
     if (usersError) {
-      console.error('Error fetching tenant users:', usersError)
-      return NextResponse.json({ error: 'Failed to fetch tenant users' }, { status: 500 })
+      console.error('Error fetching tenant users:', {
+        error: usersError,
+        message: usersError.message,
+        code: usersError.code,
+        details: usersError.details,
+        hint: usersError.hint,
+        tenantId
+      })
+      return NextResponse.json({
+        error: 'Failed to fetch tenant users',
+        details: usersError.message
+      }, { status: 500 })
     }
 
     // Transform data to match expected format
@@ -92,7 +102,7 @@ export async function GET(
         doctor_id: null,
         doctor_first_name: null,
         doctor_last_name: null,
-        is_current_tenant: user.tenantId === tenantId,
+        is_current_tenant: user.tenant_id === tenantId,
         role_assigned_at: user.created_at
       }
     })
@@ -103,8 +113,16 @@ export async function GET(
     })
 
   } catch (error) {
-    console.error('Unexpected error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Unexpected error in GET /api/tenants/[tenantId]/users:', {
+      error,
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      tenantId
+    })
+    return NextResponse.json({
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
 
@@ -178,7 +196,15 @@ export async function POST(
     return NextResponse.json(userData, { status: 201 })
 
   } catch (error) {
-    console.error('Unexpected error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Unexpected error in POST /api/tenants/[tenantId]/users:', {
+      error,
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      tenantId
+    })
+    return NextResponse.json({
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
