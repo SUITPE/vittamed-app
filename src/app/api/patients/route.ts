@@ -1,28 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
-
-async function getUserProfile(supabase: any, userId: string) {
-  const { data: profile, error } = await supabase
-    .from('custom_users')
-    .select('role, tenant_id')
-    .eq('id', userId)
-    .single()
-
-  if (error) {
-    console.warn('Could not fetch user profile:', error)
-    return null
-  }
-
-  return profile
-}
+import { customAuth } from '@/lib/custom-auth'
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient()
 
   try {
-    const { data: { session } } = await supabase.auth.getSession()
+    // Use custom JWT auth instead of Supabase Auth
+    const user = await customAuth.getCurrentUser()
 
-    if (!session?.user) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -38,14 +25,12 @@ export async function GET(request: NextRequest) {
       query = query.eq('tenant_id', tenantId)
     }
 
-    // Get user profile to check role and tenant access
-    const userProfile = await getUserProfile(supabase, session.user.id)
-
-    if (userProfile?.role === 'doctor') {
-      if (!userProfile.tenant_id) {
-        return NextResponse.json({ error: 'Doctor tenant not found' }, { status: 403 })
+    // Filter by user's tenant if doctor or admin_tenant
+    if (user.profile?.role === 'doctor' || user.profile?.role === 'admin_tenant' || user.profile?.role === 'staff' || user.profile?.role === 'receptionist') {
+      if (!user.profile.tenant_id) {
+        return NextResponse.json({ error: 'Tenant not found' }, { status: 403 })
       }
-      query = query.eq('tenant_id', userProfile.tenant_id)
+      query = query.eq('tenant_id', user.profile.tenant_id)
     }
 
     const { data: patients, error } = await query
@@ -67,9 +52,10 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient()
 
   try {
-    const { data: { session } } = await supabase.auth.getSession()
+    // Use custom JWT auth instead of Supabase Auth
+    const user = await customAuth.getCurrentUser()
 
-    if (!session?.user) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -93,13 +79,11 @@ export async function POST(request: NextRequest) {
 
     let finalTenantId = tenant_id
 
-    // Get user profile to determine tenant access
-    const userProfile = await getUserProfile(supabase, session.user.id)
-
-    if (userProfile?.role === 'doctor' && userProfile.tenant_id) {
-      finalTenantId = userProfile.tenant_id
-    } else if (userProfile?.role === 'admin_tenant' && userProfile.tenant_id) {
-      finalTenantId = userProfile.tenant_id
+    // Use user's tenant if they have one
+    if (user.profile?.role === 'doctor' || user.profile?.role === 'admin_tenant' || user.profile?.role === 'staff' || user.profile?.role === 'receptionist') {
+      if (user.profile.tenant_id) {
+        finalTenantId = user.profile.tenant_id
+      }
     }
 
     if (!finalTenantId) {

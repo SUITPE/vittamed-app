@@ -1,20 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
-
-async function getUserProfile(supabase: any, userId: string) {
-  const { data: profile, error } = await supabase
-    .from('custom_users')
-    .select('role, tenant_id')
-    .eq('id', userId)
-    .single()
-
-  if (error) {
-    console.warn('Could not fetch user profile:', error)
-    return null
-  }
-
-  return profile
-}
+import { customAuth } from '@/lib/custom-auth'
 
 export async function GET(
   request: NextRequest,
@@ -24,9 +10,9 @@ export async function GET(
   const supabase = await createClient()
 
   try {
-    const { data: { session } } = await supabase.auth.getSession()
+    const user = await customAuth.getCurrentUser()
 
-    if (!session?.user) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -40,15 +26,11 @@ export async function GET(
       return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
-    // Get user profile to check permissions
-    const userProfile = await getUserProfile(supabase, session.user.id)
-
-    if (userProfile?.role === 'doctor' && userProfile.tenant_id !== patient.tenant_id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-
-    if (userProfile?.role === 'admin_tenant' && userProfile.tenant_id !== patient.tenant_id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    // Check permissions
+    if (user.profile?.role === 'doctor' || user.profile?.role === 'admin_tenant' || user.profile?.role === 'staff' || user.profile?.role === 'receptionist') {
+      if (user.profile.tenant_id !== patient.tenant_id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
     }
 
     return NextResponse.json(patient)
@@ -67,9 +49,9 @@ export async function PUT(
   const supabase = await createClient()
 
   try {
-    const { data: { session } } = await supabase.auth.getSession()
+    const user = await customAuth.getCurrentUser()
 
-    if (!session?.user) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -83,15 +65,11 @@ export async function PUT(
       return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
-    // Get user profile to check permissions
-    const userProfile = await getUserProfile(supabase, session.user.id)
-
-    if (userProfile?.role === 'doctor' && userProfile.tenant_id !== existingPatient.tenant_id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-
-    if (userProfile?.role === 'admin_tenant' && userProfile.tenant_id !== existingPatient.tenant_id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    // Check permissions
+    if (user.profile?.role === 'doctor' || user.profile?.role === 'admin_tenant' || user.profile?.role === 'staff' || user.profile?.role === 'receptionist') {
+      if (user.profile.tenant_id !== existingPatient.tenant_id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
     }
 
     const updateData = await request.json()
@@ -148,17 +126,15 @@ export async function DELETE(
   const supabase = await createClient()
 
   try {
-    const { data: { session } } = await supabase.auth.getSession()
+    const user = await customAuth.getCurrentUser()
 
-    if (!session?.user) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user profile to check permissions
-    const userProfile = await getUserProfile(supabase, session.user.id)
-
-    if (userProfile?.role !== 'admin_tenant') {
-      return NextResponse.json({ error: 'Only admin_tenant can delete patients' }, { status: 403 })
+    // Check permissions - only admin_tenant can delete
+    if (user.profile?.role !== 'admin_tenant' && user.profile?.role !== 'staff') {
+      return NextResponse.json({ error: 'Only admin can delete patients' }, { status: 403 })
     }
 
     const { data: existingPatient, error: fetchError } = await supabase
@@ -171,7 +147,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
-    if (userProfile?.tenant_id !== existingPatient.tenant_id) {
+    if (user.profile?.tenant_id !== existingPatient.tenant_id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

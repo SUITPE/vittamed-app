@@ -302,7 +302,10 @@ export default function PatientsPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         {patient.date_of_birth
-                          ? new Date(patient.date_of_birth).toLocaleDateString('es-ES')
+                          ? (() => {
+                              const [year, month, day] = patient.date_of_birth.split('-')
+                              return `${day}/${month}/${year}`
+                            })()
                           : 'No registrada'
                         }
                       </div>
