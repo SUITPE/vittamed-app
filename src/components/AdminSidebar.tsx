@@ -40,12 +40,6 @@ export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
       description: 'Gestionar usuarios'
     },
     {
-      name: 'Citas',
-      href: '/appointments',
-      icon: Icons.clock3,
-      description: 'Gestión de citas'
-    },
-    {
       name: 'Pacientes',
       href: '/patients',
       icon: Icons.users,
