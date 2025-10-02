@@ -226,7 +226,7 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="mt-8"
             >
-              <Link href="/auth/signup">
+              <Link href="/auth/register-business">
                 <Button size="lg" variant="secondary" className="text-base px-8 py-4 h-auto shadow-lg hover:shadow-xl transition-all duration-300">
                   <Icons.userPlus className="mr-2 h-5 w-5" />
                   Comenzar Gratis
