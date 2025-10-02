@@ -44,12 +44,6 @@ export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
       href: '/patients',
       icon: Icons.users,
       description: 'Base de pacientes'
-    },
-    {
-      name: 'Reservar',
-      href: '/booking',
-      icon: Icons.calendar,
-      description: 'Nueva cita'
     }
   ]
 
