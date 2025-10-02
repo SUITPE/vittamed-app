@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import ReceptionistNavigation from '@/components/ReceptionistNavigation'
-import AdminNavigation from '@/components/AdminNavigation'
+import DoctorSidebar from '@/components/DoctorSidebar'
+import AdminHeader from '@/components/AdminHeader'
+import { Icons } from '@/components/ui/Icons'
 
 interface Appointment {
   id: string
@@ -41,19 +42,32 @@ export default function AppointmentsPage() {
   const isReceptionist = user?.profile?.role === 'receptionist'
   const isAdmin = user?.profile?.role === 'admin_tenant'
   const isDoctor = user?.profile?.role === 'doctor'
-  // For testing purposes, use the known tenant ID
-  const currentTenantId = user?.profile?.tenant_id || 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+  const isStaff = user?.profile?.role === 'staff'
+  const currentTenantId = user?.profile?.tenant_id
 
   useEffect(() => {
-    if (!loading && (!user || !['receptionist', 'admin_tenant', 'doctor'].includes(user.profile?.role || ''))) {
-      router.push('/auth/login')
-      return
-    }
+    if (!loading) {
+      if (!user) {
+        router.push('/auth/login')
+        return
+      }
 
-    if (user && currentTenantId && (isReceptionist || isAdmin || isDoctor)) {
+      const validRoles = ['receptionist', 'admin_tenant', 'doctor', 'staff']
+      if (!validRoles.includes(user.profile?.role || '')) {
+        router.push('/auth/login')
+        return
+      }
+
+      if (!currentTenantId) {
+        console.error('No tenant_id found for user')
+        setError('No se encontró información del tenant')
+        setLoadingData(false)
+        return
+      }
+
       fetchAppointmentsData()
     }
-  }, [user, loading, router, currentTenantId])
+  }, [user, loading, router])
 
   async function fetchAppointmentsData() {
     try {
@@ -109,7 +123,7 @@ export default function AppointmentsPage() {
 
   // Refresh when filters change
   useEffect(() => {
-    if (currentTenantId && (isReceptionist || isAdmin || isDoctor)) {
+    if (currentTenantId && user) {
       fetchAppointmentsData()
     }
   }, [selectedDate, selectedDoctor, selectedStatus])
@@ -177,13 +191,15 @@ export default function AppointmentsPage() {
 
   if (loading || loadingData) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        {isReceptionist && <ReceptionistNavigation currentPath="/appointments" tenantId={currentTenantId} />}
-        {isAdmin && <AdminNavigation currentPath="/appointments" tenantId={currentTenantId} />}
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Cargando citas...</p>
+      <div className="flex min-h-screen bg-gray-50">
+        {isDoctor && <DoctorSidebar />}
+        <div className="flex-1">
+          <AdminHeader />
+          <div className="pt-16 flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Cargando citas...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -191,16 +207,16 @@ export default function AppointmentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {isReceptionist && <ReceptionistNavigation currentPath="/appointments" tenantId={currentTenantId} />}
-      {isAdmin && <AdminNavigation currentPath="/appointments" tenantId={currentTenantId} />}
-
-      <div className="p-6">
-        <div className="max-w-7xl mx-auto">
+    <div className="flex min-h-screen bg-gray-50">
+      {isDoctor && <DoctorSidebar />}
+      <div className="flex-1">
+        <AdminHeader />
+        <div className="pt-16 p-6">
+          <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-6">
             <h1 className="text-3xl font-bold text-gray-900">
-              📋 Gestión de Citas
+              Gestión de Citas
             </h1>
             <p className="text-gray-600 mt-1">
               {isDoctor ? 'Gestiona tus citas médicas' : 'Administra todas las citas médicas'}
@@ -226,7 +242,7 @@ export default function AppointmentsPage() {
                     type="date"
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
@@ -238,7 +254,7 @@ export default function AppointmentsPage() {
                     <select
                       value={selectedDoctor}
                       onChange={(e) => setSelectedDoctor(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="">Todos los doctores</option>
                       {doctors.map((doctor) => (
@@ -258,7 +274,7 @@ export default function AppointmentsPage() {
                   <select
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Todos los estados</option>
                     <option value="pending">Pendientes</option>
@@ -276,8 +292,9 @@ export default function AppointmentsPage() {
                 </p>
                 <button
                   onClick={() => router.push('/booking')}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
                 >
+                  <Icons.plus className="w-4 h-4" />
                   Nueva Cita
                 </button>
               </div>
@@ -293,7 +310,7 @@ export default function AppointmentsPage() {
                 </div>
                 <button
                   onClick={() => router.push('/booking')}
-                  className="text-purple-600 hover:text-purple-500"
+                  className="text-blue-600 hover:text-blue-700 font-medium"
                 >
                   Crear la primera cita
                 </button>
@@ -393,6 +410,7 @@ export default function AppointmentsPage() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   )
 }

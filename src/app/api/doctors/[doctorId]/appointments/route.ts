@@ -10,6 +10,8 @@ export async function GET(
   const supabase = await createClient()
   const { searchParams } = new URL(request.url)
   const date = searchParams.get('date')
+  const start = searchParams.get('start')
+  const end = searchParams.get('end')
 
   try {
     const user = await customAuth.getCurrentUser()
@@ -22,19 +24,23 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    if (!date) {
-      return NextResponse.json({ error: 'Date parameter is required' }, { status: 400 })
+    // Support both single date and date range queries
+    if (!date && !start) {
+      return NextResponse.json({ error: 'Date or start parameter is required' }, { status: 400 })
     }
 
     console.log('🔍 Fetching appointments for:', {
       doctorId,
-      date
+      date,
+      start,
+      end
     })
 
-    const { data: appointments, error } = await supabase
+    let query = supabase
       .from('appointments')
       .select(`
         id,
+        appointment_date,
         start_time,
         end_time,
         status,
@@ -43,8 +49,23 @@ export async function GET(
         services!inner(name)
       `)
       .eq('doctor_id', doctorId)
-      .eq('appointment_date', date)
+
+    // If single date is provided, filter by that date
+    if (date) {
+      query = query.eq('appointment_date', date)
+    }
+    // If date range is provided, filter by range
+    else if (start) {
+      query = query.gte('appointment_date', start)
+      if (end) {
+        query = query.lte('appointment_date', end)
+      }
+    }
+
+    query = query.order('appointment_date', { ascending: true })
       .order('start_time', { ascending: true })
+
+    const { data: appointments, error } = await query
 
     if (error) {
       console.error('Error fetching appointments:', error)
@@ -53,6 +74,7 @@ export async function GET(
 
     const formattedAppointments = (appointments || []).map((appointment: any) => ({
       id: appointment.id,
+      appointment_date: appointment.appointment_date,
       patient_name: `${appointment.patients?.first_name} ${appointment.patients?.last_name}`,
       patient_email: appointment.patients?.email,
       service_name: appointment.services?.name,

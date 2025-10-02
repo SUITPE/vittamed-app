@@ -145,6 +145,77 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
+    // If user is a doctor, create entries in doctors and doctor_tenants tables
+    if (role === 'doctor') {
+      console.log('🔍 Creating doctor profile for user:', { userId, email, tenant_id })
+
+      // Step 1: Create entry in doctors table
+      const { error: doctorError } = await supabase
+        .from('doctors')
+        .insert({
+          id: userId,
+          first_name: first_name || '',
+          last_name: last_name || '',
+          email: email || '',
+          phone: phone || null,
+          specialty: null,
+          license_number: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+
+      if (doctorError) {
+        console.error('❌ Error creating doctor entry:', {
+          error: doctorError,
+          message: doctorError.message,
+          userId,
+          email
+        })
+        // Rollback: delete the custom_users entry
+        await supabase.from('custom_users').delete().eq('id', userId)
+        return NextResponse.json({
+          error: 'Failed to create doctor profile',
+          details: doctorError.message
+        }, { status: 500 })
+      }
+
+      console.log('✅ Doctor entry created successfully')
+
+      // Step 2: Create entry in doctor_tenants table if tenant_id provided
+      if (tenant_id) {
+        const { error: doctorTenantError } = await supabase
+          .from('doctor_tenants')
+          .insert({
+            doctor_id: userId,
+            tenant_id: tenant_id,
+            is_active: true,
+            hourly_rate: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+
+        if (doctorTenantError) {
+          console.error('❌ Error creating doctor_tenant entry:', {
+            error: doctorTenantError,
+            message: doctorTenantError.message,
+            userId,
+            tenant_id
+          })
+          // Rollback: delete both custom_users and doctors entries
+          await supabase.from('doctors').delete().eq('id', userId)
+          await supabase.from('custom_users').delete().eq('id', userId)
+          return NextResponse.json({
+            error: 'Failed to link doctor to tenant',
+            details: doctorTenantError.message
+          }, { status: 500 })
+        }
+
+        console.log('✅ Doctor-tenant link created successfully')
+      } else {
+        console.log('⚠️ No tenant_id provided, skipping doctor_tenants entry')
+      }
+    }
+
     // Get tenant info for response and email
     let tenantName = 'VittaMed'
     if (tenant_id) {

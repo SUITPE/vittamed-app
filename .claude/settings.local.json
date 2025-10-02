@@ -118,7 +118,9 @@
       "Bash(PGPASSWORD='VittaMed2024!' psql \"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\" -c \"\\d custom_users\")",
       "Bash(PGPASSWORD='VittaMed2024!' psql \"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\" -c \"\\d user_profiles\")",
       "Bash(PGPASSWORD='VittaMed2024!' psql \"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\" -c \"\\d patients\")",
-      "Bash(open:*)"
+      "Bash(open:*)",
+      "Read(//Users/alvaro/.npm/_logs/**)",
+      "Bash(PGPASSWORD='VittaMed2024!' psql \"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\" -f /tmp/fix-existing-doctor.sql)"
     ],
     "deny": [],
     "ask": []

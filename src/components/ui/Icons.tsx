@@ -52,6 +52,8 @@ import {
   Shield,
   List,
   Loader2,
+  Info,
+  Utensils,
 } from "lucide-react"
 
 export const Icons = {
@@ -131,6 +133,10 @@ export const Icons = {
 
   // Loading
   loader: Loader2,
+
+  // Additional
+  info: Info,
+  utensils: Utensils,
 }
 
 export type IconName = keyof typeof Icons
