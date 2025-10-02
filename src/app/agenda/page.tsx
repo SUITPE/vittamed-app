@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import DoctorSidebar from '@/components/DoctorSidebar'
+import AdminHeader from '@/components/AdminHeader'
 
 interface DoctorAvailability {
   id: string
@@ -210,27 +212,31 @@ export default function AgendaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Mi Agenda - Dr. {user?.profile?.first_name} {user?.profile?.last_name}
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Gestiona tu disponibilidad y revisa tus citas
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="p-6 border-b">
-              <h2 className="text-xl font-semibold text-gray-900">Horarios de Disponibilidad</h2>
-              <p className="text-sm text-gray-500 mt-1">
-                Configura tus horarios de trabajo para cada día de la semana
+    <div className="flex min-h-screen bg-gray-50">
+      <DoctorSidebar />
+      <div className="flex-1">
+        <AdminHeader />
+        <div className="pt-16 p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">
+                Mi Agenda - Dr. {user?.profile?.first_name} {user?.profile?.last_name}
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Gestiona tu disponibilidad y revisa tus citas
               </p>
             </div>
-            <div className="p-6">
-              <div className="space-y-4">
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="bg-white rounded-lg shadow-sm">
+                <div className="p-6 border-b">
+                  <h2 className="text-xl font-semibold text-gray-900">Horarios de Disponibilidad</h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Configura tus horarios de trabajo para cada día de la semana
+                  </p>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-4">
                 {[1, 2, 3, 4, 5, 6, 0].map(dayOfWeek => {
                   const dayAvailability = availability.find(a => a.day_of_week === dayOfWeek)
 
@@ -404,5 +410,7 @@ export default function AgendaPage() {
         </div>
       </div>
     </div>
+  </div>
+  </div>
   )
 }

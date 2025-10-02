@@ -317,7 +317,7 @@ VittaMedApp/
 ### 3. Features Adicionales
 - [ ] Sistema de reportes avanzados
 - [ ] Recordatorios automáticos (24h antes)
-- [ ] Integración con calendario (Google/Outlook)
+- [ ] Integración con Noio (Google/Outlook)
 - [ ] App móvil con React Native
 
 ### 4. Monitoreo
