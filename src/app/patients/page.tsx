@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import ReceptionistNavigation from '@/components/ReceptionistNavigation'
-import AdminNavigation from '@/components/AdminNavigation'
+import AdminSidebar from '@/components/AdminSidebar'
+import AdminHeader from '@/components/AdminHeader'
 
 interface Patient {
   id: string
@@ -28,6 +28,7 @@ export default function PatientsPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
   const [error, setError] = useState('')
+  const [tenantInfo, setTenantInfo] = useState<any>(null)
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -41,9 +42,9 @@ export default function PatientsPage() {
   // Check user permissions
   const isReceptionist = user?.profile?.role === 'receptionist'
   const isAdmin = user?.profile?.role === 'admin_tenant'
-  const canManagePatients = isReceptionist || isAdmin
-  // For testing purposes, use the known tenant ID
-  const currentTenantId = user?.profile?.tenant_id || 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+  const isStaff = user?.profile?.role === 'staff'
+  const canManagePatients = isReceptionist || isAdmin || isStaff
+  const currentTenantId = user?.profile?.tenant_id
 
   useEffect(() => {
     if (!authLoading && (!user || !canManagePatients)) {
@@ -53,8 +54,26 @@ export default function PatientsPage() {
 
     if (user && canManagePatients) {
       fetchPatients()
+      fetchTenantInfo()
     }
   }, [user, authLoading, router, canManagePatients])
+
+  async function fetchTenantInfo() {
+    if (!currentTenantId) return
+
+    try {
+      const tenantResponse = await fetch('/api/tenants')
+      if (tenantResponse.ok) {
+        const tenants = await tenantResponse.json()
+        const tenant = tenants.find((t: any) => t.id === currentTenantId)
+        if (tenant) {
+          setTenantInfo(tenant)
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to fetch tenant info')
+    }
+  }
 
   async function fetchPatients() {
     try {
@@ -153,12 +172,14 @@ export default function PatientsPage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        {isReceptionist && <ReceptionistNavigation currentPath="/patients" tenantId={currentTenantId} />}
-        {isAdmin && <AdminNavigation currentPath="/patients" tenantId={currentTenantId} />}
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Cargando pacientes...</p>
+        <AdminSidebar tenantId={currentTenantId} />
+        <AdminHeader />
+        <div className="ml-64 pt-16 p-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Cargando pacientes...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -187,26 +208,25 @@ export default function PatientsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {isReceptionist && <ReceptionistNavigation currentPath="/patients" tenantId={currentTenantId} />}
-      {isAdmin && <AdminNavigation currentPath="/patients" tenantId={currentTenantId} />}
-
-      <div className="p-6">
+      <AdminSidebar tenantId={currentTenantId} />
+      <AdminHeader />
+      <div className="ml-64 pt-16">
+        <div className="p-6">
         <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Gestión de Pacientes</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Pacientes - {tenantInfo?.name || 'Cargando...'}
+              </h1>
               <p className="text-gray-600 mt-1">
                 Administra la información de tus pacientes
               </p>
             </div>
             <button
               onClick={() => setShowAddModal(true)}
-              className={`text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${
-                isReceptionist
-                  ? 'bg-purple-600 hover:bg-purple-700 focus:ring-purple-500'
-                  : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
-              }`}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
             >
               Agregar Paciente
             </button>
@@ -324,6 +344,8 @@ export default function PatientsPage() {
             </div>
           )}
         </div>
+        </div>
+      </div>
       </div>
 
       {showAddModal && (
@@ -454,6 +476,5 @@ export default function PatientsPage() {
         </div>
       )}
     </div>
-  </div>
   )
 }

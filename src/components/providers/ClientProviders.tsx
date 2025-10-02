@@ -14,7 +14,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
   const pathname = usePathname()
 
   // Hide ModernNavigation on admin routes (they use AdminSidebar), auth routes (use PublicHeader), doctor routes (use DoctorSidebar), and root (will redirect)
-  const hideModernNav = pathname === '/' || pathname?.startsWith('/dashboard/') || pathname?.startsWith('/admin/') || pathname?.startsWith('/receptionist/') || pathname?.startsWith('/auth/') || pathname?.startsWith('/agenda')
+  const hideModernNav = pathname === '/' || pathname?.startsWith('/dashboard/') || pathname?.startsWith('/admin/') || pathname?.startsWith('/receptionist/') || pathname?.startsWith('/auth/') || pathname?.startsWith('/agenda') || pathname?.startsWith('/patients')
 
   useEffect(() => {
     // Global error handler for unhandled promise rejections and runtime errors
