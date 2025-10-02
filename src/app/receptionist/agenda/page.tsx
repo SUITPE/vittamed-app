@@ -92,12 +92,12 @@ export default function ReceptionistAgendaPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
 
-  // Check if user is receptionist or staff
-  const isReceptionist = user?.profile?.role === 'receptionist' || user?.profile?.role === 'staff'
+  // Check if user is receptionist, staff, or admin_tenant
+  const isReceptionist = user?.profile?.role === 'receptionist' || user?.profile?.role === 'staff' || user?.profile?.role === 'admin_tenant'
   const currentTenantId = user?.profile?.tenant_id || undefined
 
   useEffect(() => {
-    if (!loading && (!user || (user.profile?.role !== 'receptionist' && user.profile?.role !== 'staff'))) {
+    if (!loading && (!user || (user.profile?.role !== 'receptionist' && user.profile?.role !== 'staff' && user.profile?.role !== 'admin_tenant'))) {
       router.push('/auth/login')
       return
     }
