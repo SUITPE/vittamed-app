@@ -83,8 +83,11 @@ export default function CreateTenantPage() {
         setError(data.error || 'Error al crear el negocio')
       } else {
         setSuccess(true)
+        console.log('✅ Tenant created successfully:', data.tenant)
         setTimeout(() => {
-          router.push(`/dashboard/${data.tenant.id}`)
+          // Use window.location.href to force full page reload
+          // This ensures AuthContext refreshes and gets updated user profile with tenant_id
+          window.location.href = `/dashboard/${data.tenant.id}`
         }, 2000)
       }
     } catch (err) {

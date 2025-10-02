@@ -10,28 +10,42 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!loading && user?.profile) {
+      console.log('🔍 Dashboard redirect - User profile:', {
+        role: user.profile.role,
+        tenant_id: user.profile.tenant_id,
+        email: user.email
+      })
+
       // Redirect based on user role
       switch (user.profile.role) {
         case 'admin_tenant':
         case 'staff':
         case 'receptionist':
           if (user.profile.tenant_id) {
-            router.push(`/dashboard/${user.profile.tenant_id}`)
+            console.log('✅ Redirecting to dashboard with tenant:', user.profile.tenant_id)
+            window.location.href = `/dashboard/${user.profile.tenant_id}`
           } else {
-            router.push('/auth/login')
+            console.log('⚠️ No tenant_id, redirecting to create-tenant')
+            window.location.href = '/admin/create-tenant'
           }
           break
         case 'doctor':
-          router.push('/agenda')
+          console.log('✅ Redirecting doctor to agenda')
+          window.location.href = '/agenda'
           break
         case 'patient':
-          router.push('/my-appointments')
+          console.log('✅ Redirecting patient to appointments')
+          window.location.href = '/my-appointments'
           break
         default:
-          router.push('/auth/login')
+          console.log('❌ Unknown role, redirecting to login')
+          window.location.href = '/auth/login'
       }
+    } else if (!loading && !user) {
+      console.log('❌ No user found, redirecting to login')
+      window.location.href = '/auth/login'
     }
-  }, [user, loading, router])
+  }, [user, loading])
 
   if (loading) {
     return (
