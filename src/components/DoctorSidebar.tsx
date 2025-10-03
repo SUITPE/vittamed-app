@@ -86,11 +86,11 @@ export default function DoctorSidebar() {
       <div
         className={cn(
           'fixed left-0 top-0 h-full bg-white border-r border-gray-200 transition-all duration-300 z-50',
-          // Mobile: slide in from left when open, hide when closed
-          'md:translate-x-0',
-          isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
-          // Desktop: normal collapse behavior
-          isCollapsed ? 'w-20' : 'w-64'
+          // Width
+          isCollapsed ? 'w-20' : 'w-64',
+          // Mobile: hidden by default, slide in when open
+          '-translate-x-full md:translate-x-0',
+          isMobileOpen && 'translate-x-0'
         )}
       >
         {/* Logo */}
