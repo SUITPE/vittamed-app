@@ -203,10 +203,10 @@ export default function AgendaPage() {
 
             {/* Tabs */}
             <div className="border-b border-gray-200 mb-6">
-              <nav className="-mb-px flex space-x-8">
+              <nav className="-mb-px flex space-x-4 md:space-x-8 overflow-x-auto">
                 <button
                   onClick={() => setActiveTab('calendar')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                     activeTab === 'calendar'
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -214,12 +214,13 @@ export default function AgendaPage() {
                 >
                   <div className="flex items-center gap-2">
                     <Icons.calendarDays className="w-5 h-5" />
-                    <span>Vista Semanal</span>
+                    <span className="hidden sm:inline">Vista Semanal</span>
+                    <span className="sm:hidden">Calendario</span>
                   </div>
                 </button>
                 <button
                   onClick={() => setActiveTab('settings')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                     activeTab === 'settings'
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -227,7 +228,8 @@ export default function AgendaPage() {
                 >
                   <div className="flex items-center gap-2">
                     <Icons.settings className="w-5 h-5" />
-                    <span>Configurar Disponibilidad</span>
+                    <span className="hidden sm:inline">Configurar Disponibilidad</span>
+                    <span className="sm:hidden">Configurar</span>
                   </div>
                 </button>
               </nav>

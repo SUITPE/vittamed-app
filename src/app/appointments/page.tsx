@@ -231,9 +231,9 @@ export default function AppointmentsPage() {
           )}
 
           {/* Filters */}
-          <div className="bg-white rounded-lg shadow-sm mb-8">
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-lg shadow-sm mb-6">
+            <div className="p-4 md:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Fecha
@@ -285,17 +285,17 @@ export default function AppointmentsPage() {
                 </div>
               </div>
 
-              <div className="mt-4 flex justify-between items-center">
+              <div className="mt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                 <p className="text-sm text-gray-500">
                   {appointments.length} cita{appointments.length !== 1 ? 's' : ''} encontrada{appointments.length !== 1 ? 's' : ''}
-                  {selectedDate && ` para ${formatDate(selectedDate)}`}
+                  <span className="hidden md:inline">{selectedDate && ` para ${formatDate(selectedDate)}`}</span>
                 </p>
                 <button
                   onClick={() => router.push('/booking')}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                  className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
                 >
                   <Icons.plus className="w-4 h-4" />
-                  Nueva Cita
+                  <span>Nueva Cita</span>
                 </button>
               </div>
             </div>
@@ -316,8 +316,10 @@ export default function AppointmentsPage() {
                 </button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+              <>
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -406,6 +408,73 @@ export default function AppointmentsPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden divide-y divide-gray-200">
+                {appointments.map((appointment) => (
+                  <div key={appointment.id} className="p-4 hover:bg-gray-50">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 mb-1">
+                          {appointment.patient_name}
+                        </div>
+                        {appointment.patient_email && (
+                          <div className="text-sm text-gray-500">
+                            {appointment.patient_email}
+                          </div>
+                        )}
+                      </div>
+                      {getStatusBadge(appointment.status)}
+                    </div>
+
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center text-gray-600">
+                        <Icons.clock className="w-4 h-4 mr-2" />
+                        {formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}
+                      </div>
+                      {!isDoctor && (
+                        <div className="flex items-center text-gray-600">
+                          <Icons.user className="w-4 h-4 mr-2" />
+                          {appointment.doctor_name}
+                        </div>
+                      )}
+                      <div className="flex items-center text-gray-600">
+                        <Icons.stethoscope className="w-4 h-4 mr-2" />
+                        {appointment.service_name}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {appointment.status === 'pending' && (
+                        <button
+                          onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
+                          className="flex-1 px-3 py-1.5 text-sm bg-green-50 text-green-700 rounded-lg hover:bg-green-100"
+                        >
+                          Confirmar
+                        </button>
+                      )}
+                      {appointment.status === 'confirmed' && (
+                        <button
+                          onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
+                          className="flex-1 px-3 py-1.5 text-sm bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100"
+                        >
+                          Completar
+                        </button>
+                      )}
+                      {(appointment.status === 'pending' || appointment.status === 'confirmed') && (
+                        <button
+                          onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
+                          className="flex-1 px-3 py-1.5 text-sm bg-red-50 text-red-700 rounded-lg hover:bg-red-100"
+                        >
+                          Cancelar
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </>
             )}
           </div>
         </div>

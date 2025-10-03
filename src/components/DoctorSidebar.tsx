@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Icons } from '@/components/ui/Icons'
@@ -9,6 +9,32 @@ import { cn } from '@/lib/utils'
 export default function DoctorSidebar() {
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isMobileOpen, setIsMobileOpen] = useState(false)
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMobileOpen(false)
+  }, [pathname])
+
+  // Close mobile menu on resize to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsMobileOpen(false)
+      }
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Listen for mobile sidebar toggle event from header
+  useEffect(() => {
+    const handleToggle = () => {
+      setIsMobileOpen(prev => !prev)
+    }
+    window.addEventListener('toggle-mobile-sidebar', handleToggle)
+    return () => window.removeEventListener('toggle-mobile-sidebar', handleToggle)
+  }, [])
 
   const menuItems = [
     {
@@ -48,10 +74,22 @@ export default function DoctorSidebar() {
 
   return (
     <>
+      {/* Mobile Overlay */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <div
         className={cn(
           'fixed left-0 top-0 h-full bg-white border-r border-gray-200 transition-all duration-300 z-50',
+          // Mobile: slide in from left when open, hide when closed
+          'md:translate-x-0',
+          isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
+          // Desktop: normal collapse behavior
           isCollapsed ? 'w-20' : 'w-64'
         )}
       >
@@ -67,13 +105,20 @@ export default function DoctorSidebar() {
           )}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="hidden md:block p-2 rounded-lg hover:bg-gray-100 transition-colors"
           >
             {isCollapsed ? (
               <Icons.chevronRight className="w-5 h-5 text-gray-600" />
             ) : (
               <Icons.chevronLeft className="w-5 h-5 text-gray-600" />
             )}
+          </button>
+          {/* Close button for mobile */}
+          <button
+            onClick={() => setIsMobileOpen(false)}
+            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <Icons.x className="w-5 h-5 text-gray-600" />
           </button>
         </div>
 
@@ -130,8 +175,16 @@ export default function DoctorSidebar() {
         </div>
       </div>
 
-      {/* Spacer to push content */}
-      <div className={cn('transition-all duration-300', isCollapsed ? 'w-20' : 'w-64')} />
+      {/* Spacer to push content - only on desktop */}
+      <div className={cn(
+        'hidden md:block transition-all duration-300',
+        isCollapsed ? 'w-20' : 'w-64'
+      )} />
     </>
   )
+}
+
+// Export function to toggle mobile menu (to be called from header)
+export function useSidebarToggle() {
+  return { setIsMobileOpen: () => {} }
 }

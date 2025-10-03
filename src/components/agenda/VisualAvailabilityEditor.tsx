@@ -221,8 +221,8 @@ export default function VisualAvailabilityEditor({
   return (
     <div className="bg-white rounded-lg shadow-sm">
       {/* Header */}
-      <div className="p-6 border-b">
-        <div className="flex items-center justify-between">
+      <div className="p-4 md:p-6 border-b">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
               Configurar Disponibilidad
@@ -234,7 +234,7 @@ export default function VisualAvailabilityEditor({
           <button
             onClick={handleSave}
             disabled={!hasChanges || saving}
-            className={`px-6 py-2 rounded-lg font-medium transition-all ${
+            className={`px-6 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
               hasChanges && !saving
                 ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -253,8 +253,8 @@ export default function VisualAvailabilityEditor({
       </div>
 
       {/* Calendar Grid */}
-      <div className="p-6">
-        <div className="overflow-x-auto">
+      <div className="p-4 md:p-6">
+        <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
           <div className="min-w-[900px]">
             {/* Day Headers */}
             <div className="grid grid-cols-8 gap-2 mb-2">

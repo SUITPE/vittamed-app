@@ -58,11 +58,23 @@ export default function AdminHeader() {
     return (first + last).toUpperCase() || 'U'
   }
 
+  const toggleMobileSidebar = () => {
+    // Dispatch custom event to toggle sidebar
+    window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'))
+  }
+
   return (
-    <header className="bg-white border-b border-gray-200 h-16 fixed top-0 right-0 left-64 z-30">
-      <div className="h-full px-6 flex items-center justify-between">
-        {/* Left side - can add breadcrumbs or page title here */}
+    <header className="bg-white border-b border-gray-200 h-16 fixed top-0 right-0 left-0 md:left-64 z-30">
+      <div className="h-full px-4 md:px-6 flex items-center justify-between">
+        {/* Left side - Mobile menu button + breadcrumbs */}
         <div className="flex items-center space-x-4">
+          {/* Mobile menu button */}
+          <button
+            onClick={toggleMobileSidebar}
+            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <Icons.menu className="w-5 h-5 text-gray-600" />
+          </button>
           <h2 className="text-lg font-semibold text-gray-900">
             {/* Page title will go here */}
           </h2>
