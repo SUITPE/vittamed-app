@@ -404,7 +404,7 @@ export default function AppointmentsPage() {
                                 className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
                                 title="Completar cita"
                               >
-                                <Icons.check className="w-5 h-5" />
+                                <Icons.checkCircle className="w-5 h-5" />
                               </button>
                             )}
                             {(appointment.status === 'pending' || appointment.status === 'confirmed') && (
