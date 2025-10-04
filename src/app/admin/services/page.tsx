@@ -13,17 +13,40 @@ interface Service {
   price: number
   is_active: boolean
   tenant_id: string
+  category_id: string | null
+  created_at: string
+  category?: {
+    id: string
+    name: string
+  }
+}
+
+interface ServiceCategory {
+  id: string
+  name: string
+  description: string | null
+  is_active: boolean
   created_at: string
 }
 
 export default function ServicesPage() {
   const { user, loading: authLoading } = useAuth()
   const [services, setServices] = useState<Service[]>([])
+  const [categories, setCategories] = useState<ServiceCategory[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingService, setEditingService] = useState<Service | null>(null)
+  const [activeTab, setActiveTab] = useState<'services' | 'categories'>('services')
+
+  // Category management state
+  const [showCategoryModal, setShowCategoryModal] = useState(false)
+  const [editingCategory, setEditingCategory] = useState<ServiceCategory | null>(null)
+  const [categoryFormData, setCategoryFormData] = useState({
+    name: '',
+    description: ''
+  })
 
   // Form state
   const [formData, setFormData] = useState({
@@ -31,6 +54,7 @@ export default function ServicesPage() {
     description: '',
     duration_minutes: 60,
     price: 0,
+    category_id: '',
     is_active: true
   })
   const [submitting, setSubmitting] = useState(false)
@@ -45,6 +69,7 @@ export default function ServicesPage() {
   useEffect(() => {
     if (user && isAuthorized()) {
       fetchServices()
+      fetchCategories()
     }
   }, [user])
 
@@ -72,6 +97,18 @@ export default function ServicesPage() {
     }
   }
 
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/catalog/service-categories?is_active=true')
+      if (response.ok) {
+        const data = await response.json()
+        setCategories(data || [])
+      }
+    } catch (err) {
+      console.error('Error fetching categories:', err)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!currentTenantId) return
@@ -95,6 +132,7 @@ export default function ServicesPage() {
           description: '',
           duration_minutes: 60,
           price: 0,
+          category_id: '',
           is_active: true
         })
         setShowAddModal(false)
@@ -140,6 +178,7 @@ export default function ServicesPage() {
       description: service.description || '',
       duration_minutes: service.duration_minutes,
       price: service.price,
+      category_id: service.category_id || '',
       is_active: service.is_active
     })
     setShowEditModal(true)
@@ -169,6 +208,7 @@ export default function ServicesPage() {
           description: '',
           duration_minutes: 60,
           price: 0,
+          category_id: '',
           is_active: true
         })
         await fetchServices()
@@ -201,6 +241,74 @@ export default function ServicesPage() {
       }
     } catch (err) {
       setError('Error al eliminar servicio')
+    }
+  }
+
+  // Category management functions
+  const handleCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setError('')
+
+    try {
+      const url = editingCategory
+        ? `/api/catalog/service-categories/${editingCategory.id}`
+        : '/api/catalog/service-categories'
+
+      const response = await fetch(url, {
+        method: editingCategory ? 'PATCH' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(categoryFormData)
+      })
+
+      if (response.ok) {
+        setCategoryFormData({ name: '', description: '' })
+        setShowCategoryModal(false)
+        setEditingCategory(null)
+        await fetchCategories()
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Error al guardar categoría')
+      }
+    } catch (err) {
+      setError('Error al guardar categoría')
+      console.error('Error saving category:', err)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleEditCategory = (category: ServiceCategory) => {
+    setEditingCategory(category)
+    setCategoryFormData({
+      name: category.name,
+      description: category.description || ''
+    })
+    setShowCategoryModal(true)
+  }
+
+  const deleteCategory = async (categoryId: string, categoryName: string) => {
+    if (!confirm(`¿Estás seguro de que deseas eliminar la categoría "${categoryName}"?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/catalog/service-categories/${categoryId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        await fetchCategories()
+        await fetchServices() // Refresh services to update their category display
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Error al eliminar categoría')
+      }
+    } catch (err) {
+      setError('Error al eliminar categoría')
+      console.error('Error deleting category:', err)
     }
   }
 
@@ -254,22 +362,50 @@ export default function ServicesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">
-                    🏥 Gestión de Servicios
+                    {activeTab === 'services' ? '🏥 Gestión de Servicios' : '📁 Categorías de Servicios'}
                   </h1>
                   <p className="mt-1 text-sm text-gray-600">
-                    Administra los servicios ofrecidos en tu negocio
+                    {activeTab === 'services'
+                      ? 'Administra los servicios ofrecidos en tu negocio'
+                      : 'Organiza tus servicios en categorías'}
                   </p>
                 </div>
                 <button
-                  onClick={() => setShowAddModal(true)}
+                  onClick={() => activeTab === 'services' ? setShowAddModal(true) : setShowCategoryModal(true)}
                   className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
-                  Agregar Servicio
+                  {activeTab === 'services' ? 'Agregar Servicio' : 'Agregar Categoría'}
                 </button>
               </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+                <button
+                  onClick={() => setActiveTab('services')}
+                  className={`${
+                    activeTab === 'services'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                >
+                  Servicios
+                </button>
+                <button
+                  onClick={() => setActiveTab('categories')}
+                  className={`${
+                    activeTab === 'categories'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                >
+                  Categorías
+                </button>
+              </nav>
             </div>
 
             {/* Error Display */}
@@ -282,6 +418,7 @@ export default function ServicesPage() {
             )}
 
             {/* Services List */}
+            {activeTab === 'services' && (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -294,6 +431,9 @@ export default function ServicesPage() {
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Precio
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Categoría
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Estado
@@ -326,6 +466,11 @@ export default function ServicesPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
                           ${service.price}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {service.category?.name || '-'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -378,6 +523,82 @@ export default function ServicesPage() {
                 </div>
               )}
             </div>
+            )}
+
+            {/* Categories List */}
+            {activeTab === 'categories' && (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Categoría
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Descripción
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Estado
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {categories.map((category) => (
+                    <tr key={category.id} className={!category.is_active ? 'bg-gray-50' : ''}>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900">
+                          {category.name}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-500">
+                          {category.description || '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          category.is_active
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {category.is_active ? 'Activa' : 'Inactiva'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                        <button
+                          onClick={() => handleEditCategory(category)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => deleteCategory(category.id, category.name)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {categories.length === 0 && !loading && (
+                <div className="text-center py-12">
+                  <div className="text-gray-500 text-lg mb-4">No hay categorías configuradas</div>
+                  <button
+                    onClick={() => setShowCategoryModal(true)}
+                    className="text-blue-600 hover:text-blue-500"
+                  >
+                    Agregar la primera categoría
+                  </button>
+                </div>
+              )}
+            </div>
+            )}
           </div>
         </div>
       </div>
@@ -451,6 +672,22 @@ export default function ServicesPage() {
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     placeholder="0.00"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Categoría</label>
+                  <select
+                    value={formData.category_id}
+                    onChange={(e) => setFormData(prev => ({ ...prev, category_id: e.target.value }))}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Sin categoría</option>
+                    {categories.filter(c => c.is_active).map(category => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="flex items-center">
@@ -557,6 +794,22 @@ export default function ServicesPage() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Categoría</label>
+                  <select
+                    value={formData.category_id}
+                    onChange={(e) => setFormData(prev => ({ ...prev, category_id: e.target.value }))}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Sin categoría</option>
+                    {categories.filter(c => c.is_active).map(category => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="flex items-center">
                   <input
                     type="checkbox"
@@ -583,6 +836,75 @@ export default function ServicesPage() {
                     className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 border border-transparent rounded-md disabled:opacity-50"
                   >
                     {submitting ? 'Creando...' : 'Crear Servicio'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Category Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={() => setShowCategoryModal(false)}></div>
+
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <form onSubmit={handleCategorySubmit}>
+                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                  <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+                    {editingCategory ? 'Editar Categoría' : 'Nueva Categoría'}
+                  </h3>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nombre *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={categoryFormData.name}
+                        onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Ej: Consultas, Tratamientos, etc."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Descripción
+                      </label>
+                      <textarea
+                        value={categoryFormData.description}
+                        onChange={(e) => setCategoryFormData({ ...categoryFormData, description: e.target.value })}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Descripción de la categoría"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 border border-transparent rounded-md disabled:opacity-50"
+                  >
+                    {submitting ? 'Guardando...' : editingCategory ? 'Actualizar' : 'Crear'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCategoryModal(false)
+                      setEditingCategory(null)
+                      setCategoryFormData({ name: '', description: '' })
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-md"
+                  >
+                    Cancelar
                   </button>
                 </div>
               </form>
