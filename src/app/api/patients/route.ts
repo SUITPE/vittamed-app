@@ -49,7 +49,18 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
+  // Use service role client to bypass RLS
+  const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
+  const supabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  )
 
   try {
     // Use custom JWT auth instead of Supabase Auth
