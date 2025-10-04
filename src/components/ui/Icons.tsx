@@ -57,6 +57,7 @@ import {
   Info,
   Utensils,
   Package,
+  Circle,
 } from "lucide-react"
 
 export const Icons = {
@@ -145,6 +146,7 @@ export const Icons = {
   info: Info,
   utensils: Utensils,
   package: Package,
+  circle: Circle,
 }
 
 export type IconName = keyof typeof Icons
