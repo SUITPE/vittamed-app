@@ -72,12 +72,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, tenant_type, address, phone, email } = body
+    const { name, tenant_type, document, address, phone, email } = body
 
     // Validate required fields
-    if (!name || !tenant_type) {
+    if (!name || !tenant_type || !document) {
       return NextResponse.json({
-        error: 'Name and tenant_type are required'
+        error: 'Name, tenant_type, and document are required'
       }, { status: 400 })
     }
 
@@ -110,6 +110,7 @@ export async function POST(request: NextRequest) {
       .insert({
         name,
         tenant_type: dbTenantType,
+        document,
         address,
         phone,
         email
