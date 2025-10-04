@@ -45,11 +45,7 @@ CREATE TABLE IF NOT EXISTS medical_records (
   created_by uuid REFERENCES user_profiles(id) ON DELETE SET NULL,
   updated_by uuid REFERENCES user_profiles(id) ON DELETE SET NULL,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
-  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
-
-  CONSTRAINT medical_records_patient_tenant_fk
-    FOREIGN KEY (patient_id, tenant_id)
-    REFERENCES patients(id, tenant_id)
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- =====================================================
@@ -215,43 +211,44 @@ CREATE TABLE IF NOT EXISTS medical_record_field_configs (
 -- =====================================================
 -- 8. INSERT DEFAULT FIELD CONFIGURATIONS BY TENANT TYPE
 -- =====================================================
--- Medical Clinic Fields
-INSERT INTO medical_record_field_configs (tenant_id, tenant_type, field_key, field_label, field_type, category, display_order) VALUES
-  ((SELECT id FROM tenants LIMIT 1), 'medical_clinic', 'previous_surgeries', 'Cirugías Previas', 'textarea', 'Medical History', 1),
-  ((SELECT id FROM tenants LIMIT 1), 'medical_clinic', 'family_history', 'Antecedentes Familiares', 'textarea', 'Medical History', 2),
-  ((SELECT id FROM tenants LIMIT 1), 'medical_clinic', 'current_medications', 'Medicamentos Actuales', 'textarea', 'Medications', 3)
-ON CONFLICT DO NOTHING;
+-- Note: Field configs will be created dynamically per tenant
+-- This is just a template for reference. Actual configs should be created
+-- via API when tenant is created or when feature is enabled.
 
--- Dental Clinic Fields
-INSERT INTO medical_record_field_configs (tenant_id, tenant_type, field_key, field_label, field_type, field_options, category, display_order) VALUES
-  ((SELECT id FROM tenants LIMIT 1), 'dental_clinic', 'tooth_number', 'Número de Diente', 'text', NULL, 'Dental', 1),
-  ((SELECT id FROM tenants LIMIT 1), 'dental_clinic', 'procedure_type', 'Tipo de Procedimiento', 'select', '["Limpieza", "Extracción", "Endodoncia", "Corona", "Implante", "Ortodoncia"]'::jsonb, 'Dental', 2),
-  ((SELECT id FROM tenants LIMIT 1), 'dental_clinic', 'dental_condition', 'Condición Dental', 'select', '["Caries", "Gingivitis", "Periodontitis", "Absceso", "Sensibilidad", "Fractura"]'::jsonb, 'Dental', 3)
-ON CONFLICT DO NOTHING;
+-- The following are example field configurations that can be inserted
+-- for existing tenants via a separate admin tool or API endpoint:
 
--- Physiotherapy Fields
-INSERT INTO medical_record_field_configs (tenant_id, tenant_type, field_key, field_label, field_type, field_options, category, display_order) VALUES
-  ((SELECT id FROM tenants LIMIT 1), 'physiotherapy_clinic', 'affected_area', 'Área Afectada', 'text', NULL, 'Physiotherapy', 1),
-  ((SELECT id FROM tenants LIMIT 1), 'physiotherapy_clinic', 'mobility_level', 'Nivel de Movilidad', 'select', '["Normal", "Limitada", "Muy Limitada", "Inmóvil"]'::jsonb, 'Physiotherapy', 2),
-  ((SELECT id FROM tenants LIMIT 1), 'physiotherapy_clinic', 'pain_level', 'Nivel de Dolor (1-10)', 'number', NULL, 'Physiotherapy', 3),
-  ((SELECT id FROM tenants LIMIT 1), 'physiotherapy_clinic', 'exercise_plan', 'Plan de Ejercicios', 'textarea', NULL, 'Physiotherapy', 4)
-ON CONFLICT DO NOTHING;
+/*
+Example field configurations by tenant type:
 
--- Psychology Fields
-INSERT INTO medical_record_field_configs (tenant_id, tenant_type, field_key, field_label, field_type, field_options, category, display_order) VALUES
-  ((SELECT id FROM tenants LIMIT 1), 'psychology_clinic', 'presenting_issue', 'Motivo de Consulta Principal', 'textarea', NULL, 'Psychology', 1),
-  ((SELECT id FROM tenants LIMIT 1), 'psychology_clinic', 'mental_status', 'Estado Mental', 'select', '["Alerta", "Ansioso", "Deprimido", "Confuso", "Agitado"]'::jsonb, 'Psychology', 2),
-  ((SELECT id FROM tenants LIMIT 1), 'psychology_clinic', 'therapy_approach', 'Enfoque Terapéutico', 'select', '["Cognitivo-Conductual", "Psicoanalítico", "Humanista", "Sistémico", "Integrativo"]'::jsonb, 'Psychology', 3),
-  ((SELECT id FROM tenants LIMIT 1), 'psychology_clinic', 'homework_assignment', 'Tarea Asignada', 'textarea', NULL, 'Psychology', 4)
-ON CONFLICT DO NOTHING;
+Medical Clinic:
+- previous_surgeries (textarea) - Cirugías Previas
+- family_history (textarea) - Antecedentes Familiares
+- current_medications (textarea) - Medicamentos Actuales
 
--- Veterinary Fields
-INSERT INTO medical_record_field_configs (tenant_id, tenant_type, field_key, field_label, field_type, field_options, category, display_order) VALUES
-  ((SELECT id FROM tenants LIMIT 1), 'veterinary_clinic', 'species', 'Especie', 'select', '["Perro", "Gato", "Ave", "Conejo", "Otro"]'::jsonb, 'Animal Info', 1),
-  ((SELECT id FROM tenants LIMIT 1), 'veterinary_clinic', 'breed', 'Raza', 'text', NULL, 'Animal Info', 2),
-  ((SELECT id FROM tenants LIMIT 1), 'veterinary_clinic', 'neutered', 'Esterilizado/Castrado', 'checkbox', NULL, 'Animal Info', 3),
-  ((SELECT id FROM tenants LIMIT 1), 'veterinary_clinic', 'vaccination_status', 'Estado de Vacunación', 'textarea', NULL, 'Veterinary', 4)
-ON CONFLICT DO NOTHING;
+Dental Clinic:
+- tooth_number (text) - Número de Diente
+- procedure_type (select) - Tipo de Procedimiento
+- dental_condition (select) - Condición Dental
+
+Physiotherapy:
+- affected_area (text) - Área Afectada
+- mobility_level (select) - Nivel de Movilidad
+- pain_level (number) - Nivel de Dolor (1-10)
+- exercise_plan (textarea) - Plan de Ejercicios
+
+Psychology:
+- presenting_issue (textarea) - Motivo de Consulta Principal
+- mental_status (select) - Estado Mental
+- therapy_approach (select) - Enfoque Terapéutico
+- homework_assignment (textarea) - Tarea Asignada
+
+Veterinary:
+- species (select) - Especie
+- breed (text) - Raza
+- neutered (checkbox) - Esterilizado/Castrado
+- vaccination_status (textarea) - Estado de Vacunación
+*/
 
 -- =====================================================
 -- 9. CREATE INDEXES
