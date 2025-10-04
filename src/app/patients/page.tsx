@@ -333,6 +333,12 @@ export default function PatientsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         <button
+                          onClick={() => router.push(`/patients/${patient.id}`)}
+                          className="text-purple-600 hover:text-purple-900 font-medium"
+                        >
+                          Ver Perfil
+                        </button>
+                        <button
                           onClick={() => handleEdit(patient)}
                           className="text-blue-600 hover:text-blue-900"
                         >
