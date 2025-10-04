@@ -40,10 +40,12 @@ export default function ClientSelectorPanel({
   const fetchClients = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/tenants/${tenantId}/users?role=patient`)
+      // Use /api/patients to get actual patients from the patients table
+      const response = await fetch(`/api/patients?tenantId=${tenantId}`)
       if (response.ok) {
         const data = await response.json()
-        setClients(data.users || [])
+        // API returns array directly, not wrapped in { users: [] }
+        setClients(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       console.error('Error fetching clients:', error)
