@@ -144,10 +144,8 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
               <div className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">
-                    <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-3xl font-bold text-blue-600">
-                        {patient.first_name[0]}{patient.last_name[0]}
-                      </span>
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                      <Icons.user className="w-10 h-10 text-white" />
                     </div>
                     <div>
                       <h1 className="text-3xl font-bold text-gray-900 mb-2">

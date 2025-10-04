@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
+import { Icons } from '@/components/ui/Icons'
 
 interface Patient {
   id: string
@@ -231,8 +232,9 @@ export default function PatientsPage() {
             </div>
             <button
               onClick={() => setShowAddModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors shadow-sm"
             >
+              <Icons.plus className="w-5 h-5" />
               Agregar Paciente
             </button>
           </div>
@@ -260,9 +262,7 @@ export default function PatientsPage() {
                   className="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+                  <Icons.search className="h-5 w-5 text-gray-400" />
                 </div>
               </div>
             </div>
@@ -296,19 +296,28 @@ export default function PatientsPage() {
                 {filteredPatients.map((patient) => (
                   <tr key={patient.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {patient.first_name} {patient.last_name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        ID: {patient.id.slice(0, 8)}...
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Icons.user className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {patient.first_name} {patient.last_name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {patient.email}
+                          </div>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{patient.document || 'No registrado'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{patient.email}</div>
-                      <div className="text-sm text-gray-500">{patient.phone || 'No registrado'}</div>
+                      <div className="flex items-center gap-2 text-sm text-gray-900">
+                        <Icons.phone className="w-4 h-4 text-gray-400" />
+                        {patient.phone || 'No registrado'}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
@@ -331,24 +340,43 @@ export default function PatientsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-3">
                         <button
                           onClick={() => router.push(`/patients/${patient.id}`)}
-                          className="text-purple-600 hover:text-purple-900 font-medium"
+                          className="flex items-center gap-1 text-purple-600 hover:text-purple-900 font-medium transition-colors"
+                          title="Ver perfil e historia clínica"
                         >
+                          <Icons.activity className="w-4 h-4" />
                           Ver Perfil
                         </button>
                         <button
                           onClick={() => handleEdit(patient)}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="flex items-center gap-1 text-blue-600 hover:text-blue-900 transition-colors"
+                          title="Editar información del paciente"
                         >
+                          <Icons.edit className="w-4 h-4" />
                           Editar
                         </button>
                         <button
                           onClick={() => handleToggleStatus(patient.id, patient.is_active)}
-                          className={patient.is_active ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}
+                          className={`flex items-center gap-1 transition-colors ${
+                            patient.is_active
+                              ? 'text-red-600 hover:text-red-900'
+                              : 'text-green-600 hover:text-green-900'
+                          }`}
+                          title={patient.is_active ? 'Desactivar paciente' : 'Activar paciente'}
                         >
-                          {patient.is_active ? 'Desactivar' : 'Activar'}
+                          {patient.is_active ? (
+                            <>
+                              <Icons.x className="w-4 h-4" />
+                              Desactivar
+                            </>
+                          ) : (
+                            <>
+                              <Icons.checkCircle className="w-4 h-4" />
+                              Activar
+                            </>
+                          )}
                         </button>
                       </div>
                     </td>
@@ -378,11 +406,9 @@ export default function PatientsPage() {
                 </h3>
                 <button
                   onClick={handleCloseModal}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <Icons.x className="h-6 w-6" />
                 </button>
               </div>
 
