@@ -343,39 +343,31 @@ export default function PatientsPage() {
                       <div className="flex space-x-3">
                         <button
                           onClick={() => router.push(`/patients/${patient.id}`)}
-                          className="flex items-center gap-1 text-purple-600 hover:text-purple-900 font-medium transition-colors"
+                          className="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors"
                           title="Ver perfil e historia clínica"
                         >
-                          <Icons.activity className="w-4 h-4" />
-                          Ver Perfil
+                          <Icons.activity className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleEdit(patient)}
-                          className="flex items-center gap-1 text-blue-600 hover:text-blue-900 transition-colors"
+                          className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
                           title="Editar información del paciente"
                         >
-                          <Icons.edit className="w-4 h-4" />
-                          Editar
+                          <Icons.edit className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleToggleStatus(patient.id, patient.is_active)}
-                          className={`flex items-center gap-1 transition-colors ${
+                          className={`p-2 rounded-lg transition-colors ${
                             patient.is_active
-                              ? 'text-red-600 hover:text-red-900'
-                              : 'text-green-600 hover:text-green-900'
+                              ? 'text-red-600 hover:text-red-900 hover:bg-red-50'
+                              : 'text-green-600 hover:text-green-900 hover:bg-green-50'
                           }`}
                           title={patient.is_active ? 'Desactivar paciente' : 'Activar paciente'}
                         >
                           {patient.is_active ? (
-                            <>
-                              <Icons.x className="w-4 h-4" />
-                              Desactivar
-                            </>
+                            <Icons.x className="w-5 h-5" />
                           ) : (
-                            <>
-                              <Icons.checkCircle className="w-4 h-4" />
-                              Activar
-                            </>
+                            <Icons.checkCircle className="w-5 h-5" />
                           )}
                         </button>
                       </div>
