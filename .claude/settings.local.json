@@ -122,7 +122,9 @@
       "Read(//Users/alvaro/.npm/_logs/**)",
       "Bash(PGPASSWORD='VittaMed2024!' psql \"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\" -f /tmp/fix-existing-doctor.sql)",
       "Bash(PGPASSWORD='VittaMed2024!' psql \"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\" -c \"SELECT email, role FROM custom_users WHERE email LIKE ''%@%'' LIMIT 10;\")",
-      "Bash(column -t -s:*)"
+      "Bash(column -t -s:*)",
+      "Bash(PGPASSWORD='VittaMed2024!' psql \"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\" -c \"SELECT typname, enumlabel FROM pg_enum e JOIN pg_type t ON e.enumtypid = t.oid WHERE t.typname = ''tenant_type'' ORDER BY e.enumsortorder;\")",
+      "Bash(export DATABASE_URL=\"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\")"
     ],
     "deny": [],
     "ask": []
