@@ -72,47 +72,38 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, tenant_type, address, phone, email } = body
+    const { name, tenant_type, document, address, phone, email } = body
 
     // Validate required fields
-    if (!name || !tenant_type) {
+    if (!name || !tenant_type || !document) {
       return NextResponse.json({
-        error: 'Name and tenant_type are required'
+        error: 'Name, tenant_type, and document are required'
       }, { status: 400 })
     }
 
-    // Validate tenant_type - only use existing DB types until migration is applied
-    const validTypes = ['clinic', 'spa', 'consultorio'] // Legacy types that exist in current DB
+    // Validate tenant_type - accept all business types from config
     const allValidTypes = Object.keys(BUSINESS_TYPE_CONFIGS) as BusinessType[]
 
-    if (!validTypes.includes(tenant_type) && !allValidTypes.includes(tenant_type as BusinessType)) {
+    if (!allValidTypes.includes(tenant_type as BusinessType)) {
       return NextResponse.json({
-        error: `Invalid tenant_type. Must be one of: ${validTypes.join(', ')}`
+        error: `Invalid tenant_type. Must be one of: ${allValidTypes.join(', ')}`
       }, { status: 400 })
-    }
-
-    // If using new business type, map to legacy type for now
-    let dbTenantType = tenant_type
-    if (!validTypes.includes(tenant_type)) {
-      const businessConfig = getBusinessTypeConfig(tenant_type as BusinessType)
-      // Map new types to legacy types based on category
-      dbTenantType = businessConfig.category === 'medical' ? 'clinic' :
-                    businessConfig.category === 'wellness' ? 'spa' :
-                    'consultorio'
     }
 
     // Get business configuration for the selected type
     const businessConfig = getBusinessTypeConfig(tenant_type as BusinessType)
 
-    // Create tenant (use mapped type for DB until migration is applied)
+    // Create tenant with actual business type (no mapping needed)
     const { data: tenant, error: createError } = await supabase
       .from('tenants')
       .insert({
         name,
-        tenant_type: dbTenantType,
+        tenant_type: tenant_type,
+        document,
         address,
         phone,
-        email
+        email,
+        business_settings: businessConfig.settings
       })
       .select()
       .single()
@@ -137,7 +128,6 @@ export async function POST(request: NextRequest) {
       success: true,
       tenant: {
         ...tenant,
-        tenant_type: tenant_type, // Return original selected type, not mapped DB type
         business_config: businessConfig
       },
       message: `${businessConfig.label} creado exitosamente y admin asignado`

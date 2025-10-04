@@ -9,6 +9,7 @@ export default function CreateTenantPage() {
   const [formData, setFormData] = useState({
     name: '',
     tenant_type: 'medical_clinic' as BusinessType,
+    document: '',
     address: '',
     phone: '',
     email: ''
@@ -153,6 +154,22 @@ export default function CreateTenantPage() {
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Ej: Clínica San Rafael"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="document" className="block text-sm font-medium text-gray-700">
+                ID / Documento <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="document"
+                type="text"
+                data-testid="tenant-document-input"
+                required
+                value={formData.document}
+                onChange={(e) => setFormData(prev => ({ ...prev, document: e.target.value }))}
+                className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="RUC, NIT, Tax ID, etc."
               />
             </div>
 

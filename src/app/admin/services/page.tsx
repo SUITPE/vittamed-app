@@ -22,6 +22,8 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingService, setEditingService] = useState<Service | null>(null)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -128,6 +130,57 @@ export default function ServicesPage() {
       }
     } catch (err) {
       setError('Error al actualizar servicio')
+    }
+  }
+
+  const handleEdit = (service: Service) => {
+    setEditingService(service)
+    setFormData({
+      name: service.name,
+      description: service.description || '',
+      duration_minutes: service.duration_minutes,
+      price: service.price,
+      is_active: service.is_active
+    })
+    setShowEditModal(true)
+  }
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!currentTenantId || !editingService) return
+
+    setSubmitting(true)
+    setError('')
+
+    try {
+      const response = await fetch(`/api/tenants/${currentTenantId}/services/${editingService.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      })
+
+      if (response.ok) {
+        setShowEditModal(false)
+        setEditingService(null)
+        setFormData({
+          name: '',
+          description: '',
+          duration_minutes: 60,
+          price: 0,
+          is_active: true
+        })
+        await fetchServices()
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Error al actualizar servicio')
+      }
+    } catch (err) {
+      setError('Error al actualizar servicio')
+      console.error('Error updating service:', err)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -286,6 +339,12 @@ export default function ServicesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                         <button
+                          onClick={() => handleEdit(service)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          Editar
+                        </button>
+                        <button
                           onClick={() => toggleServiceStatus(service.id, service.is_active)}
                           className={`text-sm ${
                             service.is_active
@@ -324,6 +383,113 @@ export default function ServicesPage() {
       </div>
 
       {/* Add Service Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Editar Servicio</h3>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false)
+                    setEditingService(null)
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdate} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Nombre del Servicio *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Ej: Consulta General"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Descripción</label>
+                  <textarea
+                    rows={3}
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Descripción del servicio..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Duración (minutos) *</label>
+                  <input
+                    type="number"
+                    required
+                    min="15"
+                    max="480"
+                    value={formData.duration_minutes}
+                    onChange={(e) => setFormData(prev => ({ ...prev, duration_minutes: parseInt(e.target.value) }))}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Precio *</label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    step="0.01"
+                    value={formData.price}
+                    onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_active}
+                    onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label className="ml-2 block text-sm text-gray-700">
+                    Servicio activo
+                  </label>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditModal(false)
+                      setEditingService(null)
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-md"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 border border-transparent rounded-md disabled:opacity-50"
+                  >
+                    {submitting ? 'Actualizando...' : 'Actualizar Servicio'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showAddModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">

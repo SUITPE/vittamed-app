@@ -11,6 +11,7 @@ interface Patient {
   first_name: string
   last_name: string
   email: string
+  document: string
   phone?: string
   date_of_birth?: string
   address?: string
@@ -33,6 +34,7 @@ export default function PatientsPage() {
     first_name: '',
     last_name: '',
     email: '',
+    document: '',
     phone: '',
     date_of_birth: '',
     address: '',
@@ -124,6 +126,7 @@ export default function PatientsPage() {
       first_name: patient.first_name,
       last_name: patient.last_name,
       email: patient.email,
+      document: patient.document || '',
       phone: patient.phone || '',
       date_of_birth: patient.date_of_birth || '',
       address: patient.address || '',
@@ -139,6 +142,7 @@ export default function PatientsPage() {
       first_name: '',
       last_name: '',
       email: '',
+      document: '',
       phone: '',
       date_of_birth: '',
       address: '',
@@ -166,7 +170,8 @@ export default function PatientsPage() {
 
   const filteredPatients = patients.filter(patient =>
     `${patient.first_name} ${patient.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.email.toLowerCase().includes(searchTerm.toLowerCase())
+    patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    patient.document?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   if (authLoading || loading) {
@@ -271,6 +276,9 @@ export default function PatientsPage() {
                     Paciente
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Documento
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Contacto
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -294,6 +302,9 @@ export default function PatientsPage() {
                       <div className="text-sm text-gray-500">
                         ID: {patient.id.slice(0, 8)}...
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{patient.document || 'No registrado'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{patient.email}</div>
@@ -407,6 +418,20 @@ export default function PatientsPage() {
                     value={formData.email}
                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    ID / Documento <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.document}
+                    onChange={(e) => setFormData(prev => ({ ...prev, document: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="DNI, Pasaporte, etc."
                   />
                 </div>
 

@@ -312,3 +312,4 @@ TWILIO_WHATSAPP_NUMBER=
 ---
 
 **📝 Note:** This project implements a complete medical appointment booking system with multi-tenant architecture, payment processing, and comprehensive testing. All core modules are functional and ready for production deployment with a modern, professional UI inspired by industry-leading applications like Fresha.
+- Genera una rama para cada cambio
