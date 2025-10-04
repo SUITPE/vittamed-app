@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
       first_name,
       last_name,
       email,
+      document,
       phone,
       date_of_birth,
       address,
@@ -70,9 +71,9 @@ export async function POST(request: NextRequest) {
       tenant_id
     } = await request.json()
 
-    if (!first_name || !last_name || !email) {
+    if (!first_name || !last_name || !email || !document) {
       return NextResponse.json(
-        { error: 'first_name, last_name, and email are required' },
+        { error: 'first_name, last_name, email, and document are required' },
         { status: 400 }
       )
     }
@@ -110,6 +111,7 @@ export async function POST(request: NextRequest) {
         first_name,
         last_name,
         email,
+        document,
         phone,
         date_of_birth,
         address,

@@ -1,0 +1,92 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - img [ref=e7]
+          - generic [ref=e9]: VittaMed
+        - button [ref=e10] [cursor=pointer]:
+          - img [ref=e11] [cursor=pointer]
+      - navigation [ref=e13]:
+        - link "Dashboard Resumen general" [ref=e14] [cursor=pointer]:
+          - /url: /dashboard/1323b89d-2d9b-4a81-a412-005c79153370
+          - img [ref=e15] [cursor=pointer]
+          - generic [ref=e17] [cursor=pointer]:
+            - generic [ref=e18] [cursor=pointer]: Dashboard
+            - generic [ref=e19] [cursor=pointer]: Resumen general
+        - link "Agenda Agenda de doctores" [ref=e20] [cursor=pointer]:
+          - /url: /receptionist/agenda
+          - img [ref=e21] [cursor=pointer]
+          - generic [ref=e23] [cursor=pointer]:
+            - generic [ref=e24] [cursor=pointer]: Agenda
+            - generic [ref=e25] [cursor=pointer]: Agenda de doctores
+        - link "Servicios Gestionar servicios" [ref=e26] [cursor=pointer]:
+          - /url: /admin/services
+          - img [ref=e27] [cursor=pointer]
+          - generic [ref=e31] [cursor=pointer]:
+            - generic [ref=e32] [cursor=pointer]: Servicios
+            - generic [ref=e33] [cursor=pointer]: Gestionar servicios
+        - link "Usuarios Gestionar usuarios" [ref=e34] [cursor=pointer]:
+          - /url: /admin/manage-users
+          - img [ref=e35] [cursor=pointer]
+          - generic [ref=e39] [cursor=pointer]:
+            - generic [ref=e40] [cursor=pointer]: Usuarios
+            - generic [ref=e41] [cursor=pointer]: Gestionar usuarios
+        - link "Pacientes Base de pacientes" [ref=e42] [cursor=pointer]:
+          - /url: /patients
+          - img [ref=e43] [cursor=pointer]
+          - generic [ref=e48] [cursor=pointer]:
+            - generic [ref=e49] [cursor=pointer]: Pacientes
+            - generic [ref=e50] [cursor=pointer]: Base de pacientes
+      - button "Cerrar Sesión Salir del sistema" [ref=e52] [cursor=pointer]:
+        - img [ref=e53] [cursor=pointer]
+        - generic [ref=e56] [cursor=pointer]:
+          - generic [ref=e57] [cursor=pointer]: Cerrar Sesión
+          - generic [ref=e58] [cursor=pointer]: Salir del sistema
+    - banner [ref=e59]:
+      - generic [ref=e60]:
+        - generic:
+          - heading [level=2]
+        - generic [ref=e61]:
+          - button [ref=e63] [cursor=pointer]:
+            - img [ref=e64] [cursor=pointer]
+          - button [ref=e69] [cursor=pointer]:
+            - img [ref=e70] [cursor=pointer]
+          - button "Admin User Administrador AU" [ref=e74] [cursor=pointer]:
+            - generic [ref=e75] [cursor=pointer]:
+              - generic [ref=e76] [cursor=pointer]:
+                - generic [ref=e77] [cursor=pointer]: Admin User
+                - generic [ref=e78] [cursor=pointer]: Administrador
+              - generic [ref=e79] [cursor=pointer]: AU
+            - img [ref=e80] [cursor=pointer]
+    - generic [ref=e84]:
+      - generic [ref=e86]:
+        - generic [ref=e87]:
+          - heading "Pacientes - Clínica San Rafael" [level=1] [ref=e88]
+          - paragraph [ref=e89]: Administra la información de tus pacientes
+        - button "Agregar Paciente" [ref=e90] [cursor=pointer]
+      - generic [ref=e91]:
+        - generic [ref=e93]:
+          - heading "Lista de Pacientes (0)" [level=2] [ref=e94]
+          - generic [ref=e95]:
+            - textbox "Buscar pacientes..." [active] [ref=e96]: example
+            - generic:
+              - img
+        - table [ref=e98]:
+          - rowgroup [ref=e99]:
+            - row "Paciente Documento Contacto Fecha de Nacimiento Estado Acciones" [ref=e100]:
+              - cell "Paciente" [ref=e101]
+              - cell "Documento" [ref=e102]
+              - cell "Contacto" [ref=e103]
+              - cell "Fecha de Nacimiento" [ref=e104]
+              - cell "Estado" [ref=e105]
+              - cell "Acciones" [ref=e106]
+          - rowgroup
+        - paragraph [ref=e108]: No se encontraron pacientes
+  - button "Open Next.js Dev Tools" [ref=e114] [cursor=pointer]:
+    - img [ref=e115] [cursor=pointer]
+  - alert [ref=e118]
+```

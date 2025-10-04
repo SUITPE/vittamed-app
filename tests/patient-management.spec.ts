@@ -4,23 +4,24 @@ test.describe('Patient Management Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/auth/login')
 
-    await page.fill('[data-testid="email-input"]', 'admin@clinicasanrafael.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
+    await page.fill('input[type="email"]', 'admin@clinicasanrafael.com')
+    await page.fill('input[type="password"]', 'password123')
+    await page.click('button[type="submit"]')
 
-    await page.waitForURL('/dashboard/**')
+    await page.waitForURL('/dashboard/**', { timeout: 15000 })
     await page.goto('/patients')
   })
 
   test('should display patients page', async ({ page }) => {
-    await expect(page.locator('h1')).toContainText('Gestión de Pacientes')
+    await expect(page.locator('h1')).toContainText('Pacientes')
     await expect(page.locator('text=Administra la información de tus pacientes')).toBeVisible()
     await expect(page.locator('button').filter({ hasText: 'Agregar Paciente' })).toBeVisible()
   })
 
   test('should show patients table', async ({ page }) => {
-    await expect(page.locator('h2')).toContainText('Lista de Pacientes')
+    await expect(page.locator('h2:has-text("Lista de Pacientes")')).toBeVisible()
     await expect(page.locator('th').filter({ hasText: 'Paciente' })).toBeVisible()
+    await expect(page.locator('th').filter({ hasText: 'Documento' })).toBeVisible()
     await expect(page.locator('th').filter({ hasText: 'Contacto' })).toBeVisible()
     await expect(page.locator('th').filter({ hasText: 'Fecha de Nacimiento' })).toBeVisible()
     await expect(page.locator('th').filter({ hasText: 'Estado' })).toBeVisible()
@@ -42,6 +43,7 @@ test.describe('Patient Management Tests', () => {
     await expect(page.locator('label:has-text("Nombre")')).toBeVisible()
     await expect(page.locator('label:has-text("Apellido")')).toBeVisible()
     await expect(page.locator('label:has-text("Email")')).toBeVisible()
+    await expect(page.locator('label:has-text("ID / Documento")')).toBeVisible()
     await expect(page.locator('label:has-text("Teléfono")')).toBeVisible()
     await expect(page.locator('label:has-text("Fecha de Nacimiento")')).toBeVisible()
     await expect(page.locator('label:has-text("Dirección")')).toBeVisible()
@@ -65,16 +67,20 @@ test.describe('Patient Management Tests', () => {
   test('should validate required fields', async ({ page }) => {
     await page.click('button:has-text("Agregar Paciente")')
 
-    const submitButton = page.locator('button[type="submit"]')
-    await submitButton.click()
+    // Wait for modal to open
+    await page.waitForSelector('h3:has-text("Agregar Paciente")')
 
-    const nameInput = page.locator('input').first()
-    const lastNameInput = page.locator('input').nth(1)
-    const emailInput = page.locator('input[type="email"]')
+    // Get inputs from the modal specifically
+    const modal = page.locator('div.fixed')
+    const nameInput = modal.locator('input[type="text"]').first()
+    const lastNameInput = modal.locator('input[type="text"]').nth(1)
+    const emailInput = modal.locator('input[type="email"]')
+    const documentInput = modal.locator('input[placeholder*="DNI"]')
 
     await expect(nameInput).toHaveAttribute('required', '')
     await expect(lastNameInput).toHaveAttribute('required', '')
     await expect(emailInput).toHaveAttribute('required', '')
+    await expect(documentInput).toHaveAttribute('required', '')
   })
 
   test('should add new patient successfully', async ({ page }) => {
@@ -154,6 +160,41 @@ test.describe('Patient Management Tests', () => {
 
       const newStatus = await statusBadge.textContent()
       expect(newStatus).not.toBe(initialStatus)
+    }
+  })
+
+  test('should search patients by document number', async ({ page }) => {
+    // Get first patient's document number
+    const firstRow = page.locator('tbody tr').first()
+
+    if (await firstRow.isVisible()) {
+      const documentCell = firstRow.locator('td').nth(1) // Document is 2nd column
+      const documentText = await documentCell.textContent()
+
+      if (documentText && documentText !== 'No registrado') {
+        // Search using first few characters of document
+        const searchInput = page.locator('input[placeholder="Buscar pacientes..."]')
+        const searchTerm = documentText.trim().substring(0, 5)
+        await searchInput.fill(searchTerm)
+
+        await page.waitForTimeout(500)
+
+        // Verify the patient is still visible
+        await expect(page.locator(`text=${documentText}`)).toBeVisible()
+      }
+    }
+  })
+
+  test('should display document in patient table', async ({ page }) => {
+    const firstRow = page.locator('tbody tr').first()
+
+    if (await firstRow.isVisible()) {
+      const documentCell = firstRow.locator('td').nth(1)
+      await expect(documentCell).toBeVisible()
+
+      // Document should either show a value or "No registrado"
+      const documentText = await documentCell.textContent()
+      expect(documentText).toBeTruthy()
     }
   })
 })

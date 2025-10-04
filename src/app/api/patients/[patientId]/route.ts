@@ -78,6 +78,7 @@ export async function PUT(
       'first_name',
       'last_name',
       'email',
+      'document',
       'phone',
       'date_of_birth',
       'address',
