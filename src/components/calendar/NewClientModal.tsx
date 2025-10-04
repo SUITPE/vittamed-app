@@ -20,6 +20,7 @@ export default function NewClientModal({
     first_name: '',
     last_name: '',
     email: '',
+    document: '',
     phone: ''
   })
   const [loading, setLoading] = useState(false)
@@ -31,26 +32,29 @@ export default function NewClientModal({
     setError('')
 
     try {
-      const response = await fetch(`/api/tenants/${tenantId}/users`, {
+      // Use /api/patients to create actual patient record
+      const response = await fetch(`/api/patients`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           ...formData,
-          role: 'patient'
+          tenant_id: tenantId
         })
       })
 
       if (response.ok) {
         const data = await response.json()
-        onClientCreated(data.user)
+        // API returns the patient directly
+        onClientCreated(data)
 
         // Reset form
         setFormData({
           first_name: '',
           last_name: '',
           email: '',
+          document: '',
           phone: ''
         })
         onClose()
@@ -129,14 +133,29 @@ export default function NewClientModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+              Email *
             </label>
             <input
               type="email"
+              required
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="john.doe@email.com"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nro Documento *
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.document}
+              onChange={(e) => setFormData({ ...formData, document: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="DNI, Pasaporte, etc."
             />
           </div>
 
