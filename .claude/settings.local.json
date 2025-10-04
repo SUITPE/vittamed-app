@@ -125,7 +125,9 @@
       "Bash(column -t -s:*)",
       "Bash(PGPASSWORD='VittaMed2024!' psql \"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\" -c \"SELECT typname, enumlabel FROM pg_enum e JOIN pg_type t ON e.enumtypid = t.oid WHERE t.typname = ''tenant_type'' ORDER BY e.enumsortorder;\")",
       "Bash(export DATABASE_URL=\"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\")",
-      "Bash(PGPASSWORD='VittaMed2024!' psql \"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\" -c \"\\d service_categories\")"
+      "Bash(PGPASSWORD='VittaMed2024!' psql \"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\" -c \"\\d service_categories\")",
+      "mcp__ide__getDiagnostics",
+      "Bash(PGPASSWORD='VittaMed2024!' psql \"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\" -c \"SELECT email, password_hash FROM custom_users WHERE email = ''alvaro@abp.pe'';\")"
     ],
     "deny": [],
     "ask": []
