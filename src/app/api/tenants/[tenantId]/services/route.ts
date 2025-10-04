@@ -12,7 +12,10 @@ export async function GET(
 
     const { data: services, error } = await supabase
       .from('services')
-      .select('*')
+      .select(`
+        *,
+        category:service_categories(id, name)
+      `)
       .eq('tenant_id', tenantId)
       .eq('is_active', true)
       .order('name')
