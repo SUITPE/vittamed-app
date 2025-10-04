@@ -9,6 +9,7 @@ import { Icons } from '@/components/ui/Icons'
 
 interface Appointment {
   id: string
+  patient_id: string
   patient_name: string
   patient_email?: string
   patient_phone?: string
@@ -377,31 +378,45 @@ export default function AppointmentsPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getStatusBadge(appointment.status)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                          {appointment.status === 'pending' && (
-                            <button
-                              onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
-                              className="text-green-600 hover:text-green-900"
-                            >
-                              Confirmar
-                            </button>
-                          )}
-                          {appointment.status === 'confirmed' && (
-                            <button
-                              onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
-                              className="text-blue-600 hover:text-blue-900"
-                            >
-                              Completar
-                            </button>
-                          )}
-                          {(appointment.status === 'pending' || appointment.status === 'confirmed') && (
-                            <button
-                              onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
-                              className="text-red-600 hover:text-red-900 ml-2"
-                            >
-                              Cancelar
-                            </button>
-                          )}
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex justify-end gap-2">
+                            {isDoctor && appointment.patient_id && (
+                              <button
+                                onClick={() => router.push(`/patients/${appointment.patient_id}`)}
+                                className="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors"
+                                title="Ver perfil y atender paciente"
+                              >
+                                <Icons.activity className="w-5 h-5" />
+                              </button>
+                            )}
+                            {appointment.status === 'pending' && (
+                              <button
+                                onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
+                                className="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors"
+                                title="Confirmar cita"
+                              >
+                                <Icons.checkCircle className="w-5 h-5" />
+                              </button>
+                            )}
+                            {appointment.status === 'confirmed' && (
+                              <button
+                                onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
+                                className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Completar cita"
+                              >
+                                <Icons.check className="w-5 h-5" />
+                              </button>
+                            )}
+                            {(appointment.status === 'pending' || appointment.status === 'confirmed') && (
+                              <button
+                                onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
+                                className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Cancelar cita"
+                              >
+                                <Icons.x className="w-5 h-5" />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -446,6 +461,15 @@ export default function AppointmentsPage() {
 
                     {/* Actions */}
                     <div className="mt-3 flex flex-wrap gap-2">
+                      {isDoctor && appointment.patient_id && (
+                        <button
+                          onClick={() => router.push(`/patients/${appointment.patient_id}`)}
+                          className="flex-1 px-3 py-1.5 text-sm bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 flex items-center justify-center gap-1"
+                        >
+                          <Icons.activity className="w-4 h-4" />
+                          Atender
+                        </button>
+                      )}
                       {appointment.status === 'pending' && (
                         <button
                           onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
