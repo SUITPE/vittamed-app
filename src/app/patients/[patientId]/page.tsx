@@ -8,6 +8,7 @@ import AdminHeader from '@/components/AdminHeader'
 import { Icons } from '@/components/ui/Icons'
 import { RECORD_TYPE_CONFIG, SEVERITY_CONFIG } from '@/types/medical-history'
 import type { MedicalRecordWithRelations } from '@/types/medical-history'
+import MedicalRecordForm from '@/components/medical/MedicalRecordForm'
 
 interface Patient {
   id: string
@@ -30,6 +31,8 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'info' | 'history' | 'allergies'>('history')
   const [patientId, setPatientId] = useState<string>('')
+  const [showRecordForm, setShowRecordForm] = useState(false)
+  const [recordToEdit, setRecordToEdit] = useState<MedicalRecordWithRelations | null>(null)
 
   const currentTenantId = user?.profile?.tenant_id
 
@@ -124,6 +127,9 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
   }
 
   const age = calculateAge(patient.date_of_birth)
+
+  // Check if current user is doctor or admin
+  const canCreateRecords = user?.profile?.role && ['doctor', 'admin_tenant', 'super_admin'].includes(user.profile.role)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -224,6 +230,19 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
             {/* Tab Content */}
             {activeTab === 'history' && (
               <div className="space-y-4">
+                {/* Add Record Button */}
+                {canCreateRecords && (
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => setShowRecordForm(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <Icons.plus className="w-4 h-4" />
+                      Nuevo Registro Médico
+                    </button>
+                  </div>
+                )}
+
                 {medicalRecords.length === 0 ? (
                   <div className="bg-white rounded-lg shadow-sm p-12 text-center">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -232,9 +251,18 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
                       Sin historia clínica
                     </h3>
-                    <p className="text-gray-500 max-w-md mx-auto">
+                    <p className="text-gray-500 max-w-md mx-auto mb-6">
                       Este paciente aún no tiene registros médicos. La historia se crea automáticamente al completar citas.
                     </p>
+                    {canCreateRecords && (
+                      <button
+                        onClick={() => setShowRecordForm(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <Icons.plus className="w-4 h-4" />
+                        Crear Primer Registro
+                      </button>
+                    )}
                   </div>
                 ) : (
                   medicalRecords.map((record) => {
@@ -260,6 +288,18 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
                                 </p>
                               </div>
                             </div>
+                            {canCreateRecords && (
+                              <button
+                                onClick={() => {
+                                  setRecordToEdit(record)
+                                  setShowRecordForm(true)
+                                }}
+                                className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm"
+                              >
+                                <Icons.edit className="w-4 h-4" />
+                                Editar
+                              </button>
+                            )}
                           </div>
                         </div>
 
@@ -467,6 +507,27 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
           </div>
         </div>
       </div>
+
+      {/* Medical Record Form Modal */}
+      {showRecordForm && (
+        <MedicalRecordForm
+          isOpen={showRecordForm}
+          onClose={() => {
+            setShowRecordForm(false)
+            setRecordToEdit(null)
+          }}
+          patientId={patientId}
+          tenantId={currentTenantId || ''}
+          doctorId={user?.profile?.id || ''}
+          doctorName={user?.profile ? `${user.profile.first_name} ${user.profile.last_name}` : ''}
+          recordToEdit={recordToEdit}
+          onSuccess={() => {
+            fetchPatientData()
+            setShowRecordForm(false)
+            setRecordToEdit(null)
+          }}
+        />
+      )}
     </div>
   )
 }
