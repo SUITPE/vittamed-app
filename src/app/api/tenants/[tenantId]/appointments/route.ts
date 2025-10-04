@@ -85,6 +85,7 @@ export async function GET(
     const transformedAppointments = appointments?.map((appointment: any) => ({
       id: appointment.id,
       appointment_date: appointment.appointment_date, // Add the date field separately
+      patient_id: appointment.patient_id,
       patient_name: appointment.patients
         ? `${appointment.patients.first_name} ${appointment.patients.last_name}`
         : 'Paciente no especificado',
