@@ -65,15 +65,7 @@ CREATE TABLE IF NOT EXISTS plan_features (
 );
 
 -- =====================================================
--- 5. ADD SUBSCRIPTION TO TENANTS TABLE
--- =====================================================
-ALTER TABLE tenants ADD COLUMN IF NOT EXISTS subscription_plan_key text DEFAULT 'free' REFERENCES subscription_plans(plan_key);
-ALTER TABLE tenants ADD COLUMN IF NOT EXISTS subscription_starts_at timestamp with time zone;
-ALTER TABLE tenants ADD COLUMN IF NOT EXISTS subscription_ends_at timestamp with time zone;
-ALTER TABLE tenants ADD COLUMN IF NOT EXISTS subscription_status text DEFAULT 'active' CHECK (subscription_status IN ('active', 'trial', 'expired', 'cancelled', 'paused'));
-
--- =====================================================
--- 6. INSERT DEFAULT FEATURE FLAGS
+-- 5. INSERT DEFAULT FEATURE FLAGS (BEFORE ADDING CONSTRAINTS)
 -- =====================================================
 INSERT INTO feature_flags (feature_key, feature_name, description, category, is_premium) VALUES
   -- Clinical Features
@@ -103,7 +95,7 @@ INSERT INTO feature_flags (feature_key, feature_name, description, category, is_
 ON CONFLICT (feature_key) DO NOTHING;
 
 -- =====================================================
--- 7. INSERT DEFAULT SUBSCRIPTION PLANS
+-- 6. INSERT DEFAULT SUBSCRIPTION PLANS (BEFORE FOREIGN KEY)
 -- =====================================================
 INSERT INTO subscription_plans (plan_key, plan_name, description, price_monthly, price_yearly, max_users, max_appointments_per_month, is_active) VALUES
   ('free', 'Plan Gratuito', 'Funcionalidades básicas para empezar', 0, 0, 2, 100, true),
@@ -111,6 +103,30 @@ INSERT INTO subscription_plans (plan_key, plan_name, description, price_monthly,
   ('professional', 'Plan Profesional', 'Para clínicas y consultorios', 79, 790, 15, 2000, true),
   ('enterprise', 'Plan Empresarial', 'Para organizaciones grandes', 199, 1990, NULL, NULL, true)
 ON CONFLICT (plan_key) DO NOTHING;
+
+-- =====================================================
+-- 7. ADD SUBSCRIPTION COLUMNS TO TENANTS TABLE (AFTER PLANS ARE INSERTED)
+-- =====================================================
+-- First add columns without foreign key constraint
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS subscription_plan_key text;
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS subscription_starts_at timestamp with time zone;
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS subscription_ends_at timestamp with time zone;
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS subscription_status text DEFAULT 'active';
+
+-- Set default values for existing tenants
+UPDATE tenants SET subscription_plan_key = 'free' WHERE subscription_plan_key IS NULL;
+UPDATE tenants SET subscription_status = 'active' WHERE subscription_status IS NULL;
+
+-- Now add the foreign key constraint
+ALTER TABLE tenants
+  ADD CONSTRAINT tenants_subscription_plan_key_fkey
+  FOREIGN KEY (subscription_plan_key)
+  REFERENCES subscription_plans(plan_key);
+
+-- Add check constraint for subscription_status
+ALTER TABLE tenants
+  ADD CONSTRAINT tenants_subscription_status_check
+  CHECK (subscription_status IN ('active', 'trial', 'expired', 'cancelled', 'paused'));
 
 -- =====================================================
 -- 8. MAP FEATURES TO PLANS
@@ -157,7 +173,27 @@ FROM feature_flags
 ON CONFLICT (plan_key, feature_key) DO NOTHING;
 
 -- =====================================================
--- 9. CREATE INDEXES
+-- 9. ENABLE DEFAULT FEATURES FOR EXISTING TENANTS
+-- =====================================================
+-- Enable basic features for all existing tenants (free plan defaults)
+INSERT INTO tenant_features (tenant_id, feature_key, is_enabled, enabled_at)
+SELECT t.id, 'appointments', true, NOW()
+FROM tenants t
+WHERE NOT EXISTS (
+  SELECT 1 FROM tenant_features tf
+  WHERE tf.tenant_id = t.id AND tf.feature_key = 'appointments'
+);
+
+INSERT INTO tenant_features (tenant_id, feature_key, is_enabled, enabled_at)
+SELECT t.id, 'online_booking', true, NOW()
+FROM tenants t
+WHERE NOT EXISTS (
+  SELECT 1 FROM tenant_features tf
+  WHERE tf.tenant_id = t.id AND tf.feature_key = 'online_booking'
+);
+
+-- =====================================================
+-- 10. CREATE INDEXES
 -- =====================================================
 CREATE INDEX IF NOT EXISTS idx_tenant_features_tenant_id ON tenant_features(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_tenant_features_feature_key ON tenant_features(feature_key);
@@ -166,7 +202,7 @@ CREATE INDEX IF NOT EXISTS idx_plan_features_plan_key ON plan_features(plan_key)
 CREATE INDEX IF NOT EXISTS idx_tenants_subscription_plan ON tenants(subscription_plan_key);
 
 -- =====================================================
--- 10. CREATE HELPER FUNCTION
+-- 11. CREATE HELPER FUNCTIONS
 -- =====================================================
 -- Function to check if a tenant has a specific feature enabled
 CREATE OR REPLACE FUNCTION tenant_has_feature(
@@ -219,26 +255,6 @@ BEGIN
     updated_at = NOW();
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- =====================================================
--- 11. ENABLE DEFAULT FEATURES FOR EXISTING TENANTS
--- =====================================================
--- Enable basic features for all existing tenants (free plan defaults)
-INSERT INTO tenant_features (tenant_id, feature_key, is_enabled, enabled_at)
-SELECT t.id, 'appointments', true, NOW()
-FROM tenants t
-WHERE NOT EXISTS (
-  SELECT 1 FROM tenant_features tf
-  WHERE tf.tenant_id = t.id AND tf.feature_key = 'appointments'
-);
-
-INSERT INTO tenant_features (tenant_id, feature_key, is_enabled, enabled_at)
-SELECT t.id, 'online_booking', true, NOW()
-FROM tenants t
-WHERE NOT EXISTS (
-  SELECT 1 FROM tenant_features tf
-  WHERE tf.tenant_id = t.id AND tf.feature_key = 'online_booking'
-);
 
 -- =====================================================
 -- 12. CREATE RLS POLICIES
