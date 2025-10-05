@@ -313,3 +313,18 @@ TWILIO_WHATSAPP_NUMBER=
 
 **📝 Note:** This project implements a complete medical appointment booking system with multi-tenant architecture, payment processing, and comprehensive testing. All core modules are functional and ready for production deployment with a modern, professional UI inspired by industry-leading applications like Fresha.
 - Genera una rama para cada cambio
+- Usuarios de prueba Datos de prueba:
+Admin Tenant
+usuario: admin@clinicasanrafael.com
+password: password123
+
+
+Doctor
+user: doctor-1759245234123@clinicasanrafael.com
+Pass:VittaMed2024!
+
+
+Recepcionista
+user: secre@clinicasanrafael.com
+pass: password
+- el password de psql es KMZvgHQAzeFdTg6O

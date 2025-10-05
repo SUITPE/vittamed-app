@@ -15,6 +15,20 @@ interface MedicalRecordFormProps {
   onSuccess: () => void
 }
 
+// Rangos normales de signos vitales (adultos)
+const VITAL_RANGES = {
+  temperature: { min: 36.1, max: 37.2, unit: '°C', label: 'Temperatura' },
+  heart_rate: { min: 60, max: 100, unit: 'bpm', label: 'Frecuencia Cardíaca' },
+  blood_pressure_systolic: { min: 90, max: 120, unit: 'mmHg', label: 'Presión Sistólica' },
+  blood_pressure_diastolic: { min: 60, max: 80, unit: 'mmHg', label: 'Presión Diastólica' },
+  respiratory_rate: { min: 12, max: 20, unit: 'rpm', label: 'Frecuencia Respiratoria' },
+  oxygen_saturation: { min: 95, max: 100, unit: '%', label: 'Saturación O₂' },
+  weight: { min: 40, max: 200, unit: 'kg', label: 'Peso' }, // Rango amplio
+  height: { min: 140, max: 220, unit: 'cm', label: 'Altura' } // Rango amplio
+}
+
+type VitalSign = keyof typeof VITAL_RANGES
+
 export default function MedicalRecordForm({
   isOpen,
   onClose,
@@ -27,6 +41,7 @@ export default function MedicalRecordForm({
 }: MedicalRecordFormProps) {
   const [loading, setLoading] = useState(false)
   const [activeSection, setActiveSection] = useState<'basic' | 'vitals' | 'prescriptions' | 'diagnoses'>('basic')
+  const [vitalWarnings, setVitalWarnings] = useState<Record<string, string>>({})
 
   // Form state
   const [formData, setFormData] = useState<MedicalRecordFormData>({
@@ -177,6 +192,42 @@ export default function MedicalRecordForm({
     const updated = [...diagnoses]
     updated[index] = { ...updated[index], [field]: value }
     setDiagnoses(updated)
+  }
+
+  // Validar signos vitales
+  const validateVitalSign = (field: VitalSign, value: number) => {
+    const range = VITAL_RANGES[field]
+    if (!value || !range) return null
+
+    if (value < range.min) {
+      return `⚠️ Valor bajo - Rango normal: ${range.min}-${range.max} ${range.unit}`
+    }
+    if (value > range.max) {
+      return `⚠️ Valor alto - Rango normal: ${range.min}-${range.max} ${range.unit}`
+    }
+    return null
+  }
+
+  // Actualizar warnings cuando cambien los signos vitales
+  const updateVitalSign = (field: VitalSign, value: number | undefined) => {
+    setFormData({
+      ...formData,
+      vital_signs: { ...formData.vital_signs, [field]: value }
+    })
+
+    // Validar y actualizar warnings
+    if (value) {
+      const warning = validateVitalSign(field, value)
+      if (warning) {
+        setVitalWarnings({ ...vitalWarnings, [field]: warning })
+      } else {
+        const { [field]: removed, ...rest } = vitalWarnings
+        setVitalWarnings(rest)
+      }
+    } else {
+      const { [field]: removed, ...rest } = vitalWarnings
+      setVitalWarnings(rest)
+    }
   }
 
   if (!isOpen) return null
@@ -383,13 +434,15 @@ export default function MedicalRecordForm({
                           type="number"
                           step="0.1"
                           value={formData.vital_signs?.temperature || ''}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            vital_signs: { ...formData.vital_signs, temperature: parseFloat(e.target.value) || undefined }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          onChange={(e) => updateVitalSign('temperature', parseFloat(e.target.value) || undefined)}
+                          className={`w-full px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                            vitalWarnings.temperature ? 'border-yellow-500 bg-yellow-50' : 'border-gray-300'
+                          }`}
                           placeholder="36.5"
                         />
+                        {vitalWarnings.temperature && (
+                          <p className="mt-1 text-sm text-yellow-700">{vitalWarnings.temperature}</p>
+                        )}
                       </div>
 
                       <div>
@@ -399,13 +452,15 @@ export default function MedicalRecordForm({
                         <input
                           type="number"
                           value={formData.vital_signs?.heart_rate || ''}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            vital_signs: { ...formData.vital_signs, heart_rate: parseInt(e.target.value) || undefined }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          onChange={(e) => updateVitalSign('heart_rate', parseInt(e.target.value) || undefined)}
+                          className={`w-full px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                            vitalWarnings.heart_rate ? 'border-yellow-500 bg-yellow-50' : 'border-gray-300'
+                          }`}
                           placeholder="72"
                         />
+                        {vitalWarnings.heart_rate && (
+                          <p className="mt-1 text-sm text-yellow-700">{vitalWarnings.heart_rate}</p>
+                        )}
                       </div>
 
                       <div>
@@ -415,13 +470,15 @@ export default function MedicalRecordForm({
                         <input
                           type="number"
                           value={formData.vital_signs?.blood_pressure_systolic || ''}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            vital_signs: { ...formData.vital_signs, blood_pressure_systolic: parseInt(e.target.value) || undefined }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          onChange={(e) => updateVitalSign('blood_pressure_systolic', parseInt(e.target.value) || undefined)}
+                          className={`w-full px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                            vitalWarnings.blood_pressure_systolic ? 'border-yellow-500 bg-yellow-50' : 'border-gray-300'
+                          }`}
                           placeholder="120"
                         />
+                        {vitalWarnings.blood_pressure_systolic && (
+                          <p className="mt-1 text-sm text-yellow-700">{vitalWarnings.blood_pressure_systolic}</p>
+                        )}
                       </div>
 
                       <div>
@@ -431,13 +488,15 @@ export default function MedicalRecordForm({
                         <input
                           type="number"
                           value={formData.vital_signs?.blood_pressure_diastolic || ''}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            vital_signs: { ...formData.vital_signs, blood_pressure_diastolic: parseInt(e.target.value) || undefined }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          onChange={(e) => updateVitalSign('blood_pressure_diastolic', parseInt(e.target.value) || undefined)}
+                          className={`w-full px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                            vitalWarnings.blood_pressure_diastolic ? 'border-yellow-500 bg-yellow-50' : 'border-gray-300'
+                          }`}
                           placeholder="80"
                         />
+                        {vitalWarnings.blood_pressure_diastolic && (
+                          <p className="mt-1 text-sm text-yellow-700">{vitalWarnings.blood_pressure_diastolic}</p>
+                        )}
                       </div>
 
                       <div>
@@ -448,13 +507,15 @@ export default function MedicalRecordForm({
                           type="number"
                           step="0.1"
                           value={formData.vital_signs?.weight || ''}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            vital_signs: { ...formData.vital_signs, weight: parseFloat(e.target.value) || undefined }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          onChange={(e) => updateVitalSign('weight', parseFloat(e.target.value) || undefined)}
+                          className={`w-full px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                            vitalWarnings.weight ? 'border-yellow-500 bg-yellow-50' : 'border-gray-300'
+                          }`}
                           placeholder="70"
                         />
+                        {vitalWarnings.weight && (
+                          <p className="mt-1 text-sm text-yellow-700">{vitalWarnings.weight}</p>
+                        )}
                       </div>
 
                       <div>
@@ -464,13 +525,15 @@ export default function MedicalRecordForm({
                         <input
                           type="number"
                           value={formData.vital_signs?.height || ''}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            vital_signs: { ...formData.vital_signs, height: parseInt(e.target.value) || undefined }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          onChange={(e) => updateVitalSign('height', parseInt(e.target.value) || undefined)}
+                          className={`w-full px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                            vitalWarnings.height ? 'border-yellow-500 bg-yellow-50' : 'border-gray-300'
+                          }`}
                           placeholder="170"
                         />
+                        {vitalWarnings.height && (
+                          <p className="mt-1 text-sm text-yellow-700">{vitalWarnings.height}</p>
+                        )}
                       </div>
 
                       <div>
@@ -480,13 +543,15 @@ export default function MedicalRecordForm({
                         <input
                           type="number"
                           value={formData.vital_signs?.oxygen_saturation || ''}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            vital_signs: { ...formData.vital_signs, oxygen_saturation: parseInt(e.target.value) || undefined }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          onChange={(e) => updateVitalSign('oxygen_saturation', parseInt(e.target.value) || undefined)}
+                          className={`w-full px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                            vitalWarnings.oxygen_saturation ? 'border-yellow-500 bg-yellow-50' : 'border-gray-300'
+                          }`}
                           placeholder="98"
                         />
+                        {vitalWarnings.oxygen_saturation && (
+                          <p className="mt-1 text-sm text-yellow-700">{vitalWarnings.oxygen_saturation}</p>
+                        )}
                       </div>
 
                       <div>
@@ -496,13 +561,15 @@ export default function MedicalRecordForm({
                         <input
                           type="number"
                           value={formData.vital_signs?.respiratory_rate || ''}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            vital_signs: { ...formData.vital_signs, respiratory_rate: parseInt(e.target.value) || undefined }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          onChange={(e) => updateVitalSign('respiratory_rate', parseInt(e.target.value) || undefined)}
+                          className={`w-full px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                            vitalWarnings.respiratory_rate ? 'border-yellow-500 bg-yellow-50' : 'border-gray-300'
+                          }`}
                           placeholder="16"
                         />
+                        {vitalWarnings.respiratory_rate && (
+                          <p className="mt-1 text-sm text-yellow-700">{vitalWarnings.respiratory_rate}</p>
+                        )}
                       </div>
                     </div>
                   </div>

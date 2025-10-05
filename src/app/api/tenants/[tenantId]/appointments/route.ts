@@ -47,6 +47,7 @@ export async function GET(
         status,
         service_id,
         doctor_id,
+        patient_id,
         patients (
           first_name,
           last_name
@@ -98,6 +99,8 @@ export async function GET(
         : 'Doctor no asignado',
       doctor_id: appointment.doctor_id
     })) || []
+
+    console.log('📋 Appointments with patient_id:', transformedAppointments.map(a => ({ id: a.id, patient_id: a.patient_id })))
 
     return NextResponse.json({ appointments: transformedAppointments })
   } catch (error) {

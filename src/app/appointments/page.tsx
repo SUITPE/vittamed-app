@@ -174,8 +174,22 @@ export default function AppointmentsPage() {
     )
   }
 
-  const formatTime = (dateTimeString: string) => {
-    return new Date(dateTimeString).toLocaleTimeString('es-ES', {
+  const formatTime = (timeString: string, dateString?: string) => {
+    // If it's just a time string (HH:MM:SS), display it directly
+    if (timeString && timeString.match(/^\d{2}:\d{2}(:\d{2})?$/)) {
+      return timeString.substring(0, 5) // Return HH:MM
+    }
+
+    // If it's a full datetime, parse and format it
+    if (dateString) {
+      const fullDateTime = `${dateString}T${timeString}`
+      return new Date(fullDateTime).toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
+
+    return new Date(timeString).toLocaleTimeString('es-ES', {
       hour: '2-digit',
       minute: '2-digit'
     })

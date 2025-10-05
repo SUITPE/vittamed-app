@@ -127,7 +127,11 @@
       "Bash(export DATABASE_URL=\"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\")",
       "Bash(PGPASSWORD='VittaMed2024!' psql \"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\" -c \"\\d service_categories\")",
       "mcp__ide__getDiagnostics",
-      "Bash(PGPASSWORD='VittaMed2024!' psql \"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\" -c \"SELECT email, password_hash FROM custom_users WHERE email = ''alvaro@abp.pe'';\")"
+      "Bash(PGPASSWORD='VittaMed2024!' psql \"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\" -c \"SELECT email, password_hash FROM custom_users WHERE email = ''alvaro@abp.pe'';\")",
+      "Bash(PGPASSWORD='VittaMed2024!' psql \"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\" -c \"SELECT id, patient_id, doctor_id, appointment_date, status FROM appointments WHERE tenant_id = ''33bfa2ef-c9c2-4eaa-8178-eed6d6df8d9e'' AND appointment_date >= ''2025-10-04'' LIMIT 5;\")",
+      "Bash(PGPASSWORD='KMZvgHQAzeFdTg6O' psql:*)",
+      "Bash(PGPASSWORD='KMZvgHQAzeFdTg6O' psql \"postgresql://postgres:KMZvgHQAzeFdTg6O@db.mvvxeqhsatkqtsrulcil.supabase.co:5432/postgres\" -c \"\nSELECT \n  a.id as appointment_id,\n  a.appointment_date,\n  a.patient_id,\n  cu.email as patient_email,\n  cu.first_name || '' '' || cu.last_name as patient_name\nFROM appointments a\nLEFT JOIN custom_users cu ON cu.id = a.patient_id\nWHERE a.tenant_id = ''33bfa2ef-c9c2-4eaa-8178-eed6d6df8d9e''\n  AND a.appointment_date >= ''2025-10-04''\nORDER BY a.appointment_date\nLIMIT 5;\n\")",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []
