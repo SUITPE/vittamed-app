@@ -67,8 +67,9 @@ npx playwright show-report
 ## 🔑 Demo Credentials
 
 ```
-Admin: admin@clinicasanrafael.com / password
-Doctor: ana.rodriguez@email.com / password
+Admin: admin@clinicasanrafael.com / password123
+Doctor: ana.rodriguez@email.com / VittaMed2024!
+Recepcionist: secre@clinicasanrafael.com / password
 Patient: patient@example.com / password
 ```
 

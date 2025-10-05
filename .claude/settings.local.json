@@ -131,7 +131,11 @@
       "Bash(PGPASSWORD='VittaMed2024!' psql \"postgresql://postgres.mvvxeqhsatkqtsrulcil:VittaMed2024!@aws-0-us-east-1.pooler.supabase.com:6543/postgres\" -c \"SELECT id, patient_id, doctor_id, appointment_date, status FROM appointments WHERE tenant_id = ''33bfa2ef-c9c2-4eaa-8178-eed6d6df8d9e'' AND appointment_date >= ''2025-10-04'' LIMIT 5;\")",
       "Bash(PGPASSWORD='KMZvgHQAzeFdTg6O' psql:*)",
       "Bash(PGPASSWORD='KMZvgHQAzeFdTg6O' psql \"postgresql://postgres:KMZvgHQAzeFdTg6O@db.mvvxeqhsatkqtsrulcil.supabase.co:5432/postgres\" -c \"\nSELECT \n  a.id as appointment_id,\n  a.appointment_date,\n  a.patient_id,\n  cu.email as patient_email,\n  cu.first_name || '' '' || cu.last_name as patient_name\nFROM appointments a\nLEFT JOIN custom_users cu ON cu.id = a.patient_id\nWHERE a.tenant_id = ''33bfa2ef-c9c2-4eaa-8178-eed6d6df8d9e''\n  AND a.appointment_date >= ''2025-10-04''\nORDER BY a.appointment_date\nLIMIT 5;\n\")",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/appointments-atender-button.spec.ts --timeout=60000)",
+      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/vital-signs-validation.spec.ts --timeout=60000)",
+      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/agenda-mobile.spec.ts tests/appointments-mobile.spec.ts --timeout=60000)",
+      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/appointments-atender-button.spec.ts tests/vital-signs-validation.spec.ts --timeout=60000)"
     ],
     "deny": [],
     "ask": []
