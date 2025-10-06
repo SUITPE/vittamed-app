@@ -145,7 +145,10 @@
       "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/appointment-creation.spec.ts --timeout=60000 --grep \"should create appointment successfully\")",
       "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/appointment-creation.spec.ts --reporter=list)",
       "Bash(PGPASSWORD='KMZvgHQAzeFdTg6O' psql \"postgresql://postgres:KMZvgHQAzeFdTg6O@db.mvvxeqhsatkqtsrulcil.supabase.co:5432/postgres\" -c \"\nSELECT \n  id,\n  tenant_id,\n  doctor_id,\n  patient_id,\n  service_id,\n  appointment_date,\n  start_time,\n  end_time,\n  status,\n  created_at\nFROM appointments \nWHERE id = ''19fe0cbd-6d45-4a1c-bb16-25aa7b1af3f8'';\n\")",
-      "Bash(PGPASSWORD='VittaMed2024!' psql:*)"
+      "Bash(PGPASSWORD='VittaMed2024!' psql:*)",
+      "Bash(for file in src/app/patients/[patientId]/page.tsx src/app/patients/page.tsx src/app/settings/page.tsx src/app/receptionist/agenda/page.tsx src/app/admin/manage-users/page.tsx src/app/admin/services/page.tsx)",
+      "Bash(do)",
+      "Bash(echo \"Updated: $file\")"
     ],
     "deny": [],
     "ask": []

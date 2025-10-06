@@ -58,6 +58,8 @@ import {
   Utensils,
   Package,
   Circle,
+  FileText,
+  ClipboardList,
 } from "lucide-react"
 
 export const Icons = {
@@ -147,6 +149,8 @@ export const Icons = {
   utensils: Utensils,
   package: Package,
   circle: Circle,
+  fileText: FileText,
+  clipboardList: ClipboardList,
 }
 
 export type IconName = keyof typeof Icons

@@ -337,7 +337,7 @@ export default function ServicesPage() {
       <div className="min-h-screen bg-gray-50">
         <AdminSidebar tenantId={currentTenantId || undefined} />
         <AdminHeader />
-        <div className="ml-64 pt-16">
+        <div className="md:ml-64 pt-16">
           <div className="flex justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -354,7 +354,7 @@ export default function ServicesPage() {
       <AdminSidebar tenantId={currentTenantId || undefined} />
       <AdminHeader />
 
-      <div className="ml-64 pt-16 p-6">
+      <div className="md:ml-64 pt-16 p-6">
         <div className="max-w-6xl mx-auto">
           <div className="bg-white shadow rounded-lg">
             {/* Header */}

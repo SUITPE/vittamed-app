@@ -125,7 +125,7 @@ export default function TenantDashboard() {
       <div className="min-h-screen bg-gray-50">
         <AdminSidebar tenantId={tenantId} />
         <AdminHeader />
-        <div className="ml-64 pt-16 p-6">
+        <div className="md:ml-64 pt-16 p-6">
           <div className="max-w-7xl mx-auto">
             <div className="animate-pulse">
               <div className="h-8 bg-gray-200 rounded w-64 mb-6"></div>
@@ -167,8 +167,7 @@ export default function TenantDashboard() {
     <div className="min-h-screen bg-gray-50">
       <AdminSidebar tenantId={tenantId} />
       <AdminHeader />
-      <div className="ml-64 pt-16">
-        <div className="p-6">
+      <div className="md:ml-64 pt-16 p-6">
         <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -285,7 +284,6 @@ export default function TenantDashboard() {
               </div>
             </div>
           </div>
-        </div>
         </div>
         </div>
       </div>

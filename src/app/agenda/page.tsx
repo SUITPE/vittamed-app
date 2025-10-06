@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import DoctorSidebar from '@/components/DoctorSidebar'
+import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
 import WeekCalendarView from '@/components/agenda/WeekCalendarView'
 import VisualAvailabilityEditor from '@/components/agenda/VisualAvailabilityEditor'
@@ -231,9 +232,15 @@ export default function AgendaPage() {
     )
   }
 
+  const isAdminOrStaff = ['admin_tenant', 'receptionist', 'staff', 'super_admin'].includes(user?.profile?.role || '')
+
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <DoctorSidebar />
+      {isAdminOrStaff ? (
+        <AdminSidebar tenantId={user?.profile?.tenant_id} />
+      ) : (
+        <DoctorSidebar />
+      )}
       <div className="flex-1">
         <AdminHeader />
         <div className="pt-16 p-6">

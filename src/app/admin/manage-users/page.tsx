@@ -71,7 +71,7 @@ export default function ManageUsersPage() {
       <div className="min-h-screen bg-gray-50">
         <AdminSidebar tenantId={currentTenant.tenant_id} />
         <AdminHeader />
-        <div className="ml-64 pt-16">
+        <div className="md:ml-64 pt-16">
           <div className="p-6">
             <div className="max-w-7xl mx-auto">
               <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
@@ -186,7 +186,7 @@ export default function ManageUsersPage() {
       <div className="min-h-screen bg-gray-50">
         <AdminSidebar tenantId={currentTenant.tenant_id} />
         <AdminHeader />
-        <div className="ml-64 pt-16">
+        <div className="md:ml-64 pt-16">
           <div className="p-6">
             <div className="max-w-7xl mx-auto">
               <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
@@ -206,7 +206,7 @@ export default function ManageUsersPage() {
     <div className="min-h-screen bg-gray-50">
       <AdminSidebar tenantId={currentTenant.tenant_id} />
       <AdminHeader />
-      <div className="ml-64 pt-16">
+      <div className="md:ml-64 pt-16">
         <div className="p-6">
           <div className="max-w-7xl mx-auto">
             <div className="bg-white shadow rounded-lg">
