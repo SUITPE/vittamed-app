@@ -135,7 +135,10 @@
       "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/appointments-atender-button.spec.ts --timeout=60000)",
       "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/vital-signs-validation.spec.ts --timeout=60000)",
       "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/agenda-mobile.spec.ts tests/appointments-mobile.spec.ts --timeout=60000)",
-      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/appointments-atender-button.spec.ts tests/vital-signs-validation.spec.ts --timeout=60000)"
+      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/appointments-atender-button.spec.ts tests/vital-signs-validation.spec.ts --timeout=60000)",
+      "Bash(for file in /Users/alvaro/Projects/VittaMedApp/tests/*.spec.ts)",
+      "Bash(done)",
+      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/payment-flow.spec.ts tests/notifications.spec.ts --timeout=60000)"
     ],
     "deny": [],
     "ask": []

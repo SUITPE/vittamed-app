@@ -10,66 +10,64 @@
           - generic [ref=e11]: VittaMed
         - button [ref=e12] [cursor=pointer]:
           - img [ref=e13] [cursor=pointer]
-      - navigation [ref=e15]:
-        - link "Mi Agenda Horarios y disponibilidad" [ref=e16] [cursor=pointer]:
+      - navigation [ref=e16]:
+        - link "Mi Agenda Horarios y disponibilidad" [ref=e17]:
           - /url: /agenda
-          - img [ref=e17] [cursor=pointer]
-          - generic [ref=e19] [cursor=pointer]:
-            - generic [ref=e20] [cursor=pointer]: Mi Agenda
-            - generic [ref=e21] [cursor=pointer]: Horarios y disponibilidad
-        - link "Mis Citas Gestión de citas" [ref=e22] [cursor=pointer]:
+          - img [ref=e18]
+          - generic [ref=e20]:
+            - generic [ref=e21]: Mi Agenda
+            - generic [ref=e22]: Horarios y disponibilidad
+        - link "Mis Citas Gestión de citas" [ref=e23]:
           - /url: /appointments
-          - img [ref=e23] [cursor=pointer]
-          - generic [ref=e26] [cursor=pointer]:
-            - generic [ref=e27] [cursor=pointer]: Mis Citas
-            - generic [ref=e28] [cursor=pointer]: Gestión de citas
-        - link "Pacientes Base de pacientes" [ref=e29] [cursor=pointer]:
+          - img [ref=e24]
+          - generic [ref=e27]:
+            - generic [ref=e28]: Mis Citas
+            - generic [ref=e29]: Gestión de citas
+        - link "Pacientes Base de pacientes" [ref=e30]:
           - /url: /patients
-          - img [ref=e30] [cursor=pointer]
-          - generic [ref=e35] [cursor=pointer]:
-            - generic [ref=e36] [cursor=pointer]: Pacientes
-            - generic [ref=e37] [cursor=pointer]: Base de pacientes
-        - link "Reservar Nueva cita" [ref=e38] [cursor=pointer]:
+          - img [ref=e31]
+          - generic [ref=e36]:
+            - generic [ref=e37]: Pacientes
+            - generic [ref=e38]: Base de pacientes
+        - link "Reservar Nueva cita" [ref=e39]:
           - /url: /booking
-          - img [ref=e39] [cursor=pointer]
-          - generic [ref=e41] [cursor=pointer]:
-            - generic [ref=e42] [cursor=pointer]: Reservar
-            - generic [ref=e43] [cursor=pointer]: Nueva cita
-      - button "Cerrar Sesión Salir del sistema" [ref=e45] [cursor=pointer]:
-        - img [ref=e46] [cursor=pointer]
-        - generic [ref=e49] [cursor=pointer]:
-          - generic [ref=e50] [cursor=pointer]: Cerrar Sesión
-          - generic [ref=e51] [cursor=pointer]: Salir del sistema
+          - img [ref=e40]
+          - generic [ref=e42]:
+            - generic [ref=e43]: Reservar
+            - generic [ref=e44]: Nueva cita
+      - button "Cerrar Sesión Salir del sistema" [ref=e46] [cursor=pointer]:
+        - img [ref=e47] [cursor=pointer]
+        - generic [ref=e50] [cursor=pointer]:
+          - generic [ref=e51] [cursor=pointer]: Cerrar Sesión
+          - generic [ref=e52] [cursor=pointer]: Salir del sistema
     - generic [ref=e53]:
       - banner [ref=e54]:
         - generic [ref=e55]:
-          - generic:
-            - heading [level=2]
           - generic [ref=e56]:
-            - button [ref=e58] [cursor=pointer]:
-              - img [ref=e59] [cursor=pointer]
-            - button [ref=e64] [cursor=pointer]:
-              - img [ref=e65] [cursor=pointer]
-            - button "Dr. María García Doctor DG" [ref=e69] [cursor=pointer]:
-              - generic [ref=e70] [cursor=pointer]:
-                - generic [ref=e71] [cursor=pointer]:
-                  - generic [ref=e72] [cursor=pointer]: Dr. María García
-                  - generic [ref=e73] [cursor=pointer]: Doctor
-                - generic [ref=e74] [cursor=pointer]: DG
+            - button [ref=e57] [cursor=pointer]:
+              - img [ref=e58] [cursor=pointer]
+            - heading [level=2]
+          - generic [ref=e59]:
+            - button [ref=e61] [cursor=pointer]:
+              - img [ref=e62] [cursor=pointer]
+            - button [ref=e67] [cursor=pointer]:
+              - img [ref=e68] [cursor=pointer]
+            - button "DG" [ref=e72] [cursor=pointer]:
+              - generic [ref=e74] [cursor=pointer]: DG
               - img [ref=e75] [cursor=pointer]
       - generic [ref=e78]:
         - generic [ref=e79]:
           - heading "Mi Agenda" [level=1] [ref=e80]
           - paragraph [ref=e81]: Dr. Dr. María García
         - navigation [ref=e83]:
-          - button "Vista Semanal" [ref=e84] [cursor=pointer]:
+          - button "Calendario" [ref=e84] [cursor=pointer]:
             - generic [ref=e85] [cursor=pointer]:
               - img [ref=e86] [cursor=pointer]
-              - generic [ref=e88] [cursor=pointer]: Vista Semanal
-          - button "Configurar Disponibilidad" [ref=e89] [cursor=pointer]:
+              - generic [ref=e88] [cursor=pointer]: Calendario
+          - button "Configurar" [ref=e89] [cursor=pointer]:
             - generic [ref=e90] [cursor=pointer]:
               - img [ref=e91] [cursor=pointer]
-              - generic [ref=e94] [cursor=pointer]: Configurar Disponibilidad
+              - generic [ref=e94] [cursor=pointer]: Configurar
         - generic [ref=e96]:
           - generic [ref=e97]:
             - generic [ref=e98]:
@@ -277,5 +275,5 @@
                 - generic [ref=e327]: Días disponibles
   - button "Open Next.js Dev Tools" [ref=e333] [cursor=pointer]:
     - img [ref=e334] [cursor=pointer]
-  - alert [ref=e337]
+  - alert [ref=e339]
 ```
