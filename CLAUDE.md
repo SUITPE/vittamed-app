@@ -329,3 +329,4 @@ Recepcionista
 user: secre@clinicasanrafael.com
 pass: password
 - el password de psql es KMZvgHQAzeFdTg6O
+- Si los test no pasan al 100% no esta funcionando todo correctamente

@@ -138,7 +138,14 @@
       "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/appointments-atender-button.spec.ts tests/vital-signs-validation.spec.ts --timeout=60000)",
       "Bash(for file in /Users/alvaro/Projects/VittaMedApp/tests/*.spec.ts)",
       "Bash(done)",
-      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/payment-flow.spec.ts tests/notifications.spec.ts --timeout=60000)"
+      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/payment-flow.spec.ts tests/notifications.spec.ts --timeout=60000)",
+      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/appointment-creation.spec.ts --timeout=60000)",
+      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/appointment-creation.spec.ts --timeout=60000 --headed)",
+      "Bash(npx playwright:*)",
+      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/appointment-creation.spec.ts --timeout=60000 --grep \"should create appointment successfully\")",
+      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/appointment-creation.spec.ts --reporter=list)",
+      "Bash(PGPASSWORD='KMZvgHQAzeFdTg6O' psql \"postgresql://postgres:KMZvgHQAzeFdTg6O@db.mvvxeqhsatkqtsrulcil.supabase.co:5432/postgres\" -c \"\nSELECT \n  id,\n  tenant_id,\n  doctor_id,\n  patient_id,\n  service_id,\n  appointment_date,\n  start_time,\n  end_time,\n  status,\n  created_at\nFROM appointments \nWHERE id = ''19fe0cbd-6d45-4a1c-bb16-25aa7b1af3f8'';\n\")",
+      "Bash(PGPASSWORD='VittaMed2024!' psql:*)"
     ],
     "deny": [],
     "ask": []

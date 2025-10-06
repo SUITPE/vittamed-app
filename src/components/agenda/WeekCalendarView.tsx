@@ -9,6 +9,7 @@ interface TimeSlot {
   isAvailable: boolean
   hasAppointment?: boolean
   appointmentDetails?: {
+    id: string
     patientName: string
     serviceName: string
     status: string
@@ -28,7 +29,7 @@ interface WeekCalendarViewProps {
   startDate: Date
   availability: any[]
   appointments: any[]
-  onSlotClick: (date: Date, hour: number) => void
+  onSlotClick: (date: Date, hour: number, appointmentId?: string) => void
   onDateChange: (date: Date) => void
   viewType?: 'day' | 'week'
 }
@@ -97,7 +98,11 @@ export default function WeekCalendarView({
         const dateStr = date.toISOString().split('T')[0]
         const appointment = appointments.find(apt => {
           const aptDate = apt.appointment_date || apt.start_time?.split('T')[0]
-          const aptHour = parseInt(apt.start_time?.split('T')[1]?.split(':')[0] || '0')
+          // Parse hour from start_time (handles both "HH:MM:SS" and "YYYY-MM-DDTHH:MM:SS" formats)
+          const timeStr = apt.start_time?.includes('T')
+            ? apt.start_time.split('T')[1]
+            : apt.start_time
+          const aptHour = parseInt(timeStr?.split(':')[0] || '0')
           return aptDate === dateStr && aptHour === hour
         })
 
@@ -106,6 +111,7 @@ export default function WeekCalendarView({
           isAvailable: isInWorkHours && !isLunchHour,
           hasAppointment: !!appointment,
           appointmentDetails: appointment ? {
+            id: appointment.id,
             patientName: appointment.patient_name,
             serviceName: appointment.service_name,
             status: appointment.status
@@ -247,7 +253,7 @@ export default function WeekCalendarView({
                   return (
                     <button
                       key={dayIndex}
-                      onClick={() => onSlotClick(day.date, hour)}
+                      onClick={() => onSlotClick(day.date, hour, slot?.appointmentDetails?.id)}
                       disabled={!slot?.isAvailable && !slot?.hasAppointment}
                       className={`p-2 border-l min-h-[60px] text-left transition-all relative group ${
                         day.isToday ? 'bg-blue-50/30' : ''

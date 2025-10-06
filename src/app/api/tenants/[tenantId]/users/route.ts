@@ -25,14 +25,17 @@ export async function GET(
     const userRole = user.profile?.role
     const userTenantId = user.profile?.tenant_id
 
-    // For now, check if user is admin of this tenant or any tenant
-    // In production with multi-tenant, you'd check user_tenant_roles table
-    const isAdmin = (userRole === 'admin_tenant' || userRole === 'staff') &&
-                   (userTenantId === tenantId || userRole === 'admin_tenant')
+    // Allow access for admin_tenant, staff, receptionist, and doctors from the same tenant
+    const isAuthorized = (
+      (userRole === 'admin_tenant' || userRole === 'staff' || userRole === 'receptionist') &&
+      (userTenantId === tenantId || userRole === 'admin_tenant')
+    ) || (
+      userRole === 'doctor' && userTenantId === tenantId
+    )
 
-    if (!isAdmin) {
+    if (!isAuthorized) {
       return NextResponse.json({
-        error: 'Only tenant administrators can view tenant users'
+        error: 'Only tenant administrators, staff, receptionists and doctors can view tenant users'
       }, { status: 403 })
     }
 

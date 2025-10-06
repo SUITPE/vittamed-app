@@ -7,6 +7,8 @@ import DoctorSidebar from '@/components/DoctorSidebar'
 import AdminHeader from '@/components/AdminHeader'
 import WeekCalendarView from '@/components/agenda/WeekCalendarView'
 import VisualAvailabilityEditor from '@/components/agenda/VisualAvailabilityEditor'
+import CreateAppointmentModal from '@/components/appointments/CreateAppointmentModal'
+import AppointmentDetailsModal from '@/components/appointments/AppointmentDetailsModal'
 import { Icons } from '@/components/ui/Icons'
 
 interface DoctorAvailability {
@@ -38,6 +40,10 @@ export default function AgendaPage() {
   const [activeTab, setActiveTab] = useState<'calendar' | 'settings'>('calendar')
   const [isMobile, setIsMobile] = useState(false)
   const [viewType, setViewType] = useState<'day' | 'week'>('week')
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string } | null>(null)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null)
 
   // Detect mobile viewport
   useEffect(() => {
@@ -111,6 +117,16 @@ export default function AgendaPage() {
 
       if (appointmentsResponse.ok) {
         const appointmentsData = await appointmentsResponse.json()
+        console.log('📅 Appointments fetched:', {
+          count: appointmentsData?.length || 0,
+          dateRange: `${startOfWeek.toISOString().split('T')[0]} to ${endOfWeek.toISOString().split('T')[0]}`,
+          appointments: appointmentsData?.map((a: any) => ({
+            id: a.id,
+            date: a.appointment_date,
+            time: a.start_time,
+            patient: a.patient_name
+          }))
+        })
         setAppointments(appointmentsData || [])
       } else {
         if (appointmentsResponse.status === 401) {
@@ -180,9 +196,24 @@ export default function AgendaPage() {
     }
   }
 
-  function handleSlotClick(date: Date, hour: number) {
-    console.log('Slot clicked:', date, hour)
-    // TODO: Implement slot click handler (e.g., create appointment, block time, etc.)
+  function handleSlotClick(date: Date, hour: number, appointmentId?: string) {
+    if (appointmentId) {
+      // If there's an existing appointment, show details modal
+      setSelectedAppointmentId(appointmentId)
+      setShowDetailsModal(true)
+    } else {
+      // If it's an empty slot, show create modal
+      const dateStr = date.toISOString().split('T')[0]
+      const timeStr = `${hour.toString().padStart(2, '0')}:00`
+      setSelectedSlot({ date: dateStr, time: timeStr })
+      setShowCreateModal(true)
+    }
+  }
+
+  function handleAppointmentCreated() {
+    // Refresh appointments data
+    fetchDoctorData()
+    setSelectedSlot(null)
   }
 
   function handleDateChange(date: Date) {
@@ -208,13 +239,23 @@ export default function AgendaPage() {
         <div className="pt-16 p-6">
           <div className="max-w-[1600px] mx-auto">
             {/* Header */}
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold text-gray-900">
-                Mi Agenda
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Dr. {user?.profile?.first_name} {user?.profile?.last_name}
-              </p>
+            <div className="mb-6 flex items-start justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Mi Agenda
+                </h1>
+                <p className="text-gray-600 mt-1">
+                  Dr. {user?.profile?.first_name} {user?.profile?.last_name}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                <Icons.plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Nueva Cita</span>
+                <span className="sm:hidden">Nueva</span>
+              </button>
             </div>
 
             {/* Tabs and View Toggle */}
@@ -363,6 +404,34 @@ export default function AgendaPage() {
           </div>
         </div>
       </div>
+
+      {/* Create Appointment Modal */}
+      <CreateAppointmentModal
+        isOpen={showCreateModal}
+        onClose={() => {
+          setShowCreateModal(false)
+          setSelectedSlot(null)
+        }}
+        onSuccess={handleAppointmentCreated}
+        tenantId={user?.profile?.tenant_id || ''}
+        doctorId={user?.profile?.role === 'doctor' ? user?.id : undefined}
+        selectedDate={selectedSlot?.date}
+        selectedTime={selectedSlot?.time}
+      />
+
+      {/* Appointment Details Modal */}
+      {selectedAppointmentId && (
+        <AppointmentDetailsModal
+          isOpen={showDetailsModal}
+          onClose={() => {
+            setShowDetailsModal(false)
+            setSelectedAppointmentId(null)
+          }}
+          appointmentId={selectedAppointmentId}
+          userRole={user?.profile?.role || ''}
+          onUpdate={handleAppointmentCreated}
+        />
+      )}
     </div>
   )
 }

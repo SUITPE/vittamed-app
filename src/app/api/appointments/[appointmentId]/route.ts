@@ -125,47 +125,67 @@ export async function GET(
   { params }: { params: Promise<{ appointmentId: string }> }
 ) {
   const { appointmentId } = await params
+  console.log('🔍 [GET /api/appointments/[appointmentId]] appointmentId:', appointmentId)
+
   try {
     const supabase = await createClient()
 
     // Get current user and check permissions
     const user = await customAuth.getCurrentUser()
+    console.log('👤 User:', user ? { id: user.id, role: user.profile?.role } : null)
 
     if (!user || !user.profile) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    // Get the appointment with full details
+    // Simplified query - get appointment and doctor separately
     const { data: appointment, error: appointmentError } = await supabase
       .from('appointments')
       .select(`
         id,
-        patient_name,
-        patient_email,
-        patient_phone,
+        appointment_date,
         start_time,
         end_time,
         status,
         notes,
         tenant_id,
         doctor_id,
+        patient_id,
         service_id,
+        patients (
+          first_name,
+          last_name,
+          email,
+          phone
+        ),
         services (
           name,
           duration_minutes,
           price
-        ),
-        doctors (
-          first_name,
-          last_name,
-          specialty
         )
       `)
       .eq('id', appointmentId)
       .single()
 
+    console.log('📋 Appointment query:', { found: !!appointment, error: appointmentError })
+
     if (appointmentError || !appointment) {
+      console.error('❌ Appointment not found:', appointmentError)
       return NextResponse.json({ error: 'Appointment not found' }, { status: 404 })
+    }
+
+    // Get doctor info separately
+    let doctorName = 'Doctor no asignado'
+    if (appointment.doctor_id) {
+      const { data: doctor } = await supabase
+        .from('custom_users')
+        .select('first_name, last_name')
+        .eq('id', appointment.doctor_id)
+        .single()
+
+      if (doctor) {
+        doctorName = `${doctor.first_name} ${doctor.last_name}`
+      }
     }
 
     // Use the profile data from customAuth instead of querying again
@@ -178,7 +198,7 @@ export async function GET(
                               userAccess.role === 'receptionist' ||
                               userAccess.role === 'staff' ||
                               (userAccess.role === 'doctor' && appointment.doctor_id === user.id) ||
-                              (userAccess.role === 'patient' && appointment.patient_email === user.email)
+                              (userAccess.role === 'patient' && appointment.patients?.email === user.email)
 
     if (!canViewAppointment) {
       return NextResponse.json({
@@ -186,7 +206,28 @@ export async function GET(
       }, { status: 403 })
     }
 
-    return NextResponse.json({ appointment })
+    // Transform the response to flatten patient, doctor, and service data
+    const transformedAppointment = {
+      id: appointment.id,
+      appointment_date: appointment.appointment_date,
+      start_time: appointment.start_time,
+      end_time: appointment.end_time,
+      status: appointment.status,
+      notes: appointment.notes,
+      patient_name: appointment.patients
+        ? `${appointment.patients.first_name} ${appointment.patients.last_name}`
+        : 'Paciente no especificado',
+      patient_email: appointment.patients?.email,
+      patient_phone: appointment.patients?.phone,
+      service_name: appointment.services?.name || 'Servicio no especificado',
+      service_duration: appointment.services?.duration_minutes,
+      service_price: appointment.services?.price,
+      doctor_name: doctorName
+    }
+
+    console.log('✅ Transformed appointment:', transformedAppointment)
+
+    return NextResponse.json({ appointment: transformedAppointment })
 
   } catch (error) {
     console.error('Unexpected error:', error)

@@ -305,13 +305,16 @@ export default function AppointmentsPage() {
                   {appointments.length} cita{appointments.length !== 1 ? 's' : ''} encontrada{appointments.length !== 1 ? 's' : ''}
                   <span className="hidden md:inline">{selectedDate && ` para ${formatDate(selectedDate)}`}</span>
                 </p>
+                {/* TODO: Implementar modal de nueva cita directamente desde aquí */}
+                {/*
                 <button
-                  onClick={() => router.push('/booking')}
+                  onClick={() => setShowNewAppointmentModal(true)}
                   className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
                 >
                   <Icons.plus className="w-4 h-4" />
                   <span>Nueva Cita</span>
                 </button>
+                */}
               </div>
             </div>
           </div>
@@ -323,12 +326,7 @@ export default function AppointmentsPage() {
                 <div className="text-gray-500 text-lg mb-4">
                   No se encontraron citas para los filtros seleccionados
                 </div>
-                <button
-                  onClick={() => router.push('/booking')}
-                  className="text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  Crear la primera cita
-                </button>
+                {/* TODO: Implementar modal de nueva cita */}
               </div>
             ) : (
               <>
