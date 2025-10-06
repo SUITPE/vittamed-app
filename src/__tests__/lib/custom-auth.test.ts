@@ -165,6 +165,10 @@ describe('CustomAuthService', () => {
       const superAdminUser = {
         id: 'test-id',
         email: 'superadmin@test.com',
+        app_metadata: {},
+        user_metadata: { first_name: 'Super', last_name: 'Admin' },
+        aud: 'authenticated',
+        created_at: new Date().toISOString(),
         profile: {
           id: 'test-id',
           email: 'superadmin@test.com',
@@ -178,7 +182,7 @@ describe('CustomAuthService', () => {
         },
       }
 
-      const isSuperAdmin = authService.isSuperAdmin(superAdminUser)
+      const isSuperAdmin = authService.isSuperAdmin(superAdminUser as any)
       expect(isSuperAdmin).toBe(true)
     })
 
@@ -186,6 +190,10 @@ describe('CustomAuthService', () => {
       const regularUser = {
         id: 'test-id',
         email: 'user@test.com',
+        app_metadata: {},
+        user_metadata: { first_name: 'Regular', last_name: 'User' },
+        aud: 'authenticated',
+        created_at: new Date().toISOString(),
         profile: {
           id: 'test-id',
           email: 'user@test.com',
@@ -199,7 +207,7 @@ describe('CustomAuthService', () => {
         },
       }
 
-      const isSuperAdmin = authService.isSuperAdmin(regularUser)
+      const isSuperAdmin = authService.isSuperAdmin(regularUser as any)
       expect(isSuperAdmin).toBe(false)
     })
   })

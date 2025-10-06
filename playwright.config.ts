@@ -18,8 +18,6 @@ export default defineConfig({
     navigationTimeout: 60 * 1000, // 60 seconds for navigation
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    // Add extra wait for elements
-    waitForTimeout: 5000,
   },
   projects: [
     {
