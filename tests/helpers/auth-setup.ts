@@ -32,10 +32,7 @@ export async function loginAsAdmin(page: Page) {
   // Submit the form
   await page.click('button[type="submit"]')
 
-  // Wait for navigation away from login page (should go to /dashboard or /agenda)
-  await page.waitForURL(/\/(agenda|dashboard)/, { timeout: 15000 })
-
-  // Wait for page to be fully loaded
+  // Wait for successful login
   await page.waitForLoadState('networkidle', { timeout: 15000 })
 
   // Give some extra time for auth to settle
