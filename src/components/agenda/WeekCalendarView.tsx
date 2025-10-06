@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Icons } from '@/components/ui/Icons'
+import MobileDayView from './MobileDayView'
 
 interface TimeSlot {
   hour: number
@@ -29,6 +30,7 @@ interface WeekCalendarViewProps {
   appointments: any[]
   onSlotClick: (date: Date, hour: number) => void
   onDateChange: (date: Date) => void
+  viewType?: 'day' | 'week'
 }
 
 export default function WeekCalendarView({
@@ -36,14 +38,26 @@ export default function WeekCalendarView({
   availability,
   appointments,
   onSlotClick,
-  onDateChange
+  onDateChange,
+  viewType = 'week'
 }: WeekCalendarViewProps) {
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(getWeekStart(startDate))
   const [weekDays, setWeekDays] = useState<DaySchedule[]>([])
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   useEffect(() => {
     generateWeekDays()
-  }, [currentWeekStart, availability, appointments])
+  }, [currentWeekStart, availability, appointments, viewType])
 
   function getWeekStart(date: Date): Date {
     const d = new Date(date)
@@ -57,7 +71,10 @@ export default function WeekCalendarView({
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    for (let i = 0; i < 7; i++) {
+    // If day view, only show current day. If week view, show all 7 days
+    const daysToShow = viewType === 'day' ? 1 : 7
+
+    for (let i = 0; i < daysToShow; i++) {
       const date = new Date(currentWeekStart)
       date.setDate(currentWeekStart.getDate() + i)
 
@@ -113,14 +130,16 @@ export default function WeekCalendarView({
 
   function goToPreviousWeek() {
     const newDate = new Date(currentWeekStart)
-    newDate.setDate(newDate.getDate() - 7)
+    const daysToMove = viewType === 'day' ? 1 : 7
+    newDate.setDate(newDate.getDate() - daysToMove)
     setCurrentWeekStart(newDate)
     onDateChange(newDate)
   }
 
   function goToNextWeek() {
     const newDate = new Date(currentWeekStart)
-    newDate.setDate(newDate.getDate() + 7)
+    const daysToMove = viewType === 'day' ? 1 : 7
+    newDate.setDate(newDate.getDate() + daysToMove)
     setCurrentWeekStart(newDate)
     onDateChange(newDate)
   }
@@ -135,6 +154,21 @@ export default function WeekCalendarView({
     month: 'long',
     year: 'numeric'
   })
+
+  // If mobile and day view, use MobileDayView component
+  if (isMobile && viewType === 'day' && weekDays.length > 0) {
+    return (
+      <MobileDayView
+        date={weekDays[0].date}
+        availability={availability}
+        appointments={appointments}
+        onSlotClick={onSlotClick}
+        onPreviousDay={goToPreviousWeek}
+        onNextDay={goToNextWeek}
+        onToday={goToToday}
+      />
+    )
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm">
@@ -169,9 +203,9 @@ export default function WeekCalendarView({
 
       {/* Week Grid */}
       <div className="overflow-x-auto">
-        <div className="min-w-[800px]">
+        <div className={viewType === 'day' ? 'min-w-full' : 'min-w-[800px]'}>
           {/* Day Headers */}
-          <div className="grid grid-cols-8 border-b">
+          <div className={`grid ${viewType === 'day' ? 'grid-cols-2' : 'grid-cols-8'} border-b`}>
             <div className="p-3 text-sm font-medium text-gray-500">Hora</div>
             {weekDays.map((day, index) => (
               <div
@@ -200,7 +234,7 @@ export default function WeekCalendarView({
           {/* Time Slots Grid */}
           <div className="divide-y">
             {[7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map((hour) => (
-              <div key={hour} className="grid grid-cols-8">
+              <div key={hour} className={`grid ${viewType === 'day' ? 'grid-cols-2' : 'grid-cols-8'}`}>
                 {/* Hour Label */}
                 <div className="p-3 text-sm text-gray-500 font-medium">
                   {hour.toString().padStart(2, '0')}:00
