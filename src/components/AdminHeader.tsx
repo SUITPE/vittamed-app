@@ -148,7 +148,7 @@ export default function AdminHeader() {
                   </div>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 flex items-center justify-center text-white font-medium">
-                  {getInitials(user?.profile?.first_name, user?.profile?.last_name)}
+                  {getInitials(user?.profile?.first_name ?? undefined, user?.profile?.last_name ?? undefined)}
                 </div>
               </div>
               <Icons.chevronDown className={cn(

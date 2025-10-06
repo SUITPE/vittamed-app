@@ -1,6 +1,9 @@
 // Types for VT-35: Business Catalog System
 import type { AppointmentStatus } from './database'
 
+// Re-export AppointmentStatus for external use
+export type { AppointmentStatus }
+
 export interface UnitMeasure {
   id: string
   name: string

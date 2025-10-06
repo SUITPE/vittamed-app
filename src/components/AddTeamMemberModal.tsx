@@ -109,12 +109,15 @@ export default function AddTeamMemberModal({
   }
 
   const getRoleDescription = (role: UserRole) => {
-    const descriptions = {
+    const descriptions: Record<UserRole, string> = {
+      super_admin: 'Super administrador con acceso total al sistema.',
       admin_tenant: 'Acceso completo al negocio, puede gestionar usuarios y configuraciones.',
       doctor: 'Puede gestionar agenda, pacientes y consultas médicas.',
       staff: 'Puede asistir con recepción, citas y tareas administrativas.',
       receptionist: 'Puede gestionar citas, pacientes y tareas de recepción.',
-      patient: 'Acceso básico como paciente para reservar citas.'
+      patient: 'Acceso básico como paciente para reservar citas.',
+      member: 'Miembro del equipo con acceso a funciones específicas.',
+      client: 'Cliente con acceso para reservar y gestionar sus citas.'
     }
     return descriptions[role]
   }

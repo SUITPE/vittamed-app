@@ -1,6 +1,6 @@
 // Multi-tenant user types for VittaMed platform
 
-export type UserRole = 'admin_tenant' | 'doctor' | 'patient' | 'staff' | 'receptionist' | 'member' | 'client';
+export type UserRole = 'super_admin' | 'admin_tenant' | 'doctor' | 'patient' | 'staff' | 'receptionist' | 'member' | 'client';
 
 export interface UserProfile {
   id: string;
@@ -83,7 +83,8 @@ export function getUserInitials(user: { first_name?: string; last_name?: string 
 }
 
 export function getRoleDisplayName(role: UserRole): string {
-  const roleNames = {
+  const roleNames: Record<UserRole, string> = {
+    super_admin: 'Super Administrador',
     admin_tenant: 'Administrador',
     doctor: 'Doctor',
     patient: 'Paciente',
@@ -96,7 +97,8 @@ export function getRoleDisplayName(role: UserRole): string {
 }
 
 export function getRoleColor(role: UserRole): string {
-  const roleColors = {
+  const roleColors: Record<UserRole, string> = {
+    super_admin: 'bg-gray-900 text-white',
     admin_tenant: 'bg-red-100 text-red-800',
     doctor: 'bg-blue-100 text-blue-800',
     patient: 'bg-green-100 text-green-800',
@@ -169,7 +171,7 @@ export function canUserManageOwnAppointments(userTenants: UserTenant[], tenantId
 
 // Type guards
 export function isValidUserRole(role: string): role is UserRole {
-  return ['admin_tenant', 'doctor', 'patient', 'staff', 'receptionist', 'member', 'client'].includes(role);
+  return ['super_admin', 'admin_tenant', 'doctor', 'patient', 'staff', 'receptionist', 'member', 'client'].includes(role);
 }
 
 export function hasMultipleTenants(userTenants: UserTenant[]): boolean {

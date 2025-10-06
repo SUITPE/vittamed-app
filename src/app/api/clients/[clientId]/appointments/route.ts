@@ -76,20 +76,26 @@ export async function GET(
     }
 
     // Transform the data to match the expected format
-    const transformedAppointments = (appointments || []).map(appointment => ({
-      id: appointment.id,
-      tenant_id: appointment.tenant_id,
-      tenant_name: appointment.tenants?.name || 'Unknown Tenant',
-      doctor_name: `${appointment.doctors?.first_name || ''} ${appointment.doctors?.last_name || ''}`.trim(),
-      service_name: appointment.services?.name || 'Unknown Service',
-      start_time: appointment.start_time,
-      end_time: appointment.end_time,
-      status: appointment.status,
-      notes: appointment.notes,
-      amount: appointment.amount || appointment.services?.price,
-      payment_status: appointment.payment_status,
-      location: appointment.tenants?.address
-    }))
+    const transformedAppointments = (appointments || []).map(appointment => {
+      const tenant = Array.isArray(appointment.tenants) ? appointment.tenants[0] : appointment.tenants
+      const doctor = Array.isArray(appointment.doctors) ? appointment.doctors[0] : appointment.doctors
+      const service = Array.isArray(appointment.services) ? appointment.services[0] : appointment.services
+
+      return {
+        id: appointment.id,
+        tenant_id: appointment.tenant_id,
+        tenant_name: tenant?.name || 'Unknown Tenant',
+        doctor_name: `${doctor?.first_name || ''} ${doctor?.last_name || ''}`.trim(),
+        service_name: service?.name || 'Unknown Service',
+        start_time: appointment.start_time,
+        end_time: appointment.end_time,
+        status: appointment.status,
+        notes: appointment.notes,
+        amount: appointment.amount || service?.price,
+        payment_status: appointment.payment_status,
+        location: tenant?.address
+      }
+    })
 
     return NextResponse.json(transformedAppointments)
 

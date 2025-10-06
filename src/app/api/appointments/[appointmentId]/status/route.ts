@@ -226,11 +226,8 @@ export async function GET(
       )
     }
 
-    const { data: userProfile } = await supabase
-      .from('custom_users')
-      .select('tenant_id')
-      .eq('id', user.id)
-      .single()
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
 
     if (!userRole) {
       return NextResponse.json(

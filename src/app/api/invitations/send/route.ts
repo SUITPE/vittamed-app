@@ -15,6 +15,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is admin
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
     const { data: userProfile } = await supabase
       .from('custom_users')
       .select('role, tenant_id, first_name, last_name')

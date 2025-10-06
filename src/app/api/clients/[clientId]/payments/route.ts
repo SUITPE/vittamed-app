@@ -113,20 +113,27 @@ export async function GET(
     }
 
     // Transform the data to match the expected format
-    const transformedPayments = (payments || []).map(payment => ({
-      id: payment.id,
-      appointment_id: payment.appointment_id,
-      service_name: payment.appointments?.services?.name || 'Unknown Service',
-      doctor_name: `${payment.appointments?.doctors?.first_name || ''} ${payment.appointments?.doctors?.last_name || ''}`.trim(),
-      tenant_name: payment.appointments?.tenants?.name || 'Unknown Tenant',
-      amount: payment.amount,
-      status: payment.status,
-      payment_method: payment.payment_method || 'card',
-      transaction_id: payment.transaction_id,
-      created_at: payment.created_at,
-      paid_at: payment.paid_at,
-      invoice_url: payment.invoice_url
-    }))
+    const transformedPayments = (payments || []).map(payment => {
+      const appointment = Array.isArray(payment.appointments) ? payment.appointments[0] : payment.appointments
+      const service = Array.isArray(appointment?.services) ? appointment.services[0] : appointment?.services
+      const doctor = Array.isArray(appointment?.doctors) ? appointment.doctors[0] : appointment?.doctors
+      const tenant = Array.isArray(appointment?.tenants) ? appointment.tenants[0] : appointment?.tenants
+
+      return {
+        id: payment.id,
+        appointment_id: payment.appointment_id,
+        service_name: service?.name || 'Unknown Service',
+        doctor_name: `${doctor?.first_name || ''} ${doctor?.last_name || ''}`.trim(),
+        tenant_name: tenant?.name || 'Unknown Tenant',
+        amount: payment.amount,
+        status: payment.status,
+        payment_method: payment.payment_method || 'card',
+        transaction_id: payment.transaction_id,
+        created_at: payment.created_at,
+        paid_at: payment.paid_at,
+        invoice_url: payment.invoice_url
+      }
+    })
 
     return NextResponse.json(transformedPayments)
 

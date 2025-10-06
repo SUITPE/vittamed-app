@@ -91,7 +91,7 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AdminSidebar tenantId={currentTenantId} />
+        <AdminSidebar tenantId={currentTenantId ?? undefined} />
         <AdminHeader />
         <div className="ml-64 pt-16 p-6">
           <div className="flex items-center justify-center py-12">
@@ -108,7 +108,7 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
   if (!patient) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AdminSidebar tenantId={currentTenantId} />
+        <AdminSidebar tenantId={currentTenantId ?? undefined} />
         <AdminHeader />
         <div className="ml-64 pt-16 p-6">
           <div className="text-center py-12">
@@ -133,7 +133,7 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AdminSidebar tenantId={currentTenantId} />
+      <AdminSidebar tenantId={currentTenantId ?? undefined} />
       <AdminHeader />
 
       <div className="ml-64 pt-16">

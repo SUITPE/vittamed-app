@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer'
-// @ts-expect-error - Twilio types not available
+// @ts-ignore - Twilio types not available
 import twilio from 'twilio'
 import { generateReminderEmailTemplate, generateReminderSMSTemplate, getTenantBranding } from './reminder-templates'
 import type { EmailReminderTemplateData, SMSReminderTemplateData, TenantBranding } from '@/types/catalog'

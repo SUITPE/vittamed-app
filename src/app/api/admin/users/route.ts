@@ -231,12 +231,14 @@ export async function POST(request: NextRequest) {
     // Send invitation email if requested
     if (send_invitation && email) {
       const roleNames: Record<UserRole, string> = {
+        super_admin: 'Super Administrador',
         admin_tenant: 'Administrador',
         doctor: 'Doctor/a',
         staff: 'Personal',
         receptionist: 'Recepcionista',
         patient: 'Paciente',
-        member: 'Miembro'
+        member: 'Miembro',
+        client: 'Cliente'
       }
 
       await sendEmailNotification({
