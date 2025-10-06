@@ -475,7 +475,7 @@ export default function AppointmentsPage() {
                     <div className="mt-3 flex flex-wrap gap-2">
                       {isDoctor && appointment.patient_id && (
                         <button
-                          onClick={() => router.push(`/patients/${appointment.patient_id}`)}
+                          onClick={() => router.push(`/appointments/${appointment.id}/attend`)}
                           className="flex-1 px-3 py-1.5 text-sm bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 flex items-center justify-center gap-1"
                         >
                           <Icons.activity className="w-4 h-4" />
