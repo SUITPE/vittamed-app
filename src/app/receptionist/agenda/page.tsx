@@ -242,14 +242,14 @@ export default function ReceptionistAgendaPage() {
 
   // Appointment creation flow handlers
   const handleTimeSlotClick = (event: React.MouseEvent, doctorId: string, time: Date) => {
-    const rect = (event.target as HTMLElement).getBoundingClientRect()
-    setQuickMenuPosition({ x: rect.left, y: rect.top + rect.height / 2 })
+    // NEW FLOW: Open client selector first
     setAppointmentDraft({
       doctor_id: doctorId,
       datetime: time,
       services: [],
       client: null
     })
+    setShowClientSelector(true)
   }
 
   const handleAddAppointment = () => {
@@ -262,12 +262,6 @@ export default function ReceptionistAgendaPage() {
       services: [...prev.services, service]
     }))
     setShowServiceSelector(false)
-    setShowSummaryPanel(true)
-
-    // If no client selected yet, show client selector
-    if (!appointmentDraft.client) {
-      setTimeout(() => setShowClientSelector(true), 300)
-    }
   }
 
   const handleClientSelected = (client: any) => {
@@ -275,6 +269,10 @@ export default function ReceptionistAgendaPage() {
       ...prev,
       client
     }))
+    // Show summary panel immediately
+    setShowSummaryPanel(true)
+    // Open service selector after 300ms
+    setTimeout(() => setShowServiceSelector(true), 300)
   }
 
   const handleSaveAppointment = async () => {

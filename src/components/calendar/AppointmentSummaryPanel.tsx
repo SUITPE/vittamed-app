@@ -130,22 +130,30 @@ export default function AppointmentSummaryPanel({
               </div>
             </div>
 
-            <button
-              onClick={onSelectClient}
-              className="w-full mb-4"
-            >
-              <div className="text-center">
-                <div className="font-semibold text-gray-900 text-lg mb-1">
-                  {client ? getClientDisplay() : 'Add client'}
+            <div className="w-full mb-4">
+              {client ? (
+                <div className="text-center">
+                  <div className="font-semibold text-gray-900 text-lg mb-1">
+                    {getClientDisplay()}
+                  </div>
+                  {client !== 'walk-in' && client.phone && (
+                    <div className="text-sm text-gray-500">{client.phone}</div>
+                  )}
                 </div>
-                {!client && (
-                  <div className="text-sm text-gray-500">Or leave empty for walk-ins</div>
-                )}
-                {client && client !== 'walk-in' && client.phone && (
-                  <div className="text-sm text-gray-500">{client.phone}</div>
-                )}
-              </div>
-            </button>
+              ) : (
+                <button
+                  onClick={onSelectClient}
+                  className="w-full hover:bg-gray-50 rounded-lg transition-colors py-2"
+                >
+                  <div className="text-center">
+                    <div className="font-semibold text-blue-600 text-lg mb-1">
+                      Add client
+                    </div>
+                    <div className="text-sm text-gray-500">Or leave empty for walk-ins</div>
+                  </div>
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

@@ -48,12 +48,16 @@ import {
   UserCheck,
   Clock3,
   BellRing,
+  Bell,
   MessageSquare,
   Shield,
+  Lock,
   List,
   Loader2,
   Info,
   Utensils,
+  Package,
+  Circle,
 } from "lucide-react"
 
 export const Icons = {
@@ -128,8 +132,12 @@ export const Icons = {
 
   // Communication
   bellRing: BellRing,
+  bell: Bell,
   messageSquare: MessageSquare,
   shield: Shield,
+
+  // Security
+  lock: Lock,
 
   // Loading
   loader: Loader2,
@@ -137,6 +145,8 @@ export const Icons = {
   // Additional
   info: Info,
   utensils: Utensils,
+  package: Package,
+  circle: Circle,
 }
 
 export type IconName = keyof typeof Icons
