@@ -1,19 +1,15 @@
 import { test, expect } from '@playwright/test'
 
+// Use doctor storage state for all tests
+test.use({ storageState: 'tests/.auth/doctor.json' })
+
 test.describe('Agenda Management Tests', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/auth/login')
-
-    await page.fill('[data-testid="email-input"]', 'ana.rodriguez@email.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
-
-    // Wait for agenda page with extended timeout
-    await page.waitForURL('/agenda', { timeout: 30000 })
-    await page.waitForLoadState('networkidle')
+    // Navigate to agenda - already authenticated via storage state
+    await page.goto('/agenda')
 
     // Wait for loading spinner to disappear and main content to load
-    await page.waitForSelector('text=Cargando agenda...', { state: 'hidden', timeout: 30000 })
+    await page.waitForSelector('text=Cargando agenda...', { state: 'hidden', timeout: 30000 }).catch(() => {})
     await expect(page.locator('h1')).toContainText('Mi Agenda - Dr.', { timeout: 15000 })
   })
 
@@ -52,8 +48,7 @@ test.describe('Agenda Management Tests', () => {
       await mondayCheckbox.check()
     }
 
-    await page.waitForTimeout(2000)
-
+    // Wait for time inputs to appear
     const timeInputs = page.locator('input[type="time"]')
     await expect(timeInputs.first()).toBeVisible({ timeout: 10000 })
   })
@@ -96,8 +91,7 @@ test.describe('Agenda Management Tests', () => {
     const dateInput = page.locator('input[type="date"]')
     await dateInput.fill(futureDateString)
 
-    await page.waitForTimeout(2000)
-
+    // Wait for empty state message to appear
     await expect(page.locator('text=No hay citas programadas para este día')).toBeVisible({ timeout: 15000 })
   })
 
@@ -106,10 +100,12 @@ test.describe('Agenda Management Tests', () => {
 
     if (!await mondayCheckbox.isChecked()) {
       await mondayCheckbox.check()
-      await page.waitForTimeout(2000)
     }
 
+    // Wait for time inputs to appear after checking
     const startTimeInput = page.locator('input[type="time"]').first()
+    await expect(startTimeInput).toBeVisible({ timeout: 5000 })
+
     await startTimeInput.fill('08:00')
 
     const endTimeInput = page.locator('input[type="time"]').nth(1)
@@ -132,9 +128,9 @@ test.describe('Agenda Management Tests', () => {
 
     if (!await mondayCheckbox.isChecked()) {
       await mondayCheckbox.check()
-      await page.waitForTimeout(2000)
     }
 
+    // Wait for labels to appear
     await expect(page.locator('label:has-text("Inicio")')).toBeVisible()
     await expect(page.locator('label:has-text("Fin")')).toBeVisible()
     await expect(page.locator('label:has-text("Almuerzo (inicio)")')).toBeVisible()
@@ -165,7 +161,9 @@ test.describe('Agenda Management Tests', () => {
 
       if (await confirmButton.isVisible()) {
         await confirmButton.click()
-        await page.waitForTimeout(2000)
+        // Wait for status badge to update
+        const statusBadge = appointmentCard.locator('span.px-2.py-1.rounded-full')
+        await expect(statusBadge).toBeVisible({ timeout: 5000 })
       }
     }
   })

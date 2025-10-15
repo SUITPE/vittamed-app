@@ -2,6 +2,12 @@ import { Page } from '@playwright/test'
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000'
 
+/**
+ * @deprecated Use storage state instead: test.use({ storageState: 'tests/.auth/doctor.json' })
+ *
+ * This helper is kept for backward compatibility but should be replaced with
+ * storage state for better performance (no login required per test).
+ */
 export async function loginAsDoctor(page: Page) {
   await page.goto(`${BASE_URL}/auth/login`)
 
@@ -13,15 +19,15 @@ export async function loginAsDoctor(page: Page) {
   await page.click('button[type="submit"]')
 
   // Wait for navigation away from login page (should go to /agenda)
-  await page.waitForURL(/\/(agenda|dashboard)/, { timeout: 15000 })
+  await page.waitForURL(/\/(agenda|dashboard)/, { timeout: 30000 })
 
-  // Wait for page to be fully loaded
-  await page.waitForLoadState('networkidle', { timeout: 15000 })
-
-  // Give some extra time for auth to settle
-  await page.waitForTimeout(2000)
+  // Wait for page to be fully loaded by checking for main heading
+  await page.locator('h1, h2').waitFor({ state: 'visible' })
 }
 
+/**
+ * @deprecated Use storage state instead: test.use({ storageState: 'tests/.auth/admin.json' })
+ */
 export async function loginAsAdmin(page: Page) {
   await page.goto(`${BASE_URL}/auth/login`)
 
@@ -33,12 +39,16 @@ export async function loginAsAdmin(page: Page) {
   await page.click('button[type="submit"]')
 
   // Wait for successful login
-  await page.waitForLoadState('networkidle', { timeout: 15000 })
+  await page.waitForURL('/dashboard/**', { timeout: 30000 })
 
-  // Give some extra time for auth to settle
-  await page.waitForTimeout(2000)
+  // Wait for page to be fully loaded
+  await page.locator('h1, h2').waitFor({ state: 'visible' })
 }
 
+/**
+ * @deprecated Use storage state instead: test.use({ storageState: 'tests/.auth/admin.json' })
+ * Note: Receptionist uses same storage as admin (admin_tenant role)
+ */
 export async function loginAsReceptionist(page: Page) {
   await page.goto(`${BASE_URL}/auth/login`)
 
@@ -50,20 +60,21 @@ export async function loginAsReceptionist(page: Page) {
   await page.click('button[type="submit"]')
 
   // Wait for successful login
-  await page.waitForLoadState('networkidle', { timeout: 15000 })
+  await page.waitForURL(/\/dashboard/, { timeout: 30000 })
 
-  // Give some extra time for auth to settle
-  await page.waitForTimeout(2000)
+  // Wait for page to be fully loaded
+  await page.locator('h1, h2').waitFor({ state: 'visible' })
 }
 
+/**
+ * Navigate to agenda page
+ * @deprecated Just use page.goto('/agenda') with storage state
+ */
 export async function navigateToAgenda(page: Page) {
-  // Only navigate if not already on agenda page
   if (!page.url().includes('/agenda')) {
     await page.goto(`${BASE_URL}/agenda`)
   }
 
-  await page.waitForLoadState('networkidle', { timeout: 10000 })
-
   // Wait for agenda to fully load
-  await page.waitForTimeout(1000)
+  await page.locator('h1, h2').waitFor({ state: 'visible' })
 }

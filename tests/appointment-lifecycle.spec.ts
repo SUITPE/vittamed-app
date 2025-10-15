@@ -2,14 +2,12 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Appointment Lifecycle Tests', () => {
   test.describe('Patient Appointment Management', () => {
+    // Use receptionist storage state (acts as patient for these tests)
+    test.use({ storageState: 'tests/.auth/receptionist.json' })
+
     test.beforeEach(async ({ page }) => {
-      await page.goto('/auth/login')
-
-      await page.fill('[data-testid="email-input"]', 'patient@example.com')
-      await page.fill('[data-testid="password-input"]', 'password')
-      await page.click('[data-testid="login-submit"]')
-
-      await page.waitForURL('/my-appointments')
+      await page.goto('/my-appointments')
+      await expect(page.locator('h1')).toBeVisible()
     })
 
     test('should display my appointments page', async ({ page }) => {
@@ -121,19 +119,20 @@ test.describe('Appointment Lifecycle Tests', () => {
   test.describe('Complete Booking Flow', () => {
     test('should complete full booking flow', async ({ page }) => {
       await page.goto('/booking')
+      await expect(page.locator('h1')).toBeVisible()
 
       await page.selectOption('[data-testid="tenant-select"]', 'clinica-san-rafael')
-      await page.waitForTimeout(1000)
+      await expect(page.locator('[data-testid="service-select"] option')).not.toHaveCount(1)
 
       await page.selectOption('[data-testid="service-select"]', 'consulta-general')
-      await page.waitForTimeout(1000)
+      await expect(page.locator('[data-testid="doctor-select"]')).toBeVisible()
 
       await page.selectOption('[data-testid="doctor-select"]', 'doctor-1')
-      await page.waitForTimeout(1000)
 
       const availableSlots = page.locator('[data-testid^="time-slot-"]')
       if (await availableSlots.count() > 0) {
         await availableSlots.first().click()
+        await expect(page.locator('[data-testid="patient-form"]')).toBeVisible()
       }
 
       await page.fill('[data-testid="patient-name"]', 'Test Patient')
@@ -142,22 +141,17 @@ test.describe('Appointment Lifecycle Tests', () => {
 
       await page.click('[data-testid="book-appointment"]')
 
-      await page.waitForTimeout(2000)
-
-      await expect(page.locator('[data-testid="booking-success"]')).toBeVisible()
+      await expect(page.locator('[data-testid="booking-success"]')).toBeVisible({ timeout: 10000 })
       await expect(page.locator('text=¡Cita Reservada Exitosamente!')).toBeVisible()
     })
   })
 
   test.describe('Doctor Appointment Management', () => {
+    test.use({ storageState: 'tests/.auth/doctor.json' })
+
     test.beforeEach(async ({ page }) => {
-      await page.goto('/auth/login')
-
-      await page.fill('[data-testid="email-input"]', 'ana.rodriguez@email.com')
-      await page.fill('[data-testid="password-input"]', 'password')
-      await page.click('[data-testid="login-submit"]')
-
-      await page.waitForURL('/agenda')
+      await page.goto('/agenda')
+      await expect(page.locator('h1, h2')).toBeVisible()
     })
 
     test('should update appointment status', async ({ page }) => {
@@ -170,12 +164,13 @@ test.describe('Appointment Lifecycle Tests', () => {
 
         if (await confirmButton.isVisible()) {
           await confirmButton.click()
-          await page.waitForTimeout(1000)
+          // Wait for status to update
+          await expect(appointmentCard.locator('span.px-2.py-1.rounded-full')).toBeVisible()
         }
 
         if (await completeButton.isVisible()) {
           await completeButton.click()
-          await page.waitForTimeout(1000)
+          await expect(appointmentCard.locator('span.px-2.py-1.rounded-full')).toBeVisible()
         }
 
         await expect(cancelButton).toBeVisible()
@@ -193,14 +188,11 @@ test.describe('Appointment Lifecycle Tests', () => {
   })
 
   test.describe('Admin Dashboard Integration', () => {
+    test.use({ storageState: 'tests/.auth/admin.json' })
+
     test.beforeEach(async ({ page }) => {
-      await page.goto('/auth/login')
-
-      await page.fill('[data-testid="email-input"]', 'admin@clinicasanrafael.com')
-      await page.fill('[data-testid="password-input"]', 'password')
-      await page.click('[data-testid="login-submit"]')
-
-      await page.waitForURL('/dashboard/**')
+      await page.goto('/dashboard')
+      await expect(page.locator('h1')).toBeVisible()
     })
 
     test('should show today appointments in dashboard', async ({ page }) => {

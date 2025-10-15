@@ -1,23 +1,22 @@
 import { test, expect } from '@playwright/test'
 
+
+// Use doctor storage state for all tests
+test.use({ storageState: "tests/.auth/doctor.json" })
+
 test.describe('Botón Atender en Appointments', () => {
   test.beforeEach(async ({ page }) => {
-    // Login como doctor
-    await page.goto('/auth/login')
-    await page.fill('[data-testid="email-input"]', 'doctor-1759245234123@clinicasanrafael.com')
-    await page.fill('[data-testid="password-input"]', 'VittaMed2024!')
-    await page.click('[data-testid="login-submit"]')
-    await page.waitForURL('**/agenda')
+    // Navigate to appointments - already authenticated via storage state
+    await page.goto('/appointments')
+    await expect(page.locator('h1, h2')).toBeVisible()
   })
 
   test('debe mostrar botón Atender para citas con patient_id', async ({ page }) => {
     // Ir a appointments
     await page.goto('/appointments')
-    await page.waitForLoadState('networkidle')
 
     // Seleccionar fecha con citas (2025-10-04)
     await page.fill('input[type="date"]', '2025-10-04')
-    await page.waitForTimeout(1500)
 
     // Verificar que hay citas en la tabla
     const hasCitas = await page.locator('table tbody tr').count() > 0
@@ -36,11 +35,9 @@ test.describe('Botón Atender en Appointments', () => {
 
   test('el botón Atender debe redirigir al perfil del paciente', async ({ page }) => {
     await page.goto('/appointments')
-    await page.waitForLoadState('networkidle')
 
     // Seleccionar fecha con citas
     await page.fill('input[type="date"]', '2025-10-04')
-    await page.waitForTimeout(1500)
 
     // Buscar cualquier botón en la primera fila (puede ser el botón Atender)
     const firstRowButtons = page.locator('table tbody tr').first().locator('button')
@@ -49,7 +46,6 @@ test.describe('Botón Atender en Appointments', () => {
     if (buttonCount > 0) {
       // Click en el primer botón (debería ser Atender si hay patient_id)
       await firstRowButtons.first().click()
-      await page.waitForTimeout(1000)
 
       // Verificar si redirigió a perfil de paciente
       const currentUrl = page.url()
@@ -65,10 +61,8 @@ test.describe('Botón Atender en Appointments', () => {
 
   test('debe mostrar hora correctamente (no Invalid Date)', async ({ page }) => {
     await page.goto('/appointments')
-    await page.waitForLoadState('networkidle')
 
     await page.fill('input[type="date"]', '2025-10-04')
-    await page.waitForTimeout(1000)
 
     // Verificar que no hay "Invalid Date" en ninguna parte
     const invalidDate = page.locator('text=Invalid Date')
@@ -87,17 +81,14 @@ test.describe('Botón Atender en Appointments', () => {
 
   test('filtro de fecha debe funcionar correctamente', async ({ page }) => {
     await page.goto('/appointments')
-    await page.waitForLoadState('networkidle')
 
     // Probar con fecha que tiene citas
     await page.fill('input[type="date"]', '2025-10-04')
-    await page.waitForTimeout(1500)
 
     const withAppointments = await page.locator('table tbody tr').count()
 
     // Probar con fecha sin citas (fecha futura)
     await page.fill('input[type="date"]', '2025-12-25')
-    await page.waitForTimeout(1500)
 
     const withoutAppointments = await page.locator('table tbody tr').count()
 
@@ -112,10 +103,8 @@ test.describe('Botón Atender en Appointments', () => {
 
   test('debe mostrar información completa de la cita', async ({ page }) => {
     await page.goto('/appointments')
-    await page.waitForLoadState('networkidle')
 
     await page.fill('input[type="date"]', '2025-10-04')
-    await page.waitForTimeout(1000)
 
     const hasRows = await page.locator('table tbody tr').count() > 0
 

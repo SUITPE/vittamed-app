@@ -1,58 +1,40 @@
 import { test, expect, devices } from '@playwright/test'
 
+// Use doctor storage state and iPhone 13 device
 test.use({
   ...devices['iPhone 13'],
+  storageState: 'tests/.auth/doctor.json'
 })
 
 test.describe('Appointments Mobile View', () => {
   test.beforeEach(async ({ page }) => {
-    // Login como doctor
-    await page.goto('/auth/login')
-    await page.fill('[data-testid="email-input"]', 'doctor-1759245234123@clinicasanrafael.com')
-    await page.fill('[data-testid="password-input"]', 'VittaMed2024!')
-    await page.click('[data-testid="login-submit"]')
-    await page.waitForURL('**/agenda')
-    await page.waitForTimeout(1000)
+    // Navigate to appointments - already authenticated via storage state
+    await page.goto('/appointments')
+    await expect(page.locator('h1, h2')).toBeVisible()
   })
 
   test('debe mostrar appointments correctamente en mobile', async ({ page }) => {
-    // Navegar con waitUntil para evitar redirects
-    await page.goto('/appointments', { waitUntil: 'domcontentloaded' })
-    await page.waitForTimeout(2000)
-
-    // Verificar que la página cargó (puede haber redirigido, eso está ok)
+    // Verify page loaded
     const currentUrl = page.url()
-    console.log(`Current URL: ${currentUrl}`)
+    expect(currentUrl).toContain('/appointments')
 
-    // Si estamos en appointments, verificar elementos
-    if (currentUrl.includes('/appointments')) {
-      expect(currentUrl).toContain('/appointments')
-
-      // Verificar que hay elementos visibles
-      const heading = page.locator('h1, h2, [role="heading"]')
-      const count = await heading.count()
-      expect(count).toBeGreaterThan(0)
-    } else {
-      // Si redirigió, verificar que al menos cargó una página válida
-      console.log('Redirected from /appointments')
-      expect(currentUrl.length).toBeGreaterThan(0)
-    }
+    // Verificar que hay elementos visibles
+    const heading = page.locator('h1, h2, [role="heading"]')
+    await expect(heading.first()).toBeVisible()
+    const count = await heading.count()
+    expect(count).toBeGreaterThan(0)
   })
 
   test('botón Atender debe ser accesible en mobile', async ({ page }) => {
-    await page.goto('/appointments')
-    await page.waitForLoadState('networkidle')
-
     // Seleccionar fecha con citas
     await page.fill('input[type="date"]', '2025-10-04')
-    await page.waitForTimeout(1000)
-
-    // Buscar botón Atender
-    const atenderButton = page.locator('button').filter({ has: page.locator('svg') }).first()
+    await expect(page.locator('table tbody tr, .appointment-card').first()).toBeVisible({ timeout: 10000 }).catch(() => {})
 
     const hasCitas = await page.locator('table tbody tr, .appointment-card').count() > 0
 
     if (hasCitas) {
+      // Buscar botón Atender
+      const atenderButton = page.locator('button').filter({ has: page.locator('svg') }).first()
       const buttonCount = await page.locator('button').filter({ has: page.locator('svg') }).count()
       if (buttonCount > 0) {
         await expect(atenderButton).toBeVisible()
@@ -68,16 +50,12 @@ test.describe('Appointments Mobile View', () => {
   })
 
   test('tabla debe ser scrolleable horizontalmente en mobile', async ({ page }) => {
-    await page.goto('/appointments')
-    await page.waitForLoadState('networkidle')
-
     await page.fill('input[type="date"]', '2025-10-04')
-    await page.waitForTimeout(1000)
 
-    const table = page.locator('table').first()
     const count = await page.locator('table').count()
 
     if (count > 0) {
+      const table = page.locator('table').first()
       await expect(table).toBeVisible()
 
       // Verificar que la tabla está en un contenedor scrolleable
@@ -91,16 +69,15 @@ test.describe('Appointments Mobile View', () => {
   })
 
   test('filtro de fecha debe funcionar en mobile', async ({ page }) => {
-    await page.goto('/appointments')
-    await page.waitForLoadState('networkidle')
-
     const dateInput = page.locator('input[type="date"]')
     await expect(dateInput).toBeVisible()
 
     // El input debe ser accesible
     await dateInput.click()
     await dateInput.fill('2025-10-04')
-    await page.waitForTimeout(1000)
+
+    // Wait for data to load by checking for visible rows or empty state
+    await page.locator('table tbody tr, .appointment-card, text=No hay citas').first().waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
 
     // Verificar que se filtraron las citas
     const appointmentsCount = await page.locator('table tbody tr, .appointment-card').count()
@@ -108,11 +85,7 @@ test.describe('Appointments Mobile View', () => {
   })
 
   test('debe mostrar información completa en mobile (responsive)', async ({ page }) => {
-    await page.goto('/appointments')
-    await page.waitForLoadState('networkidle')
-
     await page.fill('input[type="date"]', '2025-10-04')
-    await page.waitForTimeout(1000)
 
     const hasRows = await page.locator('table tbody tr, .appointment-card').count() > 0
 
@@ -129,26 +102,22 @@ test.describe('Appointments Mobile View', () => {
   })
 
   test('debe poder hacer click en cita para ver detalles en mobile', async ({ page }) => {
-    await page.goto('/appointments')
-    await page.waitForLoadState('networkidle')
-
     await page.fill('input[type="date"]', '2025-10-04')
-    await page.waitForTimeout(1000)
 
-    const firstRow = page.locator('table tbody tr, .appointment-card').first()
     const count = await page.locator('table tbody tr, .appointment-card').count()
 
     if (count > 0) {
+      const firstRow = page.locator('table tbody tr, .appointment-card').first()
+      await expect(firstRow).toBeVisible()
+
       // Click en la fila o card
       await firstRow.click()
-      await page.waitForTimeout(500)
+      // Wait for any modal/details to appear if applicable
+      await page.locator('h1, h2, h3').first().waitFor({ state: 'visible', timeout: 2000 }).catch(() => {})
     }
   })
 
   test('menú debe ser accesible en mobile', async ({ page }) => {
-    await page.goto('/appointments')
-    await page.waitForLoadState('networkidle')
-
     // Buscar navegación o header
     const header = page.locator('header, nav, [role="banner"]').first()
 
@@ -164,11 +133,7 @@ test.describe('Appointments Mobile View', () => {
   })
 
   test('badges de estado deben ser legibles en mobile', async ({ page }) => {
-    await page.goto('/appointments')
-    await page.waitForLoadState('networkidle')
-
     await page.fill('input[type="date"]', '2025-10-04')
-    await page.waitForTimeout(1000)
 
     const badges = page.locator('[class*="bg-"]').filter({ hasText: /.+/ })
     const count = await badges.count()
@@ -187,7 +152,7 @@ test.describe('Appointments Mobile View', () => {
     const startTime = Date.now()
 
     await page.goto('/appointments')
-    await page.waitForLoadState('networkidle')
+    await expect(page.locator('h1, h2')).toBeVisible()
 
     const loadTime = Date.now() - startTime
 
@@ -196,18 +161,15 @@ test.describe('Appointments Mobile View', () => {
   })
 
   test('debe poder volver a agenda desde appointments en mobile', async ({ page }) => {
-    await page.goto('/appointments')
-    await page.waitForLoadState('networkidle')
-
     // Buscar enlace o botón de volver a agenda
-    const agendaLink = page.locator('a[href*="agenda"], button').filter({ hasText: /agenda|back|volver/i }).first()
-
     const count = await page.locator('a[href*="agenda"], button').filter({ hasText: /agenda|back|volver/i }).count()
 
-    if (count > 0 && await agendaLink.isVisible()) {
-      await agendaLink.click()
-      await page.waitForURL('**/agenda', { timeout: 5000 })
-      expect(page.url()).toContain('/agenda')
+    if (count > 0) {
+      const agendaLink = page.locator('a[href*="agenda"], button').filter({ hasText: /agenda|back|volver/i }).first()
+      if (await agendaLink.isVisible()) {
+        await agendaLink.click()
+        await expect(page).toHaveURL(/\/agenda/, { timeout: 5000 })
+      }
     }
   })
 })

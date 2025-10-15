@@ -1,23 +1,21 @@
 import { test, expect } from '@playwright/test'
 
+// Use doctor storage state for all tests
+test.use({ storageState: 'tests/.auth/doctor.json' })
+
 // Tests skipped temporalmente - requieren navegación al perfil del paciente
 // La funcionalidad está validada con unit tests (18 tests pasando)
 test.describe.skip('Validación de Signos Vitales - E2E', () => {
   test.beforeEach(async ({ page }) => {
-    // Login como doctor
-    await page.goto('/auth/login')
-    await page.fill('[data-testid="email-input"]', 'doctor-1759245234123@clinicasanrafael.com')
-    await page.fill('[data-testid="password-input"]', 'VittaMed2024!')
-    await page.click('[data-testid="login-submit"]')
-    await page.waitForURL('**/agenda')
+    // Navigate to appointments page - already authenticated via storage state
+    await page.goto('/appointments')
+    await expect(page.locator('h1, h2')).toBeVisible()
   })
 
   test('debe validar temperatura fuera de rango', async ({ page }) => {
-    // Ir a appointments para encontrar una cita con patient_id
-    await page.goto('/appointments')
-    await page.waitForLoadState('networkidle')
+    // Fill date input and wait for appointments to load
     await page.fill('input[type="date"]', '2025-10-04')
-    await page.waitForTimeout(1500)
+    await expect(page.locator('table tbody tr').first()).toBeVisible()
 
     // Click en botón Atender para ir a perfil del paciente
     const firstRowButtons = page.locator('table tbody tr').first().locator('button')
@@ -29,14 +27,14 @@ test.describe.skip('Validación de Signos Vitales - E2E', () => {
     }
 
     await firstRowButtons.first().click()
-    await page.waitForTimeout(2000)
+    // Wait for navigation to patient profile
+    await expect(page).toHaveURL(/\/patients\/[^/]+/)
 
-    // Ahora deberíamos estar en /patients/[id]
     // Buscar sección de signos vitales o botón de nuevo registro
     const vitalSignsSection = page.locator('text=/signos vitales|vital signs/i').first()
     if (await vitalSignsSection.isVisible({ timeout: 5000 }).catch(() => false)) {
       await vitalSignsSection.click()
-      await page.waitForTimeout(500)
+      await expect(page.locator('input[placeholder="36.5"]')).toBeVisible()
     }
 
     // Probar temperatura alta
@@ -61,19 +59,19 @@ test.describe.skip('Validación de Signos Vitales - E2E', () => {
 
   test('debe validar frecuencia cardíaca fuera de rango', async ({ page }) => {
     await page.goto('/patients')
-    await page.waitForTimeout(1000)
+    await expect(page.locator('h1, h2')).toBeVisible()
 
     const newRecordButton = page.locator('text=Nuevo Registro').or(page.locator('text=Agregar Registro'))
     if (await newRecordButton.isVisible()) {
       await newRecordButton.first().click()
     } else {
       await page.click('table tbody tr:first-child')
-      await page.waitForTimeout(500)
+      await expect(page.locator('text=Nuevo Registro')).toBeVisible()
       await page.click('text=Nuevo Registro')
     }
 
     await page.click('text=Signos Vitales')
-    await page.waitForTimeout(500)
+    await expect(page.locator('input[placeholder="72"]')).toBeVisible()
 
     // Probar frecuencia cardíaca alta
     const heartRateInput = page.locator('input[placeholder="72"]')
@@ -89,19 +87,19 @@ test.describe.skip('Validación de Signos Vitales - E2E', () => {
 
   test('debe validar presión arterial fuera de rango', async ({ page }) => {
     await page.goto('/patients')
-    await page.waitForTimeout(1000)
+    await expect(page.locator('h1, h2')).toBeVisible()
 
     const newRecordButton = page.locator('text=Nuevo Registro').or(page.locator('text=Agregar Registro'))
     if (await newRecordButton.isVisible()) {
       await newRecordButton.first().click()
     } else {
       await page.click('table tbody tr:first-child')
-      await page.waitForTimeout(500)
+      await expect(page.locator('text=Nuevo Registro')).toBeVisible()
       await page.click('text=Nuevo Registro')
     }
 
     await page.click('text=Signos Vitales')
-    await page.waitForTimeout(500)
+    await expect(page.locator('input[placeholder="120"]')).toBeVisible()
 
     // Probar presión sistólica alta
     const systolicInput = page.locator('input[placeholder="120"]')
@@ -118,19 +116,19 @@ test.describe.skip('Validación de Signos Vitales - E2E', () => {
 
   test('debe validar saturación de oxígeno baja', async ({ page }) => {
     await page.goto('/patients')
-    await page.waitForTimeout(1000)
+    await expect(page.locator('h1, h2')).toBeVisible()
 
     const newRecordButton = page.locator('text=Nuevo Registro').or(page.locator('text=Agregar Registro'))
     if (await newRecordButton.isVisible()) {
       await newRecordButton.first().click()
     } else {
       await page.click('table tbody tr:first-child')
-      await page.waitForTimeout(500)
+      await expect(page.locator('text=Nuevo Registro')).toBeVisible()
       await page.click('text=Nuevo Registro')
     }
 
     await page.click('text=Signos Vitales')
-    await page.waitForTimeout(500)
+    await expect(page.locator('input[placeholder="98"]')).toBeVisible()
 
     // Probar saturación baja (crítico)
     const o2Input = page.locator('input[placeholder="98"]')
@@ -142,14 +140,14 @@ test.describe.skip('Validación de Signos Vitales - E2E', () => {
 
   test('debe permitir guardar registro con warnings', async ({ page }) => {
     await page.goto('/patients')
-    await page.waitForTimeout(1000)
+    await expect(page.locator('h1, h2')).toBeVisible()
 
     const newRecordButton = page.locator('text=Nuevo Registro').or(page.locator('text=Agregar Registro'))
     if (await newRecordButton.isVisible()) {
       await newRecordButton.first().click()
     } else {
       await page.click('table tbody tr:first-child')
-      await page.waitForTimeout(500)
+      await expect(page.locator('text=Nuevo Registro')).toBeVisible()
       await page.click('text=Nuevo Registro')
     }
 
@@ -159,7 +157,7 @@ test.describe.skip('Validación de Signos Vitales - E2E', () => {
 
     // Ir a signos vitales con valores anormales
     await page.click('text=Signos Vitales')
-    await page.waitForTimeout(500)
+    await expect(page.locator('input[placeholder="36.5"]')).toBeVisible()
 
     const tempInput = page.locator('input[placeholder="36.5"]')
     await tempInput.fill('38.5')

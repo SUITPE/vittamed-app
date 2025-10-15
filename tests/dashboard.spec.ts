@@ -1,14 +1,13 @@
 import { test, expect } from '@playwright/test'
 
+// Use admin storage state for all tests
+test.use({ storageState: 'tests/.auth/admin.json' })
+
 test.describe('Dashboard Tests', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/auth/login')
-
-    await page.fill('[data-testid="email-input"]', 'admin@clinicasanrafael.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
-
-    await page.waitForURL('/dashboard/**')
+    // Navigate to dashboard - already authenticated via storage state
+    await page.goto('/dashboard')
+    await expect(page.locator('h1')).toBeVisible()
   })
 
   test('should display dashboard stats', async ({ page }) => {

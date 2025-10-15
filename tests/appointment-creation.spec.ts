@@ -1,13 +1,13 @@
 import { test, expect } from '@playwright/test'
-import { loginAsDoctor, loginAsAdmin, navigateToAgenda } from './helpers/auth-setup'
+
+// Use doctor storage state for all tests
+test.use({ storageState: 'tests/.auth/doctor.json' })
 
 test.describe('Appointment Creation from Agenda', () => {
   test.beforeEach(async ({ page }) => {
-    // Login as doctor
-    await loginAsDoctor(page)
-
-    // Navigate to agenda
-    await navigateToAgenda(page)
+    // Navigate to agenda - already authenticated via storage state
+    await page.goto('/agenda')
+    await expect(page.locator('h1, h2')).toBeVisible()
   })
 
   test('should show Nueva Cita button in agenda header', async ({ page }) => {
@@ -85,11 +85,9 @@ test.describe('Appointment Creation from Agenda', () => {
     await page.click('button:has-text("Nueva Cita"), button:has-text("Nueva")')
     await page.waitForSelector('text=Nueva Cita')
 
-    // Wait for patients to load
-    await page.waitForTimeout(1000)
-
-    // Check that patient select has options
+    // Check that patient select has options (wait for them to load)
     const patientSelect = page.locator('select').first()
+    await expect(patientSelect.locator('option').nth(1)).toBeVisible({ timeout: 5000 })
     const options = await patientSelect.locator('option').count()
 
     // Should have at least the placeholder + some patients
@@ -101,22 +99,16 @@ test.describe('Appointment Creation from Agenda', () => {
     await page.click('button:has-text("Nueva Cita"), button:has-text("Nueva")')
     await page.waitForSelector('text=Nueva Cita')
 
-    // Wait for services to load
-    await page.waitForTimeout(1000)
-
     // Find service select (should contain "Servicio")
     const serviceLabel = page.locator('label:has-text("Servicio")')
     await expect(serviceLabel).toBeVisible()
   })
 
   test('should pre-fill date and time when clicking on calendar slot', async ({ page }) => {
-    // Wait for calendar to load
-    await page.waitForTimeout(2000)
-
     // Find an available slot (green background)
     const availableSlot = page.locator('button[class*="bg-green-50"], button[class*="hover:bg-green-50"]').first()
 
-    if (await availableSlot.isVisible()) {
+    if (await availableSlot.isVisible({ timeout: 5000 }).catch(() => false)) {
       await availableSlot.click()
 
       // Modal should open with pre-filled date/time
@@ -139,12 +131,12 @@ test.describe('Appointment Creation from Agenda', () => {
     await page.click('button:has-text("Nueva Cita"), button:has-text("Nueva")')
     await page.waitForSelector('text=Nueva Cita')
 
-    // Wait for data to load
-    await page.waitForTimeout(1500)
+    // Wait for selects to populate
+    const patientSelect = page.locator('select').first()
+    await expect(patientSelect.locator('option').nth(1)).toBeVisible({ timeout: 5000 })
 
     // Fill form
     // Select first patient
-    const patientSelect = page.locator('select').first()
     await patientSelect.selectOption({ index: 1 })
 
     // Select first service

@@ -1,15 +1,14 @@
 import { test, expect } from '@playwright/test'
 
+// Use admin storage state for all tests in this file
+test.use({ storageState: 'tests/.auth/admin.json' })
+
 test.describe('Patient Management Tests', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/auth/login')
-
-    await page.fill('input[type="email"]', 'admin@clinicasanrafael.com')
-    await page.fill('input[type="password"]', 'password123')
-    await page.click('button[type="submit"]')
-
-    await page.waitForURL('/dashboard/**', { timeout: 15000 })
+    // No login needed - session already authenticated
     await page.goto('/patients')
+    // Wait for page to load by checking for main heading
+    await expect(page.locator('h1')).toBeVisible()
   })
 
   test('should display patients page', async ({ page }) => {
@@ -110,8 +109,7 @@ test.describe('Patient Management Tests', () => {
 
     await searchInput.fill('example')
 
-    await page.waitForTimeout(500)
-
+    // Wait for search to complete by checking table updates
     const rows = page.locator('tbody tr')
     await expect(rows).toHaveCount(1)
   })
@@ -156,10 +154,8 @@ test.describe('Patient Management Tests', () => {
       const toggleButton = firstRow.locator('button').nth(1)
       await toggleButton.click()
 
-      await page.waitForTimeout(1000)
-
-      const newStatus = await statusBadge.textContent()
-      expect(newStatus).not.toBe(initialStatus)
+      // Wait for status to change by checking text content
+      await expect(statusBadge).not.toHaveText(initialStatus || '')
     }
   })
 
@@ -177,9 +173,7 @@ test.describe('Patient Management Tests', () => {
         const searchTerm = documentText.trim().substring(0, 5)
         await searchInput.fill(searchTerm)
 
-        await page.waitForTimeout(500)
-
-        // Verify the patient is still visible
+        // Verify the patient is still visible after search completes
         await expect(page.locator(`text=${documentText}`)).toBeVisible()
       }
     }

@@ -5,6 +5,9 @@
 
 import { test, expect } from '@playwright/test'
 
+// Use admin storage state for all tests
+test.use({ storageState: 'tests/.auth/admin.json' })
+
 test.describe('Patient CRUD - E2E Tests', () => {
   const timestamp = Date.now()
   const testPatient = {
@@ -19,16 +22,9 @@ test.describe('Patient CRUD - E2E Tests', () => {
   }
 
   test.beforeEach(async ({ page }) => {
-    // Login as admin
-    await page.goto('/auth/login')
-    await page.fill('input[type="email"]', 'admin@clinicasanrafael.com')
-    await page.fill('input[type="password"]', 'password123')
-    await page.click('button[type="submit"]')
-
-    // Wait for redirect and navigate to patients
-    await page.waitForURL('/dashboard/**', { timeout: 15000 })
+    // Navigate to patients page - already authenticated via storage state
     await page.goto('/patients')
-    await page.waitForLoadState('networkidle')
+    await expect(page.locator('h1')).toBeVisible()
   })
 
   test('E2E-01: Complete patient creation flow with document field', async ({ page }) => {
@@ -68,7 +64,6 @@ test.describe('Patient CRUD - E2E Tests', () => {
     await expect(page.locator('h3:has-text("Agregar Paciente")')).not.toBeVisible({ timeout: 5000 })
 
     // Step 7: Verify patient appears in table with document
-    await page.waitForTimeout(1000) // Wait for table refresh
     await expect(page.locator(`text=${testPatient.email}`)).toBeVisible()
     await expect(page.locator(`text=${testPatient.document}`)).toBeVisible()
   })
@@ -93,6 +88,7 @@ test.describe('Patient CRUD - E2E Tests', () => {
   test('E2E-03: Search patients by document number', async ({ page }) => {
     // First create a patient with unique document
     await page.click('button:has-text("Agregar Paciente")')
+    await expect(page.locator('h3:has-text("Agregar Paciente")')).toBeVisible()
 
     const uniqueDoc = `SEARCH-${Date.now()}`
     const inputs = page.locator('input[type="text"]')
@@ -102,12 +98,12 @@ test.describe('Patient CRUD - E2E Tests', () => {
     await page.locator('input[placeholder*="DNI"]').fill(uniqueDoc)
 
     await page.click('button:has-text("Agregar")')
-    await page.waitForTimeout(1000)
+    await expect(page.locator('h3:has-text("Agregar Paciente")')).not.toBeVisible()
 
     // Now search for this patient by document
     const searchInput = page.locator('input[placeholder="Buscar pacientes..."]')
     await searchInput.fill(uniqueDoc)
-    await page.waitForTimeout(500)
+    await expect(page.locator('tbody tr')).toHaveCount(1)
 
     // Verify only matching patient is shown
     await expect(page.locator(`text=${uniqueDoc}`)).toBeVisible()
@@ -116,7 +112,7 @@ test.describe('Patient CRUD - E2E Tests', () => {
   test('E2E-04: Edit patient and update document', async ({ page }) => {
     // Find the first patient row
     const firstRow = page.locator('tbody tr').first()
-    await firstRow.waitFor({ state: 'visible' })
+    await expect(firstRow).toBeVisible()
 
     // Click edit button
     await firstRow.locator('button:has-text("Editar")').click()
@@ -137,7 +133,6 @@ test.describe('Patient CRUD - E2E Tests', () => {
     await expect(page.locator('h3:has-text("Editar Paciente")')).not.toBeVisible({ timeout: 5000 })
 
     // Verify updated document appears in table
-    await page.waitForTimeout(1000)
     await expect(page.locator(`text=${newDocument}`)).toBeVisible()
   })
 
@@ -157,7 +152,7 @@ test.describe('Patient CRUD - E2E Tests', () => {
   test('E2E-06: Toggle patient status preserves document', async ({ page }) => {
     // Get first patient's document
     const firstRow = page.locator('tbody tr').first()
-    await firstRow.waitFor({ state: 'visible' })
+    await expect(firstRow).toBeVisible()
 
     const documentCell = firstRow.locator('td').nth(1)
     const originalDocument = await documentCell.textContent()
@@ -165,7 +160,10 @@ test.describe('Patient CRUD - E2E Tests', () => {
     // Toggle status
     const toggleButton = firstRow.locator('button').nth(1)
     await toggleButton.click()
-    await page.waitForTimeout(1500)
+
+    // Wait for status badge to update (indicates operation completed)
+    const statusBadge = firstRow.locator('span.px-2.py-1.rounded-full')
+    await expect(statusBadge).toBeVisible()
 
     // Verify document is still the same
     const updatedDocumentCell = page.locator('tbody tr').first().locator('td').nth(1)
@@ -178,6 +176,7 @@ test.describe('Patient CRUD - E2E Tests', () => {
 
     // Create patient
     await page.click('button:has-text("Agregar Paciente")')
+    await expect(page.locator('h3:has-text("Agregar Paciente")')).toBeVisible()
 
     const inputs = page.locator('input[type="text"]')
     await inputs.nth(0).fill('State')
@@ -186,7 +185,7 @@ test.describe('Patient CRUD - E2E Tests', () => {
     await page.locator('input[placeholder*="DNI"]').fill(`STATE-${uniqueId}`)
 
     await page.click('button:has-text("Agregar")')
-    await page.waitForTimeout(1000)
+    await expect(page.locator('h3:has-text("Agregar Paciente")')).not.toBeVisible()
 
     // Verify in active state
     await expect(page.locator(`text=STATE-${uniqueId}`)).toBeVisible()
@@ -194,6 +193,7 @@ test.describe('Patient CRUD - E2E Tests', () => {
     // Edit and verify document is editable
     const targetRow = page.locator(`tr:has-text("STATE-${uniqueId}")`).first()
     await targetRow.locator('button:has-text("Editar")').click()
+    await expect(page.locator('h3:has-text("Editar Paciente")')).toBeVisible()
 
     const documentInput = page.locator('input[placeholder*="DNI"]')
     await expect(documentInput).toBeEnabled()
@@ -201,6 +201,7 @@ test.describe('Patient CRUD - E2E Tests', () => {
 
     // Close modal without saving
     await page.click('button:has-text("Cancelar")')
+    await expect(page.locator('h3:has-text("Editar Paciente")')).not.toBeVisible()
   })
 
   test('E2E-08: Patient count updates after operations', async ({ page }) => {
@@ -210,6 +211,7 @@ test.describe('Patient CRUD - E2E Tests', () => {
 
     // Add new patient
     await page.click('button:has-text("Agregar Paciente")')
+    await expect(page.locator('h3:has-text("Agregar Paciente")')).toBeVisible()
 
     const uniqueId = Date.now()
     const inputs = page.locator('input[type="text"]')
@@ -219,7 +221,10 @@ test.describe('Patient CRUD - E2E Tests', () => {
     await page.locator('input[placeholder*="DNI"]').fill(`COUNT-${uniqueId}`)
 
     await page.click('button:has-text("Agregar")')
-    await page.waitForTimeout(1500)
+    await expect(page.locator('h3:has-text("Agregar Paciente")')).not.toBeVisible()
+
+    // Verify patient is in table
+    await expect(page.locator(`text=COUNT-${uniqueId}`)).toBeVisible()
 
     // Verify count increased
     const newCountText = await page.locator('h2:has-text("Lista de Pacientes")').textContent()
@@ -230,6 +235,7 @@ test.describe('Patient CRUD - E2E Tests', () => {
   test('E2E-09: Search by partial document number', async ({ page }) => {
     // Create patient with known document
     await page.click('button:has-text("Agregar Paciente")')
+    await expect(page.locator('h3:has-text("Agregar Paciente")')).toBeVisible()
 
     const uniqueDoc = `PARTIAL-${Date.now()}`
     const inputs = page.locator('input[type="text"]')
@@ -239,12 +245,11 @@ test.describe('Patient CRUD - E2E Tests', () => {
     await page.locator('input[placeholder*="DNI"]').fill(uniqueDoc)
 
     await page.click('button:has-text("Agregar")')
-    await page.waitForTimeout(1000)
+    await expect(page.locator('h3:has-text("Agregar Paciente")')).not.toBeVisible()
 
     // Search with partial document (first 7 chars)
     const searchInput = page.locator('input[placeholder="Buscar pacientes..."]')
     await searchInput.fill(uniqueDoc.substring(0, 7))
-    await page.waitForTimeout(500)
 
     // Should find the patient
     await expect(page.locator(`text=${uniqueDoc}`)).toBeVisible()
@@ -257,13 +262,15 @@ test.describe('Patient CRUD - E2E Tests', () => {
 
     // CREATE
     await page.click('button:has-text("Agregar Paciente")')
+    await expect(page.locator('h3:has-text("Agregar Paciente")')).toBeVisible()
+
     const inputs = page.locator('input[type="text"]')
     await inputs.nth(0).fill('Cycle')
     await inputs.nth(1).fill('Test')
     await page.locator('input[type="email"]').fill(`cycle.${cycleId}@test.com`)
     await page.locator('input[placeholder*="DNI"]').fill(originalDoc)
     await page.click('button:has-text("Agregar")')
-    await page.waitForTimeout(1000)
+    await expect(page.locator('h3:has-text("Agregar Paciente")')).not.toBeVisible()
 
     // READ - verify created
     await expect(page.locator(`text=${originalDoc}`)).toBeVisible()
@@ -271,12 +278,13 @@ test.describe('Patient CRUD - E2E Tests', () => {
     // UPDATE
     const targetRow = page.locator(`tr:has-text("${originalDoc}")`).first()
     await targetRow.locator('button:has-text("Editar")').click()
+    await expect(page.locator('h3:has-text("Editar Paciente")')).toBeVisible()
 
     const documentInput = page.locator('input[placeholder*="DNI"]')
     await documentInput.clear()
     await documentInput.fill(updatedDoc)
     await page.click('button:has-text("Actualizar")')
-    await page.waitForTimeout(1000)
+    await expect(page.locator('h3:has-text("Editar Paciente")')).not.toBeVisible()
 
     // Verify update
     await expect(page.locator(`text=${updatedDoc}`)).toBeVisible()
@@ -286,9 +294,8 @@ test.describe('Patient CRUD - E2E Tests', () => {
     const updatedRow = page.locator(`tr:has-text("${updatedDoc}")`).first()
     const toggleButton = updatedRow.locator('button').nth(1)
     await toggleButton.click()
-    await page.waitForTimeout(1000)
 
-    // Verify status changed
+    // Verify status changed by waiting for status badge text to update
     const statusBadge = updatedRow.locator('span.px-2.py-1.rounded-full')
     await expect(statusBadge).toContainText('Inactivo')
   })

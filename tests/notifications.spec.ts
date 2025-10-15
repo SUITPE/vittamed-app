@@ -1,13 +1,14 @@
 import { test, expect } from '@playwright/test'
 
+
+// Use admin storage state for all tests
+test.use({ storageState: "tests/.auth/admin.json" })
+
 test.describe('Sistema de Notificaciones', () => {
   test.beforeEach(async ({ page }) => {
-    // Login como admin para acceder a configuración
-    await page.goto('/auth/login')
-    await page.fill('[data-testid="email-input"]', 'admin@clinicasanrafael.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
-    await page.waitForLoadState('networkidle')
+    // Navigate to dashboard - already authenticated via storage state
+    await page.goto('/dashboard')
+    await expect(page.locator('h1')).toBeVisible()
   })
 
   test('debe mostrar configuración de notificaciones si existe', async ({ page }) => {
@@ -17,7 +18,6 @@ test.describe('Sistema de Notificaciones', () => {
 
     if (count > 0) {
       await settingsLink.first().click()
-      await page.waitForLoadState('networkidle')
 
       // Buscar sección de notificaciones
       const notificationsSection = page.locator('text=/notificaciones|notifications|avisos/i')
@@ -60,15 +60,8 @@ test.describe('Notificaciones de Email - Verificación de Envío', () => {
     // Note: Este test verifica que el código intenta enviar email
     // El email real requeriría interceptar llamadas HTTP o verificar logs
 
-    await page.goto('/auth/login')
-    await page.fill('[data-testid="email-input"]', 'patient@example.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
-    await page.waitForLoadState('networkidle')
-
-    // Ir a booking
+    // Ir a booking (already authenticated)
     await page.goto('/booking')
-    await page.waitForLoadState('networkidle')
 
     // El proceso de booking debería incluir envío de email
     // Por ahora solo verificamos que la página de booking existe
@@ -81,14 +74,7 @@ test.describe('Notificaciones de Email - Verificación de Envío', () => {
   })
 
   test('debe mostrar mensaje de confirmación después de booking exitoso', async ({ page }) => {
-    await page.goto('/auth/login')
-    await page.fill('[data-testid="email-input"]', 'patient@example.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
-    await page.waitForLoadState('networkidle')
-
     await page.goto('/booking')
-    await page.waitForLoadState('networkidle')
 
     // Verificar que existe algún tipo de confirmación en la UI
     // (mensaje de éxito, redirect, etc.)
@@ -103,12 +89,7 @@ test.describe('Notificaciones de WhatsApp - Mock', () => {
   test.skip('debe enviar WhatsApp al confirmar cita', async ({ page }) => {
     // Test skipped: Requiere Twilio configurado en test mode
     // O mock de la API de Twilio
-
-    await page.goto('/auth/login')
-    await page.fill('[data-testid="email-input"]', 'admin@clinicasanrafael.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
-    await page.waitForLoadState('networkidle')
+    await page.goto('/dashboard')
 
     // Interceptar llamadas a API de WhatsApp/Twilio
     let whatsappCalled = false
@@ -129,12 +110,7 @@ test.describe('Notificaciones de WhatsApp - Mock', () => {
 
   test.skip('debe manejar error al enviar WhatsApp', async ({ page }) => {
     // Test skipped: Requiere configuración de error handling
-
-    await page.goto('/auth/login')
-    await page.fill('[data-testid="email-input"]', 'admin@clinicasanrafael.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
-    await page.waitForLoadState('networkidle')
+    await page.goto('/dashboard')
 
     // Mock de error de Twilio
     await page.route('**/api/whatsapp/**', route => {
@@ -153,12 +129,7 @@ test.describe('Templates de Notificaciones', () => {
   test('debe tener templates definidos para diferentes eventos', async ({ page }) => {
     // Este test verifica que existen archivos de templates
     // o configuración de mensajes
-
-    await page.goto('/auth/login')
-    await page.fill('[data-testid="email-input"]', 'admin@clinicasanrafael.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
-    await page.waitForLoadState('networkidle')
+    await page.goto('/dashboard')
 
     // Buscar sección de templates si existe en admin
     const templatesSection = page.locator('text=/templates|plantillas|mensajes/i')
@@ -167,7 +138,6 @@ test.describe('Templates de Notificaciones', () => {
     if (hasTemplates) {
       console.log('Templates section found')
       await templatesSection.click()
-      await page.waitForTimeout(1000)
 
       // Verificar tipos de templates
       const templateTypes = [
@@ -191,11 +161,7 @@ test.describe('Templates de Notificaciones', () => {
 
 test.describe('Preferencias de Notificaciones - Usuario', () => {
   test('usuario debe poder configurar preferencias de notificaciones', async ({ page }) => {
-    await page.goto('/auth/login')
-    await page.fill('[data-testid="email-input"]', 'patient@example.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
-    await page.waitForLoadState('networkidle')
+    await page.goto('/dashboard')
 
     // Buscar perfil o configuración de usuario
     const profileLink = page.locator('a, button').filter({ hasText: /perfil|profile|cuenta|account/i })
@@ -203,7 +169,6 @@ test.describe('Preferencias de Notificaciones - Usuario', () => {
 
     if (count > 0) {
       await profileLink.first().click()
-      await page.waitForTimeout(1500)
 
       // Buscar opciones de notificaciones
       const notificationPrefs = page.locator('text=/notificaciones|notifications/i, input[type="checkbox"]').filter({ hasText: /email|whatsapp|sms/i })
@@ -220,11 +185,7 @@ test.describe('Preferencias de Notificaciones - Usuario', () => {
   })
 
   test('debe poder desactivar notificaciones por email', async ({ page }) => {
-    await page.goto('/auth/login')
-    await page.fill('[data-testid="email-input"]', 'patient@example.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
-    await page.waitForLoadState('networkidle')
+    await page.goto('/dashboard')
 
     // Buscar toggle de email notifications
     const emailToggle = page.locator('input[type="checkbox"]').filter({ has: page.locator('~ text=/email/i') })
@@ -233,7 +194,6 @@ test.describe('Preferencias de Notificaciones - Usuario', () => {
     if (hasToggle) {
       const isChecked = await emailToggle.isChecked()
       await emailToggle.click()
-      await page.waitForTimeout(500)
 
       const newState = await emailToggle.isChecked()
       expect(newState).toBe(!isChecked)
@@ -245,18 +205,16 @@ test.describe('Preferencias de Notificaciones - Usuario', () => {
 })
 
 test.describe('Notificaciones en Tiempo Real', () => {
+  test.use({ storageState: 'tests/.auth/doctor.json' })
+
   test('debe actualizar notificaciones sin recargar página', async ({ page }) => {
-    await page.goto('/auth/login')
-    await page.fill('[data-testid="email-input"]', 'doctor-1759245234123@clinicasanrafael.com')
-    await page.fill('[data-testid="password-input"]', 'VittaMed2024!')
-    await page.click('[data-testid="login-submit"]')
-    await page.waitForURL('**/agenda')
+    await page.goto('/agenda')
+    await expect(page.locator('h1, h2')).toBeVisible()
 
     // Verificar si hay WebSocket o polling para notificaciones en tiempo real
     // (esto es avanzado y puede no estar implementado)
 
     const initialUrl = page.url()
-    await page.waitForTimeout(5000)
     const finalUrl = page.url()
 
     // Verificar que no hubo reload completo

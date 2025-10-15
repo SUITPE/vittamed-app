@@ -1,23 +1,17 @@
 import { test, expect } from '@playwright/test'
 
+// Use admin storage state for all tests
+test.use({ storageState: 'tests/.auth/admin.json' })
+
 test.describe('Tenant Creation (VT-27)', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to the app
-    await page.goto('http://localhost:3000')
+    // Navigate to tenant creation page
+    await page.goto('/admin/create-tenant')
+    await expect(page.locator('h2')).toBeVisible()
   })
 
   test('should allow admin to create a new tenant', async ({ page }) => {
-    // Login as admin
-    await page.click('text=Iniciar Sesión')
-    await page.fill('[data-testid="email-input"]', 'admin@clinicasanrafael.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
-
-    // Wait a bit for login processing
-    await page.waitForTimeout(2000)
-
-    // Navigate directly to tenant creation page
-    await page.goto('http://localhost:3000/admin/create-tenant')
+    // Already on create tenant page via beforeEach
 
     // Verify we can access the create tenant page
     await expect(page.locator('h2')).toContainText('Crear Nuevo Negocio')
@@ -31,9 +25,6 @@ test.describe('Tenant Creation (VT-27)', () => {
 
     // Submit the form
     await page.click('[data-testid="create-tenant-submit"]')
-
-    // Wait for response and check for either success or error
-    await page.waitForTimeout(3000)
 
     // Check if there's an error message first
     const errorElement = page.locator('[data-testid="create-tenant-error"]')
@@ -51,17 +42,10 @@ test.describe('Tenant Creation (VT-27)', () => {
   })
 
   test('should show error for non-admin users', async ({ page }) => {
-    // Login as doctor (non-admin)
-    await page.click('text=Iniciar Sesión')
-    await page.fill('[data-testid="email-input"]', 'ana.rodriguez@email.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
+    test.use({ storageState: 'tests/.auth/doctor.json' })
 
-    // Wait for login processing
-    await page.waitForTimeout(2000)
-
-    // Try to access tenant creation page
-    await page.goto('http://localhost:3000/admin/create-tenant')
+    // Try to access tenant creation page with doctor credentials
+    await page.goto('/admin/create-tenant')
 
     // Should show access restricted message
     await expect(page.locator('text=Acceso Restringido')).toBeVisible()
@@ -69,35 +53,17 @@ test.describe('Tenant Creation (VT-27)', () => {
   })
 
   test('should show error for patient users', async ({ page }) => {
-    // Login as patient (non-admin)
-    await page.click('text=Iniciar Sesión')
-    await page.fill('[data-testid="email-input"]', 'patient@example.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
+    test.use({ storageState: 'tests/.auth/receptionist.json' })
 
-    // Wait for login processing
-    await page.waitForTimeout(2000)
-
-    // Try to access tenant creation page
-    await page.goto('http://localhost:3000/admin/create-tenant')
+    // Try to access tenant creation page with receptionist/patient credentials
+    await page.goto('/admin/create-tenant')
 
     // Should show access restricted message
     await expect(page.locator('text=Acceso Restringido')).toBeVisible()
   })
 
   test('should validate required fields', async ({ page }) => {
-    // Login as admin
-    await page.click('text=Iniciar Sesión')
-    await page.fill('[data-testid="email-input"]', 'admin@clinicasanrafael.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
-
-    // Wait for login processing
-    await page.waitForTimeout(2000)
-
-    // Navigate to tenant creation page
-    await page.goto('http://localhost:3000/admin/create-tenant')
-
+    // Already on create tenant page via beforeEach
     // Try to submit without required fields
     await page.click('[data-testid="create-tenant-submit"]')
 
@@ -107,18 +73,7 @@ test.describe('Tenant Creation (VT-27)', () => {
   })
 
   test('should handle different tenant types', async ({ page }) => {
-    // Login as admin
-    await page.click('text=Iniciar Sesión')
-    await page.fill('[data-testid="email-input"]', 'admin@clinicasanrafael.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
-
-    // Wait for login processing
-    await page.waitForTimeout(2000)
-
-    // Navigate to tenant creation page
-    await page.goto('http://localhost:3000/admin/create-tenant')
-
+    // Already on create tenant page via beforeEach
     // Test each tenant type
     const tenantTypes = ['clinic', 'spa', 'consultorio']
 
@@ -130,18 +85,7 @@ test.describe('Tenant Creation (VT-27)', () => {
   })
 
   test('should show loading state during submission', async ({ page }) => {
-    // Login as admin
-    await page.click('text=Iniciar Sesión')
-    await page.fill('[data-testid="email-input"]', 'admin@clinicasanrafael.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
-
-    // Wait for login processing
-    await page.waitForTimeout(2000)
-
-    // Navigate to tenant creation page
-    await page.goto('http://localhost:3000/admin/create-tenant')
-
+    // Already on create tenant page via beforeEach
     // Fill required fields
     await page.fill('[data-testid="tenant-name-input"]', 'Loading Test Clinic')
 

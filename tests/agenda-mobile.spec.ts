@@ -1,22 +1,19 @@
 import { test, expect, devices } from '@playwright/test'
 
+// Use doctor storage state and iPhone 13 device
 test.use({
   ...devices['iPhone 13'],
+  storageState: 'tests/.auth/doctor.json'
 })
 
 test.describe('Agenda Mobile View', () => {
   test.beforeEach(async ({ page }) => {
-    // Login como doctor
-    await page.goto('/auth/login')
-    await page.fill('[data-testid="email-input"]', 'doctor-1759245234123@clinicasanrafael.com')
-    await page.fill('[data-testid="password-input"]', 'VittaMed2024!')
-    await page.click('[data-testid="login-submit"]')
-    await page.waitForURL('**/agenda')
+    // Navigate to agenda - already authenticated via storage state
+    await page.goto('/agenda')
+    await expect(page.locator('h1, h2')).toBeVisible()
   })
 
   test('debe mostrar agenda correctamente en mobile', async ({ page }) => {
-    await page.waitForLoadState('networkidle')
-
     // Verificar que la página cargó
     expect(page.url()).toContain('/agenda')
 
@@ -36,124 +33,106 @@ test.describe('Agenda Mobile View', () => {
   })
 
   test('debe permitir navegar entre días en mobile', async ({ page }) => {
-    await page.waitForLoadState('networkidle')
-
     // Buscar botones de navegación (prev/next)
     const prevButton = page.locator('button').filter({ hasText: /anterior|prev|<|←/i }).first()
     const nextButton = page.locator('button').filter({ hasText: /siguiente|next|>|→/i }).first()
 
     if (await prevButton.isVisible()) {
       await prevButton.click()
-      await page.waitForTimeout(500)
+      // Wait for page content to update
+      await expect(page.locator('h1, h2')).toBeVisible()
     }
 
     if (await nextButton.isVisible()) {
       await nextButton.click()
-      await page.waitForTimeout(500)
+      await expect(page.locator('h1, h2')).toBeVisible()
     }
   })
 
   test('debe permitir seleccionar fecha en mobile', async ({ page }) => {
-    await page.waitForLoadState('networkidle')
-
     // Buscar input de fecha
     const dateInput = page.locator('input[type="date"]').first()
 
     if (await dateInput.isVisible()) {
       await dateInput.fill('2025-10-04')
-      await page.waitForTimeout(1000)
+      // Wait for agenda to update
+      await expect(page.locator('body')).toBeVisible()
     }
   })
 
   test('debe mostrar citas de forma responsive en mobile', async ({ page }) => {
-    await page.waitForLoadState('networkidle')
-
     // Verificar que las citas se muestran (pueden estar en cards o lista)
-    const appointmentItems = page.locator('[data-testid*="appointment"], .appointment-card, [class*="appointment"]').first()
-
-    // Si hay citas, verificar que son visibles
     const count = await page.locator('[data-testid*="appointment"], .appointment-card, [class*="appointment"]').count()
 
     if (count > 0) {
+      const appointmentItems = page.locator('[data-testid*="appointment"], .appointment-card, [class*="appointment"]').first()
       await expect(appointmentItems).toBeVisible()
     }
   })
 
   test('debe permitir hacer click en una cita en mobile', async ({ page }) => {
-    await page.waitForLoadState('networkidle')
-
     // Buscar primera cita clickeable
-    const firstAppointment = page.locator('[data-testid*="appointment"], .appointment-card, [class*="appointment"]').first()
-
     const count = await page.locator('[data-testid*="appointment"], .appointment-card, [class*="appointment"]').count()
 
-    if (count > 0 && await firstAppointment.isVisible()) {
-      await firstAppointment.click()
-      await page.waitForTimeout(500)
+    if (count > 0) {
+      const firstAppointment = page.locator('[data-testid*="appointment"], .appointment-card, [class*="appointment"]').first()
+      if (await firstAppointment.isVisible()) {
+        await firstAppointment.click()
+        // Wait for any modal/details to appear
+        await page.locator('h1, h2, h3, [role="dialog"]').first().waitFor({ state: 'visible', timeout: 2000 }).catch(() => {})
+      }
     }
   })
 
   test('menu hamburguesa debe funcionar en mobile', async ({ page }) => {
-    await page.waitForLoadState('networkidle')
-
     // Buscar botón de menú (hamburger)
     const menuButton = page.locator('button[aria-label*="menu"], button[aria-label*="Menu"], button svg').filter({ has: page.locator('path[d*="M3"]') }).first()
 
     if (await menuButton.isVisible()) {
       await menuButton.click()
-      await page.waitForTimeout(500)
 
       // Verificar que el menú se abrió
       const menu = page.locator('[role="menu"], nav, [class*="menu"]')
-      if (await menu.isVisible()) {
-        await expect(menu).toBeVisible()
-      }
+      await expect(menu.first()).toBeVisible({ timeout: 2000 }).catch(() => {})
     }
   })
 
   test('debe poder crear nueva cita desde mobile', async ({ page }) => {
-    await page.waitForLoadState('networkidle')
-
     // Buscar botón de nueva cita
     const newAppointmentButton = page.locator('button').filter({ hasText: /nueva|agregar|crear|new/i }).first()
 
     if (await newAppointmentButton.isVisible()) {
       await newAppointmentButton.click()
-      await page.waitForTimeout(1000)
 
       // Verificar que se abrió el formulario o modal
       const form = page.locator('form, [role="dialog"], [class*="modal"]').first()
-      if (await form.isVisible()) {
-        await expect(form).toBeVisible()
-      }
+      await expect(form).toBeVisible({ timeout: 3000 }).catch(() => {})
     }
   })
 
   test('debe mostrar horarios correctamente en mobile', async ({ page }) => {
-    await page.waitForLoadState('networkidle')
-
     // Verificar que los horarios se muestran en formato correcto (no "Invalid Date")
     const invalidDate = page.locator('text=Invalid Date')
     await expect(invalidDate).not.toBeVisible()
 
     // Verificar que hay elementos de tiempo visibles
-    const timeElements = page.locator('time, [datetime], text=/\\d{2}:\\d{2}/').first()
     const count = await page.locator('time, [datetime], text=/\\d{2}:\\d{2}/').count()
 
     if (count > 0) {
+      const timeElements = page.locator('time, [datetime], text=/\\d{2}:\\d{2}/').first()
       await expect(timeElements).toBeVisible()
     }
   })
 
   test('debe ser scrolleable en mobile', async ({ page }) => {
-    await page.waitForLoadState('networkidle')
-
     // Obtener altura inicial de scroll
     const scrollBefore = await page.evaluate(() => window.scrollY)
 
     // Scroll down
     await page.evaluate(() => window.scrollBy(0, 300))
-    await page.waitForTimeout(300)
+
+    // Wait a bit for scroll animation
+    await page.waitForTimeout(100)
 
     const scrollAfter = await page.evaluate(() => window.scrollY)
 
@@ -163,17 +142,17 @@ test.describe('Agenda Mobile View', () => {
   })
 
   test('debe mantener funcionalidad de filtros en mobile', async ({ page }) => {
-    await page.waitForLoadState('networkidle')
-
     // Buscar filtros (status, tipo, etc.)
-    const filterSelect = page.locator('select, [role="combobox"]').first()
-
     const count = await page.locator('select, [role="combobox"]').count()
 
-    if (count > 0 && await filterSelect.isVisible()) {
-      // Interactuar con el filtro
-      await filterSelect.click()
-      await page.waitForTimeout(300)
+    if (count > 0) {
+      const filterSelect = page.locator('select, [role="combobox"]').first()
+      if (await filterSelect.isVisible()) {
+        // Interactuar con el filtro
+        await filterSelect.click()
+        // Wait for dropdown to open
+        await expect(filterSelect).toBeFocused().catch(() => {})
+      }
     }
   })
 })

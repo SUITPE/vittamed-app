@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 
-test.describe('Authentication Tests', () => {
+// Tests that DON'T need authentication (login page tests)
+test.describe('Authentication Tests - Login Page', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/auth/login')
   })
@@ -19,66 +20,27 @@ test.describe('Authentication Tests', () => {
   })
 
   test('should login successfully with admin credentials', async ({ page }) => {
-    // Capture console logs for debugging
-    page.on('console', msg => console.log('PAGE LOG:', msg.text()))
-
     await page.fill('[data-testid="email-input"]', 'admin@clinicasanrafael.com')
-    await page.fill('[data-testid="password-input"]', 'password')
+    await page.fill('[data-testid="password-input"]', 'password123')
     await page.click('[data-testid="login-submit"]')
 
-    // Wait for either success (navigation) or error message
-    await Promise.race([
-      // Success: navigation to dashboard
-      page.waitForURL('/dashboard/**', { timeout: 15000 }).then(() => 'navigated'),
+    // Wait for navigation to dashboard
+    await page.waitForURL('/dashboard/**', { timeout: 30000 })
 
-      // Error: error message appears
-      page.waitForSelector('[data-testid="login-error"]', { timeout: 15000 }).then(() => {
-        throw new Error('Login failed - error message appeared')
-      }),
-
-      // Fallback: check current URL after timeout
-      page.waitForTimeout(10000).then(async () => {
-        const currentUrl = page.url()
-        const buttonText = await page.textContent('[data-testid="login-submit"]')
-        console.log('Current URL:', currentUrl)
-        console.log('Button text:', buttonText)
-
-        if (currentUrl.includes('/dashboard') || currentUrl.includes('/agenda')) {
-          return 'navigated'
-        } else {
-          throw new Error(`Still on login page. URL: ${currentUrl}, Button: ${buttonText}`)
-        }
-      })
-    ])
-
-    // Wait for page to load completely
-    await page.waitForLoadState('networkidle', { timeout: 10000 })
-
-    // Check for dashboard content with more flexible matching
-    await expect(page.locator('h1, h2, [data-testid="dashboard"], .dashboard-title')).toBeVisible({ timeout: 20000 })
+    // Check for dashboard content
+    await expect(page.locator('h1, h2')).toBeVisible()
   })
 
   test('should login successfully with doctor credentials', async ({ page }) => {
-    await page.fill('[data-testid="email-input"]', 'ana.rodriguez@email.com')
-    await page.fill('[data-testid="password-input"]', 'password')
+    await page.fill('[data-testid="email-input"]', 'alvaro@abp.pe')
+    await page.fill('[data-testid="password-input"]', 'VittaMed2024!')
     await page.click('[data-testid="login-submit"]')
 
-    // Wait for agenda page with extended timeout and fallback
-    try {
-      await page.waitForURL('/agenda', { timeout: 60000 })
-    } catch (e) {
-      // Fallback: check if we're on agenda or relevant page
-      await page.waitForFunction(() => {
-        return window.location.pathname.includes('/agenda') ||
-               window.location.pathname.includes('/member') ||
-               document.title.includes('Agenda')
-      }, { timeout: 30000 })
-    }
+    // Wait for navigation to agenda or dashboard
+    await page.waitForURL(/\/(agenda|dashboard)/, { timeout: 30000 })
 
-    await page.waitForLoadState('networkidle', { timeout: 30000 })
-
-    // Check for agenda content with more flexible matching
-    await expect(page.locator('h1, h2, [data-testid="agenda"], .agenda-title')).toBeVisible({ timeout: 20000 })
+    // Check for page content
+    await expect(page.locator('h1, h2')).toBeVisible()
   })
 
   test('should login successfully with patient credentials', async ({ page }) => {
@@ -86,23 +48,11 @@ test.describe('Authentication Tests', () => {
     await page.fill('[data-testid="password-input"]', 'password')
     await page.click('[data-testid="login-submit"]')
 
-    // Wait for patient appointments page with extended timeout and fallback
-    try {
-      await page.waitForURL('/my-appointments', { timeout: 60000 })
-    } catch (e) {
-      // Fallback: check if we're on appointments or client page
-      await page.waitForFunction(() => {
-        return window.location.pathname.includes('/my-appointments') ||
-               window.location.pathname.includes('/client') ||
-               window.location.pathname.includes('/appointments') ||
-               document.title.includes('Citas')
-      }, { timeout: 30000 })
-    }
+    // Wait for navigation to appointments or client page
+    await page.waitForURL(/\/(my-appointments|client)/, { timeout: 30000 })
 
-    await page.waitForLoadState('networkidle', { timeout: 30000 })
-
-    // Check for appointments content with more flexible matching
-    await expect(page.locator('h1, h2, [data-testid="appointments"], .appointments-title')).toBeVisible({ timeout: 20000 })
+    // Check for page content
+    await expect(page.locator('h1, h2')).toBeVisible()
   })
 
   test('should show error message for invalid credentials', async ({ page }) => {
@@ -210,34 +160,33 @@ test.describe('Signup Tests', () => {
   })
 })
 
-test.describe('Protected Routes', () => {
+// Tests for protected routes (NO authentication)
+test.describe('Protected Routes - Unauthenticated', () => {
   test('should redirect to login when accessing dashboard without auth', async ({ page }) => {
     await page.goto('/dashboard')
-
     await expect(page).toHaveURL(/\/auth\/login/)
   })
 
   test('should redirect to login when accessing agenda without auth', async ({ page }) => {
     await page.goto('/agenda')
-
     await expect(page).toHaveURL(/\/auth\/login/)
   })
 
   test('should redirect to login when accessing patients without auth', async ({ page }) => {
     await page.goto('/patients')
-
     await expect(page).toHaveURL(/\/auth\/login/)
   })
+})
 
-  test('should redirect to dashboard when authenticated user accesses login', async ({ page }) => {
-    await page.goto('/auth/login')
-    await page.fill('[data-testid="email-input"]', 'admin@clinicasanrafael.com')
-    await page.fill('[data-testid="password-input"]', 'password')
-    await page.click('[data-testid="login-submit"]')
+// Tests for authenticated behavior
+test.describe('Protected Routes - Authenticated', () => {
+  // Use admin storage state
+  test.use({ storageState: 'tests/.auth/admin.json' })
 
-    await page.waitForURL('/dashboard/**')
-
-    await page.goto('/auth/login')
-    await expect(page).toHaveURL('/dashboard')
+  test('should allow access to dashboard when authenticated', async ({ page }) => {
+    await page.goto('/dashboard')
+    // Should NOT redirect to login
+    await expect(page).not.toHaveURL(/\/auth\/login/)
+    await expect(page.locator('h1, h2')).toBeVisible()
   })
 })

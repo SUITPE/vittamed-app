@@ -4,27 +4,26 @@ test.describe('VittaMed Business Flows with Context7', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to booking page
     await page.goto('/booking');
+    await expect(page.locator('h1')).toBeVisible();
   });
 
   test('should execute complete appointment booking flow', async ({ page }) => {
     // Step 1: Select tenant
     await page.selectOption('[data-testid="tenant-select"]', { label: 'Clínica San Rafael' });
-    await page.waitForLoadState('networkidle');
+    await expect(page.locator('[data-testid="service-select"] option')).not.toHaveCount(1);
 
     // Step 2: Select service
     await page.selectOption('[data-testid="service-select"]', { label: 'Consulta Cardiología' });
-    await page.waitForLoadState('networkidle');
+    await expect(page.locator('[data-testid="doctor-select"]')).toBeVisible();
 
     // Step 3: Select doctor
     await page.selectOption('[data-testid="doctor-select"]', { label: 'Ana Rodríguez - Cardiología' });
-    await page.waitForLoadState('networkidle');
 
     // Step 4: Select date (tomorrow)
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
     await page.fill('[data-testid="date-picker"]', tomorrowStr);
-    await page.waitForLoadState('networkidle');
 
     // Wait for time slots to load
     await page.waitForSelector('[data-testid="time-slots"] button', { timeout: 10000 });

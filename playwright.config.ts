@@ -4,13 +4,14 @@ export default defineConfig({
   testDir: './tests',
   fullyParallel: false, // Disable to prevent race conditions
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 2, // Increase retries for better stability
+  retries: process.env.CI ? 2 : 1, // Reduce retries with better stability
   workers: 1, // Use single worker for maximum stability
   reporter: 'html',
-  timeout: 120 * 1000, // 2 minutes total test timeout
+  timeout: 60 * 1000, // 1 minute total test timeout (reduced from 2min)
   expect: {
-    timeout: 15 * 1000, // 15 seconds for assertions
+    timeout: 10 * 1000, // 10 seconds for assertions (reduced from 15s)
   },
+  globalSetup: require.resolve('./tests/global-setup'),
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
@@ -36,10 +37,12 @@ export default defineConfig({
       },
     },
   ],
-  // webServer: {
-  //   command: 'npm run dev',
-  //   url: 'http://localhost:3002',
-  //   reuseExistingServer: true,
-  //   timeout: 120 * 1000,
-  // },
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
+    stdout: 'pipe',
+    stderr: 'pipe',
+  },
 });

@@ -1,0 +1,5 @@
+# Ignore all auth state files (they contain session cookies)
+*.json
+
+# But track this .gitignore
+!.gitignore
