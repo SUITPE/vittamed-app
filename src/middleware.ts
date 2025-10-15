@@ -1,76 +1,71 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'vittamed-dev-secret-key-2024'
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'vittamed-dev-secret-key-2024'
+)
 const COOKIE_NAME = 'vittamed-auth-token'
 
 export async function middleware(request: NextRequest) {
   try {
-    let response = NextResponse.next({
-      request: {
-        headers: request.headers,
-      },
-    })
-
-    // Check if user is authenticated using custom JWT auth
-    let user = null
-    try {
-      // Get custom auth token from cookie
-      const token = request.cookies.get(COOKIE_NAME)?.value
-
-      if (token) {
-        // Verify JWT token using jose (Edge Runtime compatible)
-        const secret = new TextEncoder().encode(JWT_SECRET)
-        const { payload } = await jwtVerify(token, secret)
-        user = payload ? { id: payload.userId as string, role: payload.role as string, tenantId: payload.tenantId as string | undefined } : null
-      }
-    } catch (authError) {
-      console.error('Error verifying token in middleware:', authError)
-      // Continue without authentication check if there's an error
-    }
+    // Get the token from cookies
+    const token = request.cookies.get(COOKIE_NAME)?.value
 
     // Protected routes that require authentication
-    const protectedRoutes = ['/dashboard', '/agenda', '/patients', '/appointments', '/my-appointments']
+    const protectedRoutes = ['/dashboard', '/agenda', '/patients', '/appointments', '/my-appointments', '/admin', '/receptionist', '/member']
     const isProtectedRoute = protectedRoutes.some(route =>
       request.nextUrl.pathname.startsWith(route)
     )
 
-    // If accessing protected route without authentication, redirect to login
-    if (isProtectedRoute && !user) {
+    // If accessing protected route without token, redirect to login
+    if (isProtectedRoute && !token) {
       const redirectUrl = new URL('/auth/login', request.url)
       redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
       return NextResponse.redirect(redirectUrl)
     }
 
-    // If authenticated user tries to access auth pages, redirect based on role
-    if (user && (request.nextUrl.pathname.startsWith('/auth/'))) {
-      // Redirect based on user role from JWT payload
-      if (user.role === 'super_admin') {
-        return NextResponse.redirect(new URL('/admin/global', request.url))
-      } else if (user.role === 'admin_tenant' || user.role === 'staff' || user.role === 'receptionist') {
-        if (user.tenantId) {
-          return NextResponse.redirect(new URL(`/dashboard/${user.tenantId}`, request.url))
-        } else {
-          return NextResponse.redirect(new URL('/dashboard', request.url))
+    // Verify token if present
+    if (token) {
+      try {
+        const { payload } = await jwtVerify(token, JWT_SECRET)
+
+        // If authenticated user tries to access auth pages, redirect based on role
+        if (request.nextUrl.pathname.startsWith('/auth/')) {
+          const role = payload.role as string
+          const tenantId = payload.tenantId as string | undefined
+
+          // Redirect based on user role
+          if (role === 'super_admin') {
+            return NextResponse.redirect(new URL('/admin/global', request.url))
+          } else if (role === 'admin_tenant' || role === 'staff' || role === 'receptionist') {
+            if (tenantId) {
+              return NextResponse.redirect(new URL(`/dashboard/${tenantId}`, request.url))
+            } else {
+              return NextResponse.redirect(new URL('/dashboard', request.url))
+            }
+          } else if (role === 'doctor' || role === 'member') {
+            return NextResponse.redirect(new URL('/agenda', request.url))
+          } else if (role === 'patient') {
+            return NextResponse.redirect(new URL('/my-appointments', request.url))
+          } else {
+            return NextResponse.redirect(new URL('/dashboard', request.url))
+          }
         }
-      } else if (user.role === 'doctor') {
-        return NextResponse.redirect(new URL('/agenda', request.url))
-      } else if (user.role === 'patient') {
-        return NextResponse.redirect(new URL('/my-appointments', request.url))
-      } else {
-        return NextResponse.redirect(new URL('/dashboard', request.url))
+      } catch (error) {
+        // Token verification failed - clear cookie and redirect if on protected route
+        if (isProtectedRoute) {
+          const response = NextResponse.redirect(new URL('/auth/login', request.url))
+          response.cookies.delete(COOKIE_NAME)
+          return response
+        }
       }
     }
 
-    return response
+    return NextResponse.next()
   } catch (error) {
     console.error('Middleware error:', error)
     // Return next response without authentication checks if middleware fails
-    return NextResponse.next({
-      request: {
-        headers: request.headers,
-      },
-    })
+    return NextResponse.next()
   }
 }
 

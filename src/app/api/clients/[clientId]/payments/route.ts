@@ -4,11 +4,11 @@ import { customAuth } from '@/lib/custom-auth'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { clientId: string } }
+  { params }: { params: Promise<{ clientId: string }> }
 ) {
   try {
     const supabase = await getSupabaseServerClient()
-    const { clientId } = params
+    const { clientId } = await params
     const { searchParams } = new URL(request.url)
 
     const status = searchParams.get('status')

@@ -6,11 +6,11 @@ import type { UpdateMemberAvailabilityData } from '@/types/catalog'
 // Get specific member availability
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await getSupabaseServerClient()
-    const { id } = params
+    const { id } = await params
 
     if (!id) {
       return NextResponse.json(
@@ -92,11 +92,11 @@ export async function GET(
 // Update member availability
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await getSupabaseServerClient()
-    const { id } = params
+    const { id } = await params
     const data: UpdateMemberAvailabilityData = await request.json()
 
     if (!id) {
@@ -288,11 +288,11 @@ export async function PUT(
 // Delete member availability
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await getSupabaseServerClient()
-    const { id } = params
+    const { id } = await params
 
     if (!id) {
       return NextResponse.json(

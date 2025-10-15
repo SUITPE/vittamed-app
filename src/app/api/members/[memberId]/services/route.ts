@@ -5,11 +5,11 @@ import { customAuth } from '@/lib/custom-auth'
 // Get all services assigned to a specific member
 export async function GET(
   request: NextRequest,
-  { params }: { params: { memberId: string } }
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const supabase = await getSupabaseServerClient()
-    const { memberId } = params
+    const { memberId } = await params
     const { searchParams } = new URL(request.url)
     const isActiveOnly = searchParams.get('active_only') === 'true'
 

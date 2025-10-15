@@ -9,10 +9,10 @@ import { UpdateMemberBookingSettingsData, MemberBookingSettingsUpdateResponse } 
 // Update member booking settings
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { memberId: string } }
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
-    const memberId = params.memberId
+    const { memberId } = await params
     const body: UpdateMemberBookingSettingsData = await request.json()
     const { allow_bookings, reason, notes } = body
 
@@ -155,10 +155,10 @@ export async function PUT(
 // Get member booking settings
 export async function GET(
   request: NextRequest,
-  { params }: { params: { memberId: string } }
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
-    const memberId = params.memberId
+    const { memberId } = await params
     const supabase = await createClient()
 
     // Get current user profile for authorization

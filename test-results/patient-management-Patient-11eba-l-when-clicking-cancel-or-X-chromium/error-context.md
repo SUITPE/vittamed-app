@@ -1,0 +1,130 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - img [ref=e7]
+          - generic [ref=e9]: VittaMed
+        - button [ref=e10] [cursor=pointer]:
+          - img [ref=e11] [cursor=pointer]
+      - navigation [ref=e13]:
+        - link "Dashboard Resumen general" [ref=e14] [cursor=pointer]:
+          - /url: /dashboard/b25d4953-d741-419e-9a81-c815eb2e5f7d
+          - img [ref=e15] [cursor=pointer]
+          - generic [ref=e17] [cursor=pointer]:
+            - generic [ref=e18] [cursor=pointer]: Dashboard
+            - generic [ref=e19] [cursor=pointer]: Resumen general
+        - link "Agenda Agenda de doctores" [ref=e20] [cursor=pointer]:
+          - /url: /receptionist/agenda
+          - img [ref=e21] [cursor=pointer]
+          - generic [ref=e23] [cursor=pointer]:
+            - generic [ref=e24] [cursor=pointer]: Agenda
+            - generic [ref=e25] [cursor=pointer]: Agenda de doctores
+        - link "Servicios Gestionar servicios" [ref=e26] [cursor=pointer]:
+          - /url: /admin/services
+          - img [ref=e27] [cursor=pointer]
+          - generic [ref=e31] [cursor=pointer]:
+            - generic [ref=e32] [cursor=pointer]: Servicios
+            - generic [ref=e33] [cursor=pointer]: Gestionar servicios
+        - link "Usuarios Gestionar usuarios" [ref=e34] [cursor=pointer]:
+          - /url: /admin/manage-users
+          - img [ref=e35] [cursor=pointer]
+          - generic [ref=e39] [cursor=pointer]:
+            - generic [ref=e40] [cursor=pointer]: Usuarios
+            - generic [ref=e41] [cursor=pointer]: Gestionar usuarios
+        - link "Pacientes Base de pacientes" [ref=e42] [cursor=pointer]:
+          - /url: /patients
+          - img [ref=e43] [cursor=pointer]
+          - generic [ref=e48] [cursor=pointer]:
+            - generic [ref=e49] [cursor=pointer]: Pacientes
+            - generic [ref=e50] [cursor=pointer]: Base de pacientes
+      - button "Cerrar Sesión Salir del sistema" [ref=e52] [cursor=pointer]:
+        - img [ref=e53] [cursor=pointer]
+        - generic [ref=e56] [cursor=pointer]:
+          - generic [ref=e57] [cursor=pointer]: Cerrar Sesión
+          - generic [ref=e58] [cursor=pointer]: Salir del sistema
+    - banner [ref=e59]:
+      - generic [ref=e60]:
+        - generic:
+          - heading [level=2]
+        - generic [ref=e61]:
+          - button [ref=e63] [cursor=pointer]:
+            - img [ref=e64] [cursor=pointer]
+          - button [ref=e69] [cursor=pointer]:
+            - img [ref=e70] [cursor=pointer]
+          - button "Admin User Administrador AU" [ref=e74] [cursor=pointer]:
+            - generic [ref=e75] [cursor=pointer]:
+              - generic [ref=e76] [cursor=pointer]:
+                - generic [ref=e77] [cursor=pointer]: Admin User
+                - generic [ref=e78] [cursor=pointer]: Administrador
+              - generic [ref=e79] [cursor=pointer]: AU
+            - img [ref=e80] [cursor=pointer]
+    - generic [ref=e84]:
+      - generic [ref=e86]:
+        - generic [ref=e87]:
+          - heading "Pacientes - Clínica Dental Test" [level=1] [ref=e88]
+          - paragraph [ref=e89]: Administra la información de tus pacientes
+        - button "Agregar Paciente" [active] [ref=e90] [cursor=pointer]:
+          - img [ref=e91] [cursor=pointer]
+          - text: Agregar Paciente
+      - generic [ref=e92]:
+        - generic [ref=e94]:
+          - heading "Lista de Pacientes (0)" [level=2] [ref=e95]
+          - generic [ref=e96]:
+            - textbox "Buscar pacientes..." [ref=e97]
+            - generic:
+              - img
+        - table [ref=e99]:
+          - rowgroup [ref=e100]:
+            - row "Paciente Documento Contacto Fecha de Nacimiento Estado Acciones" [ref=e101]:
+              - cell "Paciente" [ref=e102]
+              - cell "Documento" [ref=e103]
+              - cell "Contacto" [ref=e104]
+              - cell "Fecha de Nacimiento" [ref=e105]
+              - cell "Estado" [ref=e106]
+              - cell "Acciones" [ref=e107]
+          - rowgroup
+        - paragraph [ref=e109]: No se encontraron pacientes
+      - generic [ref=e112]:
+        - generic [ref=e113]:
+          - heading "Agregar Paciente" [level=3] [ref=e114]
+          - button [ref=e115] [cursor=pointer]:
+            - img [ref=e116] [cursor=pointer]
+        - generic [ref=e119]:
+          - generic [ref=e120]:
+            - generic [ref=e121]:
+              - generic [ref=e122]: Nombre
+              - textbox [ref=e123]
+            - generic [ref=e124]:
+              - generic [ref=e125]: Apellido
+              - textbox [ref=e126]
+          - generic [ref=e127]:
+            - generic [ref=e128]: Email
+            - textbox [ref=e129]
+          - generic [ref=e130]:
+            - generic [ref=e131]:
+              - text: ID / Documento
+              - generic [ref=e132]: "*"
+            - textbox "DNI, Pasaporte, etc." [ref=e133]
+          - generic [ref=e134]:
+            - generic [ref=e135]: Teléfono
+            - textbox [ref=e136]
+          - generic [ref=e137]:
+            - generic [ref=e138]: Fecha de Nacimiento
+            - textbox [ref=e139]
+          - generic [ref=e140]:
+            - generic [ref=e141]: Dirección
+            - textbox [ref=e142]
+          - generic [ref=e143]:
+            - generic [ref=e144]: Historial Médico
+            - textbox [ref=e145]
+          - generic [ref=e146]:
+            - button "Cancelar" [ref=e147] [cursor=pointer]
+            - button "Agregar" [ref=e148] [cursor=pointer]
+  - button "Open Next.js Dev Tools" [ref=e154] [cursor=pointer]:
+    - img [ref=e155] [cursor=pointer]
+  - alert [ref=e158]
+```

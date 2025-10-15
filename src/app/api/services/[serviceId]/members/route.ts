@@ -5,11 +5,11 @@ import { customAuth } from '@/lib/custom-auth'
 // Get all members assigned to a specific service
 export async function GET(
   request: NextRequest,
-  { params }: { params: { serviceId: string } }
+  { params }: { params: Promise<{ serviceId: string }> }
 ) {
   try {
     const supabase = await getSupabaseServerClient()
-    const { serviceId } = params
+    const { serviceId } = await params
     const { searchParams } = new URL(request.url)
     const isActiveOnly = searchParams.get('active_only') === 'true'
 
@@ -123,11 +123,11 @@ export async function GET(
 // Assign/unassign multiple members to a service in batch
 export async function POST(
   request: NextRequest,
-  { params }: { params: { serviceId: string } }
+  { params }: { params: Promise<{ serviceId: string }> }
 ) {
   try {
     const supabase = await getSupabaseServerClient()
-    const { serviceId } = params
+    const { serviceId } = await params
 
     if (!serviceId) {
       return NextResponse.json(

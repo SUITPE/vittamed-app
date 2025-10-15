@@ -6,11 +6,11 @@ import type { MemberTimeSlot } from '@/types/catalog'
 // Get member's availability for a specific date (with time slot generation)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { memberId: string } }
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const supabase = await getSupabaseServerClient()
-    const { memberId } = params
+    const { memberId } = await params
     const { searchParams } = new URL(request.url)
     const date = searchParams.get('date')
     const tenant_id = searchParams.get('tenant_id')

@@ -4,11 +4,11 @@ import { customAuth } from '@/lib/custom-auth'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { doctorId: string } }
+  { params }: { params: Promise<{ doctorId: string }> }
 ) {
   try {
     const supabase = await getSupabaseServerClient()
-    const { doctorId } = params
+    const { doctorId } = await params
 
     if (!doctorId) {
       return NextResponse.json(

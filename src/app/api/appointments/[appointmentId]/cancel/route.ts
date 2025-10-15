@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { customAuth } from '@/lib/custom-auth'
 
 export async function PUT(
   request: NextRequest,
@@ -9,13 +10,13 @@ export async function PUT(
   const supabase = await createClient()
 
   try {
-    const { data: { session } } = await supabase.auth.getSession()
+    const user = await customAuth.getCurrentUser()
 
-    if (!session?.user) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const userEmail = session.user.email
+    const userEmail = user.email
 
     if (!userEmail) {
       return NextResponse.json({ error: 'User email not found' }, { status: 400 })

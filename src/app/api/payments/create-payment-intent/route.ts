@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { customAuth } from '@/lib/custom-auth'
 import { stripe, formatAmountForStripe, CURRENCY } from '@/lib/stripe'
 
 export async function POST(request: NextRequest) {
@@ -10,9 +11,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Payment processing not configured' }, { status: 503 })
     }
 
-    const { data: { session } } = await supabase.auth.getSession()
+    const user = await customAuth.getCurrentUser()
 
-    if (!session?.user) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

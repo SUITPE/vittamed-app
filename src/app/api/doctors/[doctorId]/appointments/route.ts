@@ -100,13 +100,13 @@ export async function PUT(
   const supabase = await createClient()
 
   try {
-    const { data: { session } } = await supabase.auth.getSession()
+    const user = await customAuth.getCurrentUser()
 
-    if (!session?.user) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (session.user.id !== doctorId) {
+    if (user.id !== doctorId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
