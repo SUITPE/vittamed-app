@@ -8,32 +8,38 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Main Brand Colors - Inspired by Fresha
+        // VittaSami Official Brand Colors
+        vittasami: {
+          primary: '#40C9C6',
+          accent: '#A6E3A1',
+          dark: '#003A47',
+          white: '#FFFFFF',
+        },
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb', // Main brand blue
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          950: '#172554',
+          50: '#e6f9f9',
+          100: '#ccf3f2',
+          200: '#99e7e5',
+          300: '#66dbd8',
+          400: '#40C9C6', // VittaSami Primary
+          500: '#33a19e',
+          600: '#297976',
+          700: '#20524f',
+          800: '#003A47', // VittaSami Dark
+          900: '#002a32',
+          950: '#001a1f',
         },
         success: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          200: '#bbf7d0',
-          300: '#86efac',
-          400: '#4ade80',
-          500: '#22c55e', // Main success green
-          600: '#16a34a',
-          700: '#15803d',
-          800: '#166534',
-          900: '#14532d',
-          950: '#052e16',
+          50: '#f4faf2',
+          100: '#e9f5e5',
+          200: '#d3ebcb',
+          300: '#bde1b1',
+          400: '#A6E3A1', // VittaSami Accent
+          500: '#8aca85',
+          600: '#6eb269',
+          700: '#52994d',
+          800: '#3e7939',
+          900: '#2a5a26',
+          950: '#1a3a18',
         },
         // Modern grays
         gray: {
@@ -64,8 +70,9 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Cal Sans', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'], // VittaSami UI Text
+        display: ['Poppins', 'system-ui', 'sans-serif'], // VittaSami Titles
+        heading: ['Poppins', 'system-ui', 'sans-serif'], // VittaSami Headings
       },
       fontSize: {
         xs: ['0.75rem', { lineHeight: '1rem' }],

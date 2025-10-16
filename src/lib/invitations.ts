@@ -1,4 +1,4 @@
-// Team member invitation service for VittaMed
+// Team member invitation service for VittaSami
 
 export interface InvitationData {
   email: string
@@ -53,14 +53,14 @@ class InvitationService {
       </head>
       <body>
         <div class="header">
-          <h1>🏥 VittaMed</h1>
+          <h1>🏥 VittaSami</h1>
           <p>Sistema de Gestión Médica</p>
         </div>
 
         <div class="content">
           <h2>¡Hola ${userName}!</h2>
 
-          <p><strong>${inviter_name}</strong> te ha invitado a unirte al equipo de <strong>${tenant_name}</strong> en VittaMed.</p>
+          <p><strong>${inviter_name}</strong> te ha invitado a unirte al equipo de <strong>${tenant_name}</strong> en VittaSami.</p>
 
           <p>Has sido asignado con el rol de: <span class="role-badge">${roleDisplayName}</span></p>
 
@@ -73,7 +73,7 @@ class InvitationService {
           </div>
           ` : ''}
 
-          <p>Para comenzar a usar VittaMed:</p>
+          <p>Para comenzar a usar VittaSami:</p>
           <ol>
             <li>Haz clic en el botón de abajo para acceder</li>
             <li>Inicia sesión con las credenciales proporcionadas</li>
@@ -82,7 +82,7 @@ class InvitationService {
           </ol>
 
           <div style="text-align: center;">
-            <a href="${loginUrl}" class="button">Acceder a VittaMed</a>
+            <a href="${loginUrl}" class="button">Acceder a VittaSami</a>
           </div>
 
           <h3>🎯 ¿Qué puedes hacer como ${roleDisplayName}?</h3>
@@ -94,7 +94,7 @@ class InvitationService {
         </div>
 
         <div class="footer">
-          <p>Este correo fue enviado desde VittaMed - Sistema de Gestión Médica</p>
+          <p>Este correo fue enviado desde VittaSami - Sistema de Gestión Médica</p>
           <p>Si no esperabas este correo, puedes ignorarlo con seguridad.</p>
         </div>
       </body>
@@ -104,7 +104,7 @@ class InvitationService {
     const text = `
 ¡Hola ${userName}!
 
-${inviter_name} te ha invitado a unirte al equipo de ${tenant_name} en VittaMed.
+${inviter_name} te ha invitado a unirte al equipo de ${tenant_name} en VittaSami.
 
 Has sido asignado con el rol de: ${roleDisplayName}
 
@@ -116,7 +116,7 @@ Credenciales de Acceso:
 ⚠️ Te recomendamos cambiar tu contraseña después de tu primer inicio de sesión.
 ` : ''}
 
-Para comenzar a usar VittaMed:
+Para comenzar a usar VittaSami:
 1. Visita: ${loginUrl}
 2. Inicia sesión con las credenciales proporcionadas
 3. Completa tu perfil y cambia tu contraseña
@@ -125,7 +125,7 @@ Para comenzar a usar VittaMed:
 ¡Bienvenido al equipo!
 
 ---
-VittaMed - Sistema de Gestión Médica
+VittaSami - Sistema de Gestión Médica
 Si no esperabas este correo, puedes ignorarlo con seguridad.
     `
 

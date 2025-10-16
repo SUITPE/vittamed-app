@@ -1,4 +1,4 @@
-// Business type definitions for VittaMed platform
+// Business type definitions for VittaSami platform
 
 export type BusinessType =
   // Medical specialties

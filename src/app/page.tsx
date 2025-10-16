@@ -33,9 +33,9 @@ export default function Home() {
   // Show loading state while checking authentication
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-[#e6f9f9] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#40C9C6] mx-auto"></div>
           <p className="mt-4 text-gray-600">Cargando...</p>
         </div>
       </div>
@@ -51,47 +51,47 @@ export default function Home() {
       icon: 'calendarDays',
       title: 'Gestión de Agenda',
       description: 'Vista calendario intuitiva estilo Google Calendar. Los doctores definen horarios y pacientes reservan online con un par de clics.',
-      color: 'from-blue-500 to-blue-600'
+      color: 'from-[#40C9C6] to-[#33a19e]'
     },
     {
       icon: 'zap',
       title: 'Reservas Inteligentes',
       description: 'Flujo tipo wizard con auto-selección. El sistema elige automáticamente el mejor horario y especialista disponible.',
-      color: 'from-green-500 to-green-600'
+      color: 'from-[#A6E3A1] to-[#8aca85]'
     },
     {
       icon: 'creditCard',
       title: 'Pagos Integrados',
       description: 'Checkout seguro con Stripe, resumen de citas y notificaciones automáticas por email y SMS.',
-      color: 'from-purple-500 to-purple-600'
+      color: 'from-[#40C9C6] to-[#297976]'
     },
     {
       icon: 'activity',
       title: 'Dashboard Médico',
       description: 'Estadísticas en tiempo real de citas, ingresos y pacientes con KPIs visuales y reportes.',
-      color: 'from-orange-500 to-orange-600'
+      color: 'from-[#A6E3A1] to-[#6eb269]'
     },
     {
       icon: 'users',
       title: 'Multi-Tenant',
       description: 'Escalable para múltiples clínicas y doctores con branding personalizado y gestión independiente.',
-      color: 'from-indigo-500 to-indigo-600'
+      color: 'from-[#003A47] to-[#40C9C6]'
     },
     {
       icon: 'shield',
       title: 'Seguro y Confiable',
       description: 'Cumple con estándares médicos, encriptación de datos y respaldos automáticos.',
-      color: 'from-red-500 to-red-600'
+      color: 'from-[#297976] to-[#003A47]'
     }
   ]
 
   return (
     <>
       <PublicHeader />
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-[#e6f9f9]">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-green-600/10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#40C9C6]/10 to-[#A6E3A1]/10" />
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
           <div className="text-center">
             <motion.div
@@ -99,9 +99,9 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl lg:text-7xl">
+              <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl lg:text-7xl font-heading">
                 Gestión médica
-                <span className="block bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+                <span className="block bg-gradient-to-r from-[#40C9C6] to-[#A6E3A1] bg-clip-text text-transparent">
                   moderna y simple
                 </span>
               </h1>
@@ -201,14 +201,14 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-green-600 py-24">
+      <section className="bg-gradient-to-r from-[#40C9C6] to-[#A6E3A1] py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
+              className="text-3xl font-bold tracking-tight text-white sm:text-4xl font-heading"
             >
               ¿Listo para modernizar tu clínica?
             </motion.h2>
@@ -216,7 +216,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="mt-4 text-lg text-blue-100"
+              className="mt-4 text-lg text-white/90"
             >
               Únete a cientos de profesionales que ya transformaron su práctica médica
             </motion.p>
@@ -227,7 +227,7 @@ export default function Home() {
               className="mt-8"
             >
               <Link href="/auth/register-business">
-                <Button size="lg" variant="secondary" className="text-base px-8 py-4 h-auto shadow-lg hover:shadow-xl transition-all duration-300">
+                <Button size="lg" variant="secondary" className="text-base px-8 py-4 h-auto bg-white text-[#003A47] hover:bg-gray-50 shadow-lg hover:shadow-xl transition-all duration-300">
                   <Icons.userPlus className="mr-2 h-5 w-5" />
                   Comenzar Gratis
                 </Button>

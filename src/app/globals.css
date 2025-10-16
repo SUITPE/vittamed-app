@@ -1,30 +1,36 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
+  /* VittaSami Brand Colors */
+  --vittasami-primary: 64 201 198; /* #40C9C6 - Primary turquoise */
+  --vittasami-accent: 166 227 161; /* #A6E3A1 - Accent light green */
+  --vittasami-dark: 0 58 71; /* #003A47 - Dark teal */
+  --vittasami-white: 255 255 255; /* #FFFFFF - Pure white */
+
   /* Light theme colors */
-  --background: 249 250 251; /* gray-50 */
-  --foreground: 17 24 39; /* gray-900 */
+  --background: 255 255 255; /* white background */
+  --foreground: 0 58 71; /* vittasami-dark */
   --card: 255 255 255;
-  --card-foreground: 17 24 39;
+  --card-foreground: 0 58 71;
   --popover: 255 255 255;
-  --popover-foreground: 17 24 39;
-  --primary: 37 99 235; /* blue-600 */
+  --popover-foreground: 0 58 71;
+  --primary: 64 201 198; /* vittasami-primary */
   --primary-foreground: 255 255 255;
-  --secondary: 243 244 246; /* gray-100 */
-  --secondary-foreground: 17 24 39;
+  --secondary: 166 227 161; /* vittasami-accent */
+  --secondary-foreground: 0 58 71;
   --muted: 243 244 246;
   --muted-foreground: 107 114 128; /* gray-500 */
-  --accent: 243 244 246;
-  --accent-foreground: 17 24 39;
+  --accent: 166 227 161; /* vittasami-accent */
+  --accent-foreground: 0 58 71;
   --destructive: 239 68 68; /* red-500 */
   --destructive-foreground: 255 255 255;
   --border: 229 231 235; /* gray-200 */
   --input: 229 231 235;
-  --ring: 37 99 235;
-  --success: 34 197 94; /* green-500 */
+  --ring: 64 201 198; /* vittasami-primary */
+  --success: 166 227 161; /* vittasami-accent */
   --warning: 245 158 11; /* amber-500 */
 }
 
@@ -100,15 +106,24 @@ body {
   @apply active:scale-95 transition-transform duration-100;
 }
 
-/* Gradient backgrounds */
+/* Gradient backgrounds - VittaSami */
 .gradient-primary {
-  background: linear-gradient(135deg, rgb(37 99 235) 0%, rgb(59 130 246) 100%);
+  background: linear-gradient(135deg, rgb(64 201 198) 0%, rgb(166 227 161) 100%);
 }
 
 .gradient-success {
-  background: linear-gradient(135deg, rgb(34 197 94) 0%, rgb(74 222 128) 100%);
+  background: linear-gradient(135deg, rgb(166 227 161) 0%, rgb(64 201 198) 100%);
 }
 
 .gradient-medical {
-  background: linear-gradient(135deg, rgb(14 165 233) 0%, rgb(56 189 248) 100%);
+  background: linear-gradient(135deg, rgb(0 58 71) 0%, rgb(64 201 198) 100%);
+}
+
+.gradient-vittasami {
+  background: linear-gradient(135deg, rgb(64 201 198) 0%, rgb(166 227 161) 50%, rgb(0 58 71) 100%);
+}
+
+/* Soft gradient for backgrounds */
+.gradient-soft {
+  background: linear-gradient(180deg, rgb(255 255 255) 0%, rgb(240 253 250) 100%);
 }

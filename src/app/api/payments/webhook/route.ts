@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
           tenant_id: appointment.tenant_id,
           type: 'payment_success',
           recipient_email: appointment.patient_email,
-          subject: 'Pago confirmado - VittaMed',
+          subject: 'Pago confirmado - VittaSami',
           content: `Tu pago para la cita de ${appointment.service_name} ha sido confirmado exitosamente.`,
           status: 'pending',
           created_at: new Date().toISOString()
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
           tenant_id: appointment.tenant_id,
           type: 'payment_failed',
           recipient_email: appointment.patient_email,
-          subject: 'Problema con el pago - VittaMed',
+          subject: 'Problema con el pago - VittaSami',
           content: `Hubo un problema con tu pago para la cita de ${appointment.service_name}. Por favor intenta de nuevo.`,
           status: 'pending',
           created_at: new Date().toISOString()

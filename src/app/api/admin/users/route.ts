@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       first_name,
       last_name,
       phone,
-      temp_password = 'VittaMed2024!',
+      temp_password = 'VittaSami2024!',
       role = 'patient',
       tenant_id,
       send_invitation = true
@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get tenant info for response and email
-    let tenantName = 'VittaMed'
+    let tenantName = 'VittaSami'
     if (tenant_id) {
       const { data: tenant } = await supabase
         .from('tenants')

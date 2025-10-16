@@ -82,7 +82,7 @@ export async function PUT(
         tenant_id: appointment.tenant_id,
         type: 'appointment_cancelled',
         recipient_email: appointment.patient_email,
-        subject: 'Cita cancelada - VittaMed',
+        subject: 'Cita cancelada - VittaSami',
         content: `Tu cita para ${appointment.service_name} programada para el ${appointmentDate.toLocaleDateString('es-ES')} ha sido cancelada exitosamente.`,
         appointment_id: appointmentId,
         status: 'pending',

@@ -103,13 +103,13 @@ function generateEmailTemplate(data: NotificationData): string {
     </head>
     <body>
       <div class="header">
-        <h1>VittaMed</h1>
+        <h1>VittaSami</h1>
       </div>
       <div class="content">
         ${getContentByType(data)}
       </div>
       <div class="footer">
-        <p>Este es un mensaje automático de VittaMed. No responder a este email.</p>
+        <p>Este es un mensaje automático de VittaSami. No responder a este email.</p>
       </div>
     </body>
     </html>
@@ -157,7 +157,7 @@ function getContentByType(data: NotificationData): string {
     case 'user_invitation':
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vittamed.abp.pe'
       return `
-        <h2>¡Bienvenido a ${data.metadata?.tenantName || 'VittaMed'}!</h2>
+        <h2>¡Bienvenido a ${data.metadata?.tenantName || 'VittaSami'}!</h2>
         <p>Hola ${data.metadata?.firstName || ''},</p>
         <p>${data.content}</p>
         ${data.metadata?.tempPassword ? `

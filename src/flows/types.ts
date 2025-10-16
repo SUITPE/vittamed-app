@@ -1,4 +1,4 @@
-// Context7 Flow Types for VittaMed
+// Context7 Flow Types for VittaSami
 
 export interface FlowContext {
   user?: {

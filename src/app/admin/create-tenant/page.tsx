@@ -129,7 +129,7 @@ export default function CreateTenantPage() {
           Crear Nuevo Negocio
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Registra un nuevo negocio en VittaMed
+          Registra un nuevo negocio en VittaSami
         </p>
       </div>
 

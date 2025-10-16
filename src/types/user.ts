@@ -1,4 +1,4 @@
-// Multi-tenant user types for VittaMed platform
+// Multi-tenant user types for VittaSami platform
 
 export type UserRole = 'super_admin' | 'admin_tenant' | 'doctor' | 'patient' | 'staff' | 'receptionist' | 'member' | 'client';
 

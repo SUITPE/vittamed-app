@@ -156,16 +156,16 @@ export async function PUT(
 
     if (status === 'confirmed' || status === 'completed' || status === 'cancelled') {
       let notificationType = 'appointment_confirmation'
-      let subject = 'Cita confirmada - VittaMed'
+      let subject = 'Cita confirmada - VittaSami'
       let content = `Tu cita para ${appointment.service_name} ha sido confirmada.`
 
       if (status === 'completed') {
         notificationType = 'appointment_confirmation'
-        subject = 'Cita completada - VittaMed'
+        subject = 'Cita completada - VittaSami'
         content = `Tu cita para ${appointment.service_name} ha sido completada. Gracias por tu visita.`
       } else if (status === 'cancelled') {
         notificationType = 'appointment_cancelled'
-        subject = 'Cita cancelada - VittaMed'
+        subject = 'Cita cancelada - VittaSami'
         content = `Tu cita para ${appointment.service_name} ha sido cancelada. Puedes reagendar cuando desees.`
       }
 
