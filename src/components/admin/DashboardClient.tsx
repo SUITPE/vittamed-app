@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { BUSINESS_TYPE_CONFIGS, BusinessType } from '@/types/business'
 
 interface DashboardStats {
   todayAppointments: number
@@ -62,6 +63,12 @@ export default function DashboardClient({
     router.push(path)
   }
 
+  // Get business type label in Spanish
+  const getBusinessTypeLabel = (type: string) => {
+    const config = BUSINESS_TYPE_CONFIGS[type as BusinessType]
+    return config ? config.label : type
+  }
+
   return (
     <>
       {/* Header */}
@@ -70,7 +77,7 @@ export default function DashboardClient({
           Dashboard - {tenantInfo?.name}
         </h1>
         <p className="text-gray-600 mt-1">
-          Gestión completa de tu {tenantInfo?.tenant_type}
+          Gestión completa de tu {getBusinessTypeLabel(tenantInfo?.tenant_type)}
         </p>
       </div>
 

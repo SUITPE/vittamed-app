@@ -116,11 +116,11 @@ export default async function ServicesPage() {
     console.error('Error fetching services server-side:', error)
   }
 
-  // Fetch categories server-side
+  // Fetch categories server-side (tenant-specific)
   let categories: ServiceCategory[] = []
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/catalog/service-categories?is_active=true`,
+      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/tenants/${tenantId}/categories?is_active=true`,
       {
         headers: {
           Cookie: `vittamed-auth-token=${await customAuth.getTokenFromCookie()}`

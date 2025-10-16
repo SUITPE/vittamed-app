@@ -1,13 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useState, useEffect, useContext } from 'react'
+import { AuthContext } from '@/contexts/AuthContext'
 import { Icons } from '@/components/ui/Icons'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
 export default function AdminHeader() {
-  const { user } = useAuth()
+  // Safely get auth context - return null if not available
+  const authContext = useContext(AuthContext)
+  const user = authContext?.user || null
+
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [notifications, setNotifications] = useState<any[]>([])
@@ -141,7 +144,7 @@ export default function AdminHeader() {
               <div className="flex items-center space-x-3">
                 <div className="text-right hidden sm:block">
                   <div className="text-sm font-medium text-gray-900">
-                    {user?.profile?.first_name} {user?.profile?.last_name}
+                    {user?.profile?.first_name || 'Usuario'} {user?.profile?.last_name || ''}
                   </div>
                   <div className="text-xs text-gray-500">
                     {getRoleLabel(user?.profile?.role)}
@@ -162,9 +165,9 @@ export default function AdminHeader() {
               <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
                 <div className="px-4 py-3 border-b border-gray-100">
                   <div className="font-medium text-gray-900">
-                    {user?.profile?.first_name} {user?.profile?.last_name}
+                    {user?.profile?.first_name || 'Usuario'} {user?.profile?.last_name || ''}
                   </div>
-                  <div className="text-sm text-gray-500">{user?.email}</div>
+                  <div className="text-sm text-gray-500">{user?.email || ''}</div>
                   <div className="mt-1">
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
                       {getRoleLabel(user?.profile?.role)}

@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VittaMed - Sistema de Gestión Médica",
-  description: "Sistema de reservas y gestión médica multi-tenant",
+  title: "VittaSami - Sistema de Gestión Médica",
+  description: "Sistema de reservas y gestión médica multi-tenant - Empático, inteligente y centrado en las personas",
 };
 
 export default function RootLayout({

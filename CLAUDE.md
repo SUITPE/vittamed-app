@@ -1,4 +1,4 @@
-# Claude Code Commands for VittaMed
+# Claude Code Commands for VittaSami
 
 ## 🚀 Quick Start Commands
 
@@ -7,6 +7,11 @@
 npm run dev
 # Server runs on: http://localhost:3003
 # (Port 3000/3001/3002 may be in use)
+
+# VittaSami Branding:
+# - Colors: #40C9C6, #A6E3A1, #003A47, #FFFFFF
+# - Fonts: Inter (UI), Poppins (titles)
+# - Assets: public/vittasami/
 ```
 
 ### Testing
@@ -68,7 +73,7 @@ npx playwright show-report
 
 ```
 Admin: admin@clinicasanrafael.com / password123
-Doctor: ana.rodriguez@email.com / VittaMed2024!
+Doctor: ana.rodriguez@email.com / VittaSami2024!
 Recepcionist: secre@clinicasanrafael.com / password
 Patient: patient@example.com / password
 ```
@@ -128,6 +133,16 @@ npm run lint
 # Build for production
 npm run build
 ```
+
+### 📚 Development Guidelines
+**IMPORTANT:** Before implementing new features, review:
+- **`docs/BEST_PRACTICES.md`** - Lecciones aprendidas, patterns para API routes, RLS, multi-tenancy
+- **Key Points:**
+  - Use `createAdminClient()` for INSERT/UPDATE/DELETE to bypass RLS
+  - Always verify: authentication → tenant ownership → role permissions
+  - Avoid Context7 flows for simple CRUD (causes infinite loops)
+  - Use explicit `fetch()` with `cache: 'no-store'` for data refresh
+  - Make migrations idempotent with `DO` blocks
 
 ### Database Management
 - **Schema:** supabase/migrations/001_initial_schema.sql
@@ -247,12 +262,14 @@ TWILIO_WHATSAPP_NUMBER=
 
 ## 📋 Recent Updates (Sept 2025)
 
-### ✅ **Modern UI Redesign - Fresha-Inspired**
-- **Complete design system overhaul** inspired by Fresha's modern aesthetic
-- **New color palette:** Professional blue (#2563eb), success green (#22c55e), elegant grays
-- **Typography:** Inter font family with elegant spacing and sizing
+### ✅ **VittaSami Brand Identity**
+- **Official brand colors:** Primary (#40C9C6), Accent (#A6E3A1), Dark (#003A47), White (#FFFFFF)
+- **Typography:** Inter for UI text, Poppins for titles
+- **Design:** Minimalist, soft gradients, rounded corners, white background
+- **Tone:** Empathetic, intelligent, human-centered
 - **Components:** Modern buttons, cards, inputs, badges with hover animations
 - **Navigation:** Completely redesigned navigation with backdrop blur and modern styling
+- **Assets:** Logo and images in public/vittasami/
 
 ### 🔧 **Next.js 15 Compatibility Fixes**
 - **API Routes:** Updated all Supabase authentication for Next.js 15 SSR compatibility
@@ -322,7 +339,7 @@ password: password123
 
 Doctor
 user: doctor-1759245234123@clinicasanrafael.com
-Pass:VittaMed2024!
+Pass:VittaSami2024!
 
 
 Recepcionista

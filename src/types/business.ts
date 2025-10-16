@@ -24,10 +24,20 @@ export type BusinessType =
   | 'spa'
   | 'consultorio';
 
+export type BusinessCategory = 'medical' | 'wellness' | 'beauty' | 'specialty' | 'veterinary';
+
+export const BUSINESS_CATEGORIES: BusinessCategory[] = [
+  'medical',
+  'wellness',
+  'beauty',
+  'specialty',
+  'veterinary'
+];
+
 export interface BusinessTypeConfig {
   label: string;
   description: string;
-  category: 'medical' | 'wellness' | 'beauty' | 'specialty' | 'veterinary';
+  category: BusinessCategory;
   icon: string;
   settings: BusinessSettings;
 }

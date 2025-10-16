@@ -73,7 +73,7 @@ export default function MemberNavigation({ currentPath = '', tenantId }: MemberN
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <h1 className="text-xl font-bold text-gray-900">
-                👨‍⚕️ VittaMed Member
+                👨‍⚕️ VittaSami Member
               </h1>
             </div>
           </div>

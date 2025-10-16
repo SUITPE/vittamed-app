@@ -4,6 +4,7 @@ import {
   Users,
   CreditCard,
   Activity,
+  Check,
   CheckCircle,
   XCircle,
   AlertCircle,
@@ -87,6 +88,7 @@ export const Icons = {
   list: List,
 
   // Status
+  check: Check,
   checkCircle: CheckCircle,
   xCircle: XCircle,
   alertCircle: AlertCircle,

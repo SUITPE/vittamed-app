@@ -51,7 +51,8 @@ export async function GET(
 
       supabase
         .from('patients')
-        .select('id', { count: 'exact' }),
+        .select('id', { count: 'exact' })
+        .eq('tenant_id', tenantId),
 
       supabase
         .from('appointments')

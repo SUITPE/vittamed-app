@@ -69,24 +69,64 @@ export async function POST(
       }, { status: 400 })
     }
 
-    // Use Context7 flow for service creation
-    const serviceData = {
-      name,
-      description: description || '',
-      duration_minutes,
-      price,
-      category_id: category_id || null,
-      is_active: is_active !== undefined ? is_active : true
+    // Validate duration
+    if (duration_minutes < 15 || duration_minutes > 480) {
+      return NextResponse.json({
+        error: 'Duration must be between 15 and 480 minutes'
+      }, { status: 400 })
     }
 
-    // Execute the service creation flow
-    const result = await executeServiceFlow('create', serviceData, tenantId)
-
-    if (!result.service) {
-      return NextResponse.json({ error: 'Failed to create service' }, { status: 500 })
+    // Validate price
+    if (price < 0) {
+      return NextResponse.json({
+        error: 'Price must be a positive number'
+      }, { status: 400 })
     }
 
-    return NextResponse.json({ service: result.service }, { status: 201 })
+    // Create service directly in database
+    const supabase = await createClient()
+
+    // Check for duplicate name within tenant
+    const { data: existingServices } = await supabase
+      .from('services')
+      .select('id, name')
+      .eq('tenant_id', tenantId)
+      .eq('name', name)
+      .limit(1)
+
+    if (existingServices && existingServices.length > 0) {
+      return NextResponse.json({
+        error: `A service with the name "${name}" already exists`
+      }, { status: 409 })
+    }
+
+    // Insert the service
+    const { data: service, error } = await supabase
+      .from('services')
+      .insert({
+        tenant_id: tenantId,
+        name: name.trim(),
+        description: description || '',
+        duration_minutes,
+        price,
+        category_id: category_id || null,
+        is_active: is_active !== undefined ? is_active : true
+      })
+      .select(`
+        *,
+        category:service_categories(id, name)
+      `)
+      .single()
+
+    if (error) {
+      console.error('Service creation error:', error)
+      return NextResponse.json({
+        error: 'Failed to create service'
+      }, { status: 500 })
+    }
+
+    console.log('✅ Service created successfully:', service.id)
+    return NextResponse.json({ service }, { status: 201 })
   } catch (error: any) {
     console.error('Service creation error:', error)
     return NextResponse.json({

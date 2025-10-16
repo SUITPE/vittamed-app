@@ -97,5 +97,41 @@ export async function createMiddlewareClient(
   )
 }
 
+// Create admin client with service role (bypasses RLS)
+export async function createAdminClient() {
+  const defaultUrl = 'https://mvvxeqhsatkqtsrulcil.supabase.co'
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!serviceRoleKey) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not defined')
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || defaultUrl
+
+  // Create client with service role key (bypasses RLS)
+  return createServerClient(
+    supabaseUrl,
+    serviceRoleKey,
+    {
+      cookies: {
+        async getAll() {
+          const cookieStore = await cookies()
+          return cookieStore.getAll()
+        },
+        async setAll(cookiesToSet) {
+          try {
+            const cookieStore = await cookies()
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          } catch {
+            // Ignore if called from Server Component
+          }
+        },
+      },
+    }
+  )
+}
+
 // Export alias for API routes
 export const getSupabaseServerClient = createClient

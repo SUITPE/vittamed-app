@@ -99,21 +99,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user profile to check role
+    // Get user profile to check role and tenant
     const { data: profile } = await supabase
       .from('custom_users')
-      .select('role')
+      .select('role, tenant_id')
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['admin_tenant', 'receptionist'].includes(profile.role)) {
+    if (!profile || !['admin_tenant', 'staff'].includes(profile.role)) {
       return NextResponse.json(
         { error: 'Forbidden - insufficient permissions' },
         { status: 403 }
       )
     }
 
-    const data: CreateCategoryData = await request.json()
+    const data: CreateCategoryData & { tenant_id?: string } = await request.json()
 
     // Validate required fields
     if (!data.name) {
@@ -123,11 +123,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Auto-assign tenant_id from user profile if not provided
+    const tenantId = data.tenant_id || profile.tenant_id
+
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: 'Tenant ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // Verify user has access to this tenant
+    if (profile.tenant_id && profile.tenant_id !== tenantId) {
+      return NextResponse.json(
+        { error: 'Forbidden - cannot create categories for other tenants' },
+        { status: 403 }
+      )
+    }
+
     // If parent_id is provided, validate it exists
     if (data.parent_id) {
       const { data: parentCategory, error: parentError } = await supabase
         .from('service_categories')
-        .select('id, name')
+        .select('id, name, tenant_id')
         .eq('id', data.parent_id)
         .eq('is_active', true)
         .single()
@@ -138,13 +156,22 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         )
       }
+
+      // Verify parent belongs to same tenant or is global
+      if (parentCategory.tenant_id && parentCategory.tenant_id !== tenantId) {
+        return NextResponse.json(
+          { error: 'Parent category must belong to the same tenant' },
+          { status: 400 }
+        )
+      }
     }
 
-    // Check for duplicate name within the same parent
+    // Check for duplicate name within the same tenant
     let duplicateQuery = supabase
       .from('service_categories')
       .select('id')
       .eq('name', data.name)
+      .eq('tenant_id', tenantId)
 
     if (data.parent_id) {
       duplicateQuery = duplicateQuery.eq('parent_id', data.parent_id)
@@ -156,16 +183,19 @@ export async function POST(request: NextRequest) {
 
     if (existing) {
       return NextResponse.json(
-        { error: 'Category with this name already exists in the same parent category' },
+        { error: 'Category with this name already exists in your business' },
         { status: 409 }
       )
     }
 
-    // Create category
+    // Create category with tenant_id
     const { data: category, error } = await supabase
       .from('service_categories')
       .insert({
-        ...data,
+        name: data.name,
+        description: data.description || null,
+        parent_id: data.parent_id || null,
+        tenant_id: tenantId,
         is_active: data.is_active ?? true
       })
       .select()

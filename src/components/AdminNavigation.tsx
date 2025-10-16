@@ -64,7 +64,7 @@ export default function AdminNavigation({ currentPath = '', tenantId }: AdminNav
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <h1 className="text-xl font-bold text-gray-900">
-                🏥 VittaMed Admin
+                🏥 VittaSami Admin
               </h1>
             </div>
           </div>

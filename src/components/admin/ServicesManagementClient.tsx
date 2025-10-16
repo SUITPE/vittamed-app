@@ -47,11 +47,13 @@ export default function ServicesManagementClient({
   const [editingService, setEditingService] = useState<Service | null>(null)
   const [activeTab, setActiveTab] = useState<'services' | 'categories'>('services')
   const [showCategoryModal, setShowCategoryModal] = useState(false)
+  const [showQuickCategoryModal, setShowQuickCategoryModal] = useState(false)
   const [editingCategory, setEditingCategory] = useState<ServiceCategory | null>(null)
   const [categoryFormData, setCategoryFormData] = useState({
     name: '',
     description: ''
   })
+  const [quickCategoryName, setQuickCategoryName] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -62,8 +64,29 @@ export default function ServicesManagementClient({
   })
   const [submitting, setSubmitting] = useState(false)
 
-  const refreshData = () => {
-    router.refresh() // Server Component will re-fetch
+  const refreshData = async () => {
+    try {
+      // Fetch fresh data from server
+      const [servicesRes, categoriesRes] = await Promise.all([
+        fetch(`/api/tenants/${tenantId}/services`, { cache: 'no-store' }),
+        fetch(`/api/tenants/${tenantId}/categories?is_active=true`, { cache: 'no-store' })
+      ])
+
+      if (servicesRes.ok) {
+        const servicesData = await servicesRes.json()
+        setServices(servicesData.services || [])
+      }
+
+      if (categoriesRes.ok) {
+        const categoriesData = await categoriesRes.json()
+        setCategories(categoriesData || [])
+      }
+
+      // Also trigger server component refresh
+      router.refresh()
+    } catch (error) {
+      console.error('Error refreshing data:', error)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,7 +111,9 @@ export default function ServicesManagementClient({
           is_active: true
         })
         setShowAddModal(false)
-        refreshData()
+
+        // Refresh from server to get accurate data
+        await refreshData()
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Error al crear servicio')
@@ -109,7 +134,8 @@ export default function ServicesManagementClient({
       })
 
       if (response.ok) {
-        refreshData()
+        // Refresh from server to get accurate data
+        await refreshData()
       } else {
         setError('Error al actualizar servicio')
       }
@@ -156,7 +182,9 @@ export default function ServicesManagementClient({
           category_id: '',
           is_active: true
         })
-        refreshData()
+
+        // Refresh from server to get accurate data
+        await refreshData()
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Error al actualizar servicio')
@@ -179,7 +207,8 @@ export default function ServicesManagementClient({
       })
 
       if (response.ok) {
-        refreshData()
+        // Refresh from server to get accurate data
+        await refreshData()
       } else {
         setError('Error al eliminar servicio')
       }
@@ -196,19 +225,25 @@ export default function ServicesManagementClient({
     try {
       const url = editingCategory
         ? `/api/catalog/service-categories/${editingCategory.id}`
-        : '/api/catalog/service-categories'
+        : `/api/tenants/${tenantId}/categories`
 
       const response = await fetch(url, {
         method: editingCategory ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(categoryFormData)
+        body: JSON.stringify({
+          ...categoryFormData,
+          tenant_id: tenantId // Always include tenant_id
+        })
       })
 
       if (response.ok) {
+        // Close modal and reset form
         setCategoryFormData({ name: '', description: '' })
         setShowCategoryModal(false)
         setEditingCategory(null)
-        refreshData()
+
+        // Refresh from server to get accurate data
+        await refreshData()
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Error al guardar categoría')
@@ -240,13 +275,58 @@ export default function ServicesManagementClient({
       })
 
       if (response.ok) {
-        refreshData()
+        // Clear the category from form if selected
+        if (formData.category_id === categoryId) {
+          setFormData(prev => ({ ...prev, category_id: '' }))
+        }
+
+        // Refresh from server to get accurate data
+        await refreshData()
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Error al eliminar categoría')
       }
     } catch (err) {
       setError('Error al eliminar categoría')
+    }
+  }
+
+  const handleQuickCategoryCreate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setError('')
+
+    try {
+      const response = await fetch(`/api/tenants/${tenantId}/categories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: quickCategoryName.trim(),
+          description: null,
+          tenant_id: tenantId
+        })
+      })
+
+      if (response.ok) {
+        const newCategory = await response.json()
+
+        // Close modal and reset
+        setQuickCategoryName('')
+        setShowQuickCategoryModal(false)
+
+        // Refresh from server to get accurate data
+        await refreshData()
+
+        // Auto-select the new category in the form (after refresh)
+        setFormData(prev => ({ ...prev, category_id: newCategory.id }))
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Error al crear categoría')
+      }
+    } catch (err) {
+      setError('Error al crear categoría')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -497,8 +577,435 @@ export default function ServicesManagementClient({
         )}
       </div>
 
-      {/* Modals would go here - truncated for brevity, keeping same modal code */}
-      {/* Add Service Modal, Edit Service Modal, Category Modal - same as original */}
+      {/* Add Service Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">Agregar Nuevo Servicio</h2>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Nombre del Servicio *
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Ej: Consulta General"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                  Descripción
+                </label>
+                <textarea
+                  id="description"
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Descripción del servicio..."
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="duration_minutes" className="block text-sm font-medium text-gray-700 mb-2">
+                    Duración (minutos) *
+                  </label>
+                  <input
+                    type="number"
+                    id="duration_minutes"
+                    required
+                    min="15"
+                    max="480"
+                    step="15"
+                    value={formData.duration_minutes}
+                    onChange={(e) => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
+                    Precio ($) *
+                  </label>
+                  <input
+                    type="number"
+                    id="price"
+                    required
+                    min="0"
+                    step="0.01"
+                    value={formData.price || ''}
+                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 mb-2">
+                  Categoría
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    id="category_id"
+                    value={formData.category_id}
+                    onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Sin categoría</option>
+                    {categories
+                      .filter(cat => cat.is_active)
+                      .map(category => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickCategoryModal(true)}
+                    className="px-3 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
+                    title="Crear nueva categoría"
+                  >
+                    + Nueva
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="is_active"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="is_active" className="ml-2 block text-sm text-gray-700">
+                  Servicio activo
+                </label>
+              </div>
+
+              <div className="flex justify-end space-x-4 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddModal(false)
+                    setFormData({
+                      name: '',
+                      description: '',
+                      duration_minutes: 60,
+                      price: 0,
+                      category_id: '',
+                      is_active: true
+                    })
+                  }}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'Guardando...' : 'Guardar Servicio'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Service Modal */}
+      {showEditModal && editingService && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">Editar Servicio</h2>
+            </div>
+
+            <form onSubmit={handleUpdate} className="p-6 space-y-6">
+              <div>
+                <label htmlFor="edit_name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Nombre del Servicio *
+                </label>
+                <input
+                  type="text"
+                  id="edit_name"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="edit_description" className="block text-sm font-medium text-gray-700 mb-2">
+                  Descripción
+                </label>
+                <textarea
+                  id="edit_description"
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="edit_duration" className="block text-sm font-medium text-gray-700 mb-2">
+                    Duración (minutos) *
+                  </label>
+                  <input
+                    type="number"
+                    id="edit_duration"
+                    required
+                    min="15"
+                    max="480"
+                    step="15"
+                    value={formData.duration_minutes}
+                    onChange={(e) => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="edit_price" className="block text-sm font-medium text-gray-700 mb-2">
+                    Precio ($) *
+                  </label>
+                  <input
+                    type="number"
+                    id="edit_price"
+                    required
+                    min="0"
+                    step="0.01"
+                    value={formData.price || ''}
+                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="edit_category" className="block text-sm font-medium text-gray-700 mb-2">
+                  Categoría
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    id="edit_category"
+                    value={formData.category_id}
+                    onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Sin categoría</option>
+                    {categories
+                      .filter(cat => cat.is_active)
+                      .map(category => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickCategoryModal(true)}
+                    className="px-3 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
+                    title="Crear nueva categoría"
+                  >
+                    + Nueva
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="edit_is_active"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="edit_is_active" className="ml-2 block text-sm text-gray-700">
+                  Servicio activo
+                </label>
+              </div>
+
+              <div className="flex justify-end space-x-4 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false)
+                    setEditingService(null)
+                    setFormData({
+                      name: '',
+                      description: '',
+                      duration_minutes: 60,
+                      price: 0,
+                      category_id: '',
+                      is_active: true
+                    })
+                  }}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'Guardando...' : 'Actualizar Servicio'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Category Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">
+                {editingCategory ? 'Editar Categoría' : 'Agregar Nueva Categoría'}
+              </h2>
+            </div>
+
+            <form onSubmit={handleCategorySubmit} className="p-6 space-y-6">
+              <div>
+                <label htmlFor="category_name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Nombre de la Categoría *
+                </label>
+                <input
+                  type="text"
+                  id="category_name"
+                  required
+                  value={categoryFormData.name}
+                  onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Ej: Consultas Médicas"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="category_description" className="block text-sm font-medium text-gray-700 mb-2">
+                  Descripción
+                </label>
+                <textarea
+                  id="category_description"
+                  rows={3}
+                  value={categoryFormData.description}
+                  onChange={(e) => setCategoryFormData({ ...categoryFormData, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Descripción de la categoría..."
+                />
+              </div>
+
+              <div className="flex justify-end space-x-4 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCategoryModal(false)
+                    setEditingCategory(null)
+                    setCategoryFormData({ name: '', description: '' })
+                  }}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'Guardando...' : (editingCategory ? 'Actualizar' : 'Crear Categoría')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Category Creation Modal */}
+      {showQuickCategoryModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">
+                Crear Categoría Rápida
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Crea una categoría y se seleccionará automáticamente
+              </p>
+            </div>
+
+            <form onSubmit={handleQuickCategoryCreate} className="p-6">
+              <div>
+                <label htmlFor="quick_category_name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Nombre de la Categoría *
+                </label>
+                <input
+                  type="text"
+                  id="quick_category_name"
+                  required
+                  autoFocus
+                  value={quickCategoryName}
+                  onChange={(e) => setQuickCategoryName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Ej: Consultas Médicas"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Puedes agregar más detalles después desde el tab Categorías
+                </p>
+              </div>
+
+              <div className="flex justify-end space-x-4 pt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowQuickCategoryModal(false)
+                    setQuickCategoryName('')
+                  }}
+                  disabled={submitting}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting || !quickCategoryName.trim()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {submitting ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                      <span>Creando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      <span>Crear y Usar</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   )
 }

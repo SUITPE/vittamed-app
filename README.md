@@ -1,6 +1,6 @@
-# 🏥 VittaMed - Modern Medical Appointment System
+# 🏥 VittaSami - Modern Medical Appointment System
 
-A complete, modern medical appointment booking and management system with multi-tenant architecture, inspired by industry-leading applications like Fresha.
+A complete, modern medical appointment booking and management system with multi-tenant architecture, featuring VittaSami's empathetic and human-centered design.
 
 ![Next.js](https://img.shields.io/badge/Next.js-15.5.3-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue)
@@ -10,12 +10,13 @@ A complete, modern medical appointment booking and management system with multi-
 
 ## ✨ Features
 
-### 🎨 **Modern UI/UX**
-- **Fresha-inspired design** with professional aesthetics
+### 🎨 **VittaSami Brand Identity**
+- **Official colors**: #40C9C6 (Primary), #A6E3A1 (Accent), #003A47 (Dark), #FFFFFF (White)
+- **Typography**: Inter for UI text, Poppins for titles
+- **Design**: Minimalist with soft gradients, rounded corners, white background
+- **Tone**: Empathetic, intelligent, human-centered
 - **Responsive design** optimized for mobile and desktop
 - **Smooth animations** with Framer Motion
-- **Professional color palette** with accessible contrast
-- **Modern typography** using Inter font family
 
 ### 🏗️ **Multi-Tenant Architecture**
 - **Multiple clinic types**: Clinics, Spas, Consulting offices
@@ -143,11 +144,13 @@ import { Badge } from '@/components/ui/Badge'
 import { Icons } from '@/components/ui/Icons'
 ```
 
-### Color System
+### VittaSami Color System
 ```css
-/* Professional color palette */
---primary-600: #2563eb     /* Main brand blue */
---success-500: #22c55e     /* Success green */
+/* Official VittaSami brand colors */
+--primary: #40C9C6         /* Primary turquoise */
+--accent: #A6E3A1          /* Accent light green */
+--dark: #003A47            /* Dark teal */
+--white: #FFFFFF           /* Pure white */
 --gray-50: #f9fafb         /* Light background */
 --gray-900: #111827        /* Dark text */
 ```
@@ -239,11 +242,12 @@ npm run lint
 ## 📈 Recent Updates (v2.0.0)
 
 ### Major Improvements
-- ✅ **Complete UI redesign** inspired by Fresha
+- ✅ **VittaSami brand identity** with official colors and design system
 - ✅ **Next.js 15 compatibility** with updated API patterns
 - ✅ **Tailwind CSS v3 migration** with proper configuration
 - ✅ **Enhanced performance** and developer experience
 - ✅ **Modern component library** with TypeScript
+- ✅ **Empathetic, human-centered** UI design
 
 ### Breaking Changes
 - Port changed from 3001 to 3003
@@ -304,6 +308,6 @@ pkill -f "npm run dev"
 
 ---
 
-**Built with ❤️ by the VittaMed team**
+**Built with ❤️ by the VittaSami team**
 
-*A modern, scalable solution for healthcare appointment management*
+*A modern, empathetic, and human-centered solution for healthcare appointment management*

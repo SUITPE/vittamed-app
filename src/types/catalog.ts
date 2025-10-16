@@ -41,6 +41,7 @@ export interface ServiceCategory {
   name: string
   description?: string
   parent_id?: string
+  tenant_id?: string | null // Multi-tenant support - null means global category
   is_active: boolean
   created_at: string
   updated_at: string

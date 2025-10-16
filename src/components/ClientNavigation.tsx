@@ -70,7 +70,7 @@ export default function ClientNavigation({ currentPath = '' }: ClientNavigationP
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <h1 className="text-xl font-bold text-gray-900">
-                🏥 VittaMed Client
+                🏥 VittaSami Client
               </h1>
             </div>
           </div>
@@ -121,7 +121,7 @@ export default function ClientNavigation({ currentPath = '' }: ClientNavigationP
                   <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-20">
                     <div className="py-2">
                       <div className="px-4 py-2 text-sm text-gray-500 border-b border-gray-100">
-                        Cliente VittaMed
+                        Cliente VittaSami
                       </div>
 
                       <div className="py-2">

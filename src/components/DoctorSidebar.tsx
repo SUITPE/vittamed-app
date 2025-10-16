@@ -100,7 +100,7 @@ export default function DoctorSidebar() {
               <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-green-500 rounded-lg flex items-center justify-center">
                 <Icons.stethoscope className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg font-bold text-gray-900">VittaMed</span>
+              <span className="text-lg font-bold text-gray-900">VittaSami</span>
             </div>
           )}
           <button

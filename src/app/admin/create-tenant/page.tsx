@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { BusinessType, BUSINESS_TYPE_CONFIGS, getBusinessTypesByCategory } from '@/types/business'
+import { BusinessType, BUSINESS_TYPE_CONFIGS } from '@/types/business'
+import BusinessTypeSelector from '@/components/admin/BusinessTypeSelector'
 
 export default function CreateTenantPage() {
   const [formData, setFormData] = useState({
@@ -174,96 +175,24 @@ export default function CreateTenantPage() {
             </div>
 
             <div>
-              <label htmlFor="tenant_type" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="tenant_type" className="block text-sm font-medium text-gray-700 mb-3">
                 Tipo de Negocio *
               </label>
-              <select
+
+              {/* Modern Business Type Selector with Context7 Flow */}
+              <BusinessTypeSelector
+                value={formData.tenant_type}
+                onChange={(type) => setFormData(prev => ({ ...prev, tenant_type: type }))}
+              />
+
+              {/* Hidden input for form compatibility and tests */}
+              <input
+                type="hidden"
                 id="tenant_type"
                 data-testid="tenant-type-select"
                 value={formData.tenant_type}
-                onChange={(e) => setFormData(prev => ({ ...prev, tenant_type: e.target.value as BusinessType }))}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <optgroup label="🏥 Especialidades Médicas">
-                  {getBusinessTypesByCategory('medical').map(type => {
-                    const config = BUSINESS_TYPE_CONFIGS[type]
-                    return (
-                      <option key={type} value={type}>
-                        {config.icon} {config.label}
-                      </option>
-                    )
-                  })}
-                </optgroup>
-                <optgroup label="🧘‍♀️ Bienestar y Relajación">
-                  {getBusinessTypesByCategory('wellness').map(type => {
-                    const config = BUSINESS_TYPE_CONFIGS[type]
-                    return (
-                      <option key={type} value={type}>
-                        {config.icon} {config.label}
-                      </option>
-                    )
-                  })}
-                </optgroup>
-                <optgroup label="💇‍♀️ Belleza y Estética">
-                  {getBusinessTypesByCategory('beauty').map(type => {
-                    const config = BUSINESS_TYPE_CONFIGS[type]
-                    return (
-                      <option key={type} value={type}>
-                        {config.icon} {config.label}
-                      </option>
-                    )
-                  })}
-                </optgroup>
-                <optgroup label="🔬 Centros Especializados">
-                  {getBusinessTypesByCategory('specialty').map(type => {
-                    const config = BUSINESS_TYPE_CONFIGS[type]
-                    return (
-                      <option key={type} value={type}>
-                        {config.icon} {config.label}
-                      </option>
-                    )
-                  })}
-                </optgroup>
-                <optgroup label="🐕 Veterinaria">
-                  {getBusinessTypesByCategory('veterinary').map(type => {
-                    const config = BUSINESS_TYPE_CONFIGS[type]
-                    return (
-                      <option key={type} value={type}>
-                        {config.icon} {config.label}
-                      </option>
-                    )
-                  })}
-                </optgroup>
-              </select>
-
-              {/* Show business type description */}
-              {formData.tenant_type && (
-                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                  <div className="flex items-start">
-                    <div className="text-2xl mr-3">
-                      {BUSINESS_TYPE_CONFIGS[formData.tenant_type].icon}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-blue-900">
-                        {BUSINESS_TYPE_CONFIGS[formData.tenant_type].label}
-                      </p>
-                      <p className="text-sm text-blue-700 mt-1">
-                        {BUSINESS_TYPE_CONFIGS[formData.tenant_type].description}
-                      </p>
-                      <div className="mt-2 text-xs text-blue-600">
-                        <span className="inline-flex items-center px-2 py-1 rounded bg-blue-100">
-                          Duración promedio: {BUSINESS_TYPE_CONFIGS[formData.tenant_type].settings.default_appointment_duration} min
-                        </span>
-                        {BUSINESS_TYPE_CONFIGS[formData.tenant_type].settings.requires_insurance && (
-                          <span className="inline-flex items-center px-2 py-1 rounded bg-green-100 text-green-600 ml-2">
-                            Acepta seguros
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+                readOnly
+              />
             </div>
 
             <div>

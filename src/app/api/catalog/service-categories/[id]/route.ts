@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { getSupabaseServerClient, createAdminClient } from '@/lib/supabase-server'
 import { customAuth } from '@/lib/custom-auth'
 import { UpdateCategoryData } from '@/types/catalog'
 
@@ -277,13 +277,13 @@ export async function DELETE(
     // Get user profile to check role
     const { data: profile } = await supabase
       .from('custom_users')
-      .select('role')
+      .select('role, tenant_id')
       .eq('id', user.id)
       .single()
 
-    if (!profile || profile.role !== 'admin_tenant') {
+    if (!profile || !['admin_tenant', 'staff'].includes(profile.role)) {
       return NextResponse.json(
-        { error: 'Forbidden - admin access required' },
+        { error: 'Forbidden - admin or staff access required' },
         { status: 403 }
       )
     }
@@ -332,11 +332,39 @@ export async function DELETE(
       )
     }
 
-    // Delete category
-    const { error } = await supabase
+    // Get the category first to verify tenant ownership
+    const { data: categoryToDelete } = await supabase
+      .from('service_categories')
+      .select('id, name, tenant_id')
+      .eq('id', id)
+      .single()
+
+    if (!categoryToDelete) {
+      return NextResponse.json(
+        { error: 'Category not found' },
+        { status: 404 }
+      )
+    }
+
+    // Verify user can delete this category (must own the tenant)
+    if (categoryToDelete.tenant_id && categoryToDelete.tenant_id !== profile.tenant_id) {
+      return NextResponse.json(
+        { error: 'Forbidden - you can only delete categories from your own tenant' },
+        { status: 403 }
+      )
+    }
+
+    // Use admin client to bypass RLS for deletion
+    console.log('[DELETE Category] Attempting to delete category:', id)
+    const adminClient = await createAdminClient()
+
+    const { data: deletedData, error } = await adminClient
       .from('service_categories')
       .delete()
       .eq('id', id)
+      .select()
+
+    console.log('[DELETE Category] Delete result:', { deletedData, error })
 
     if (error) {
       if (error.code === 'PGRST116') {
@@ -345,14 +373,26 @@ export async function DELETE(
           { status: 404 }
         )
       }
-      console.error('Error deleting service category:', error)
+      console.error('[DELETE Category] Error deleting service category:', error)
       return NextResponse.json(
-        { error: 'Failed to delete service category' },
+        { error: 'Failed to delete service category: ' + error.message },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ message: 'Service category deleted successfully' })
+    if (!deletedData || deletedData.length === 0) {
+      console.warn('[DELETE Category] No rows deleted for id:', id)
+      return NextResponse.json(
+        { error: 'Category not found or could not be deleted' },
+        { status: 404 }
+      )
+    }
+
+    console.log('[DELETE Category] Successfully deleted category:', id)
+    return NextResponse.json({
+      message: 'Service category deleted successfully',
+      deleted: deletedData[0]
+    })
 
   } catch (error) {
     console.error('Error in delete service category API:', error)

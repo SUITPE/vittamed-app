@@ -79,7 +79,7 @@ export default function ReceptionistNavigation({ currentPath = '', tenantId }: R
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <h1 className="text-xl font-bold text-gray-900">
-                📞 VittaMed Recepción
+                📞 VittaSami Recepción
               </h1>
             </div>
           </div>
