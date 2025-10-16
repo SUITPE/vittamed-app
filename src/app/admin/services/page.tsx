@@ -102,7 +102,7 @@ export default async function ServicesPage() {
       `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/tenants/${tenantId}/services`,
       {
         headers: {
-          Cookie: `vittamed-auth-token=${await customAuth.getTokenFromCookie()}`
+          Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
         },
         cache: 'no-store' // Always fetch fresh data
       }
@@ -123,7 +123,7 @@ export default async function ServicesPage() {
       `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/tenants/${tenantId}/categories?is_active=true`,
       {
         headers: {
-          Cookie: `vittamed-auth-token=${await customAuth.getTokenFromCookie()}`
+          Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
         },
         cache: 'no-store' // Always fetch fresh data
       }

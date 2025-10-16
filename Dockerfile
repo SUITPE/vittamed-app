@@ -1,4 +1,4 @@
-# VittaMed Production Dockerfile
+# VittaSami Production Dockerfile
 FROM node:20-alpine AS base
 
 # Install dependencies only when needed

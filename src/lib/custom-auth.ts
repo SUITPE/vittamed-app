@@ -5,9 +5,9 @@ import { createClient } from '@supabase/supabase-js'
 import { UserProfile, AuthUser } from './auth'
 
 // JWT configuration
-const JWT_SECRET = process.env.JWT_SECRET || 'vittamed-dev-secret-key-2024'
+const JWT_SECRET = process.env.JWT_SECRET || 'vittasami-dev-secret-key-2024'
 const JWT_EXPIRES_IN = '7d'
-const COOKIE_NAME = 'vittamed-auth-token'
+const COOKIE_NAME = 'vittasami-auth-token'
 
 interface JWTPayload {
   userId: string

@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({ success: true })
 
     // Clear authentication cookie
-    response.cookies.delete('vittamed-auth-token')
+    response.cookies.delete('vittasami-auth-token')
 
     return response
   } catch (error) {

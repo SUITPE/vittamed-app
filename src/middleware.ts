@@ -2,9 +2,9 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'vittamed-dev-secret-key-2024'
+  process.env.JWT_SECRET || 'vittasami-dev-secret-key-2024'
 )
-const COOKIE_NAME = 'vittamed-auth-token'
+const COOKIE_NAME = 'vittasami-auth-token'
 
 export async function middleware(request: NextRequest) {
   try {

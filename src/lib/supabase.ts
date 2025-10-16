@@ -88,7 +88,7 @@ export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     headers: {
-      'x-client-info': 'vittamed@1.0.0'
+      'x-client-info': 'vittasami@1.0.0'
     }
   }
 })
@@ -116,7 +116,7 @@ export function createClient() {
       },
       global: {
         headers: {
-          'x-client-info': 'vittamed-browser@1.0.0',
+          'x-client-info': 'vittasami-browser@1.0.0',
           'apikey': cleanKey  // Explicitly set the API key header
         },
         fetch: globalThis.fetch // Use our wrapped fetch explicitly

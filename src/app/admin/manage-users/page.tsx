@@ -81,7 +81,7 @@ export default async function ManageUsersPage() {
       {
         // Pass cookies for authentication
         headers: {
-          Cookie: `vittamed-auth-token=${await customAuth.getTokenFromCookie()}`
+          Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
         },
         cache: 'no-store' // Always fetch fresh data
       }

@@ -1,11 +1,11 @@
 version: '3.8'
 
 services:
-  vittamed-app:
+  vittasami-app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: vittamed-production
+    container_name: vittasami-production
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -25,11 +25,11 @@ services:
       - TWILIO_WHATSAPP_NUMBER=${TWILIO_WHATSAPP_NUMBER}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.vittamed.rule=Host(`your-domain.com`)"
-      - "traefik.http.routers.vittamed.tls=true"
-      - "traefik.http.routers.vittamed.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.vittasami.rule=Host(`your-domain.com`)"
+      - "traefik.http.routers.vittasami.tls=true"
+      - "traefik.http.routers.vittasami.tls.certresolver=letsencrypt"
     networks:
-      - vittamed-network
+      - vittasami-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
@@ -40,7 +40,7 @@ services:
   # Nginx reverse proxy (opcional, pero recomendado)
   nginx:
     image: nginx:alpine
-    container_name: vittamed-nginx
+    container_name: vittasami-nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -50,13 +50,13 @@ services:
       - ./ssl:/etc/nginx/ssl:ro
       - /var/log/nginx:/var/log/nginx
     depends_on:
-      - vittamed-app
+      - vittasami-app
     networks:
-      - vittamed-network
+      - vittasami-network
 
 networks:
-  vittamed-network:
+  vittasami-network:
     driver: bridge
 
 volumes:
-  vittamed-data:
+  vittasami-data:

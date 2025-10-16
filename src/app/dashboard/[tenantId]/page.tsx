@@ -63,7 +63,7 @@ export default async function TenantDashboard({ params }: PageProps) {
       `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/tenants`,
       {
         headers: {
-          Cookie: `vittamed-auth-token=${await customAuth.getTokenFromCookie()}`
+          Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
         },
         cache: 'no-store'
       }
@@ -94,7 +94,7 @@ export default async function TenantDashboard({ params }: PageProps) {
       `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/dashboard/${tenantId}/appointments?date=${today}`,
       {
         headers: {
-          Cookie: `vittamed-auth-token=${await customAuth.getTokenFromCookie()}`
+          Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
         },
         cache: 'no-store'
       }
@@ -121,7 +121,7 @@ export default async function TenantDashboard({ params }: PageProps) {
       `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/dashboard/${tenantId}/stats`,
       {
         headers: {
-          Cookie: `vittamed-auth-token=${await customAuth.getTokenFromCookie()}`
+          Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
         },
         cache: 'no-store'
       }

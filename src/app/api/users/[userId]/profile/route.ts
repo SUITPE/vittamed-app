@@ -3,7 +3,7 @@ import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'vittamed-dev-secret-key-2024'
+const JWT_SECRET = process.env.JWT_SECRET || 'vittasami-dev-secret-key-2024'
 
 export async function GET(
   request: NextRequest,
@@ -15,7 +15,7 @@ export async function GET(
 
     // Get auth token from cookies
     const cookieStore = await cookies()
-    const token = cookieStore.get('vittamed-auth-token')?.value
+    const token = cookieStore.get('vittasami-auth-token')?.value
 
     if (!token) {
       console.error('[Profile API GET] No auth token found')
@@ -70,7 +70,7 @@ export async function PATCH(
 
     // Get auth token from cookies
     const cookieStore = await cookies()
-    const token = cookieStore.get('vittamed-auth-token')?.value
+    const token = cookieStore.get('vittasami-auth-token')?.value
 
     if (!token) {
       console.error('[Profile API PATCH] No auth token found')

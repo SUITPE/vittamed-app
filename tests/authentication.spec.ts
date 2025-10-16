@@ -7,7 +7,7 @@ test.describe('Authentication Tests - Login Page', () => {
   })
 
   test('should display login form', async ({ page }) => {
-    await expect(page.locator('h2')).toContainText('Iniciar Sesión en VittaMed')
+    await expect(page.locator('h2')).toContainText('Iniciar Sesión en VittaSami')
     await expect(page.locator('[data-testid="email-input"]')).toBeVisible()
     await expect(page.locator('[data-testid="password-input"]')).toBeVisible()
     await expect(page.locator('[data-testid="login-submit"]')).toBeVisible()
@@ -77,7 +77,7 @@ test.describe('Authentication Tests - Login Page', () => {
     await page.click('text=Regístrate aquí')
 
     await expect(page).toHaveURL('/auth/signup')
-    await expect(page.locator('h2')).toContainText('Crear Cuenta en VittaMed')
+    await expect(page.locator('h2')).toContainText('Crear Cuenta en VittaSami')
   })
 
   test('should show loading state during login', async ({ page }) => {
@@ -98,7 +98,7 @@ test.describe('Signup Tests', () => {
   })
 
   test('should display signup form', async ({ page }) => {
-    await expect(page.locator('h2')).toContainText('Crear Cuenta en VittaMed')
+    await expect(page.locator('h2')).toContainText('Crear Cuenta en VittaSami')
     await expect(page.locator('[data-testid="first-name-input"]')).toBeVisible()
     await expect(page.locator('[data-testid="last-name-input"]')).toBeVisible()
     await expect(page.locator('[data-testid="email-input"]')).toBeVisible()
@@ -143,7 +143,7 @@ test.describe('Signup Tests', () => {
     await page.click('text=Inicia sesión aquí')
 
     await expect(page).toHaveURL('/auth/login')
-    await expect(page.locator('h2')).toContainText('Iniciar Sesión en VittaMed')
+    await expect(page.locator('h2')).toContainText('Iniciar Sesión en VittaSami')
   })
 
   test('should show loading state during signup', async ({ page }) => {

@@ -155,7 +155,7 @@ function getContentByType(data: NotificationData): string {
         <a href="#" class="button">Reagendar cita</a>
       `
     case 'user_invitation':
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vittamed.abp.pe'
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vittasami.abp.pe'
       return `
         <h2>¡Bienvenido a ${data.metadata?.tenantName || 'VittaSami'}!</h2>
         <p>Hola ${data.metadata?.firstName || ''},</p>

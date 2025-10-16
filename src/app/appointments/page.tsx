@@ -79,7 +79,7 @@ export default async function AppointmentsPage() {
       const doctorsResponse = await fetch(
         `${baseUrl}/api/tenants/${currentTenantId}/doctors`,
         {
-          headers: { Cookie: `vittamed-auth-token=${token}` },
+          headers: { Cookie: `vittasami-auth-token=${token}` },
           cache: 'no-store'
         }
       )
@@ -98,7 +98,7 @@ export default async function AppointmentsPage() {
     }
 
     const appointmentsResponse = await fetch(appointmentsUrl, {
-      headers: { Cookie: `vittamed-auth-token=${token}` },
+      headers: { Cookie: `vittasami-auth-token=${token}` },
       cache: 'no-store'
     })
 

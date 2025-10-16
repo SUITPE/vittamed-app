@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('VittaMed Business Flows with Context7', () => {
+test.describe('VittaSami Business Flows with Context7', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to booking page
     await page.goto('/booking');
@@ -34,7 +34,7 @@ test.describe('VittaMed Business Flows with Context7', () => {
     // Step 6: Fill patient information
     await page.fill('[data-testid="patient-first-name"]', 'Flow');
     await page.fill('[data-testid="patient-last-name"]', 'Test');
-    await page.fill('[data-testid="patient-email"]', 'flow.test@vittamed.com');
+    await page.fill('[data-testid="patient-email"]', 'flow.test@vittasami.com');
     await page.fill('[data-testid="patient-phone"]', '+1234567777');
 
     // Step 7: Submit booking (this should trigger the Context7 flow)
@@ -78,7 +78,7 @@ test.describe('VittaMed Business Flows with Context7', () => {
 
     await page.fill('[data-testid="patient-first-name"]', 'First');
     await page.fill('[data-testid="patient-last-name"]', 'User');
-    await page.fill('[data-testid="patient-email"]', 'first@vittamed.com');
+    await page.fill('[data-testid="patient-email"]', 'first@vittasami.com');
     await page.fill('[data-testid="patient-phone"]', '+1234567111');
 
     await page.click('[data-testid="submit-booking"]');
@@ -125,7 +125,7 @@ test.describe('VittaMed Business Flows with Context7', () => {
 
     await page.fill('[data-testid="patient-first-name"]', 'Payment');
     await page.fill('[data-testid="patient-last-name"]', 'Test');
-    await page.fill('[data-testid="patient-email"]', 'payment.test@vittamed.com');
+    await page.fill('[data-testid="patient-email"]', 'payment.test@vittasami.com');
 
     await page.click('[data-testid="submit-booking"]');
 

@@ -30,7 +30,7 @@ class InvitationService {
                     email.split('@')[0]
 
     const roleDisplayName = this.getRoleDisplayName(role)
-    const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://vittamed.com'}/auth/login`
+    const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://vittasami.com'}/auth/login`
 
     const subject = `Invitación a ${tenant_name} - ${roleDisplayName}`
 

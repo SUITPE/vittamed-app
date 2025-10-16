@@ -5,7 +5,9 @@
       "Bash(for file in appointment-lifecycle appointments-atender-button payment-flow notifications flows)",
       "Bash(do echo \"=== $file.spec.ts ===\")",
       "Bash(PGPASSWORD='KMZvgHQAzeFdTg6O' psql:*)",
-      "Bash(./apply-profile-migration.sh:*)"
+      "Bash(./apply-profile-migration.sh:*)",
+      "Bash(npm run build:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
