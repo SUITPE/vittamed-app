@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import PublicHeader from '@/components/marketing/PublicHeader'
+import PublicFooter from '@/components/marketing/PublicFooter'
 
 export const metadata: Metadata = {
   title: {
@@ -67,9 +69,10 @@ export default function MarketingLayout({
   children: React.ReactNode
 }) {
   return (
-    <>
-      {/* El PublicHeader y PublicFooter se agregarán aquí */}
-      {children}
-    </>
+    <div className="flex min-h-screen flex-col">
+      <PublicHeader />
+      <main className="flex-1">{children}</main>
+      <PublicFooter />
+    </div>
   )
 }
