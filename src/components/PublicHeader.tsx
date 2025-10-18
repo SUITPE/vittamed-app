@@ -12,7 +12,7 @@ export default function PublicHeader() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <Image
-              src="/vittasami/vittasami_logo_alta_sinfondo.png"
+              src="/vittasami/vittasami_logo_alta_zoom.png"
               alt="VittaSami Logo"
               width={32}
               height={32}
