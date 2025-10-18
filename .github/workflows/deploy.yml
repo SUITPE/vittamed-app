@@ -1,4 +1,4 @@
-name: 🚀 Deploy VittaMed to DigitalOcean
+name: 🚀 Deploy VittaSami to DigitalOcean
 
 on:
   push:
@@ -24,9 +24,16 @@ jobs:
 
     - name: 🔧 Create production environment
       run: |
-        echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" > .env.production
+        echo "# Domain configuration" > .env.production
+        echo "NEXT_PUBLIC_DOMAIN_MAIN=${{ secrets.NEXT_PUBLIC_DOMAIN_MAIN }}" >> .env.production
+        echo "NEXT_PUBLIC_DOMAIN_APP=${{ secrets.NEXT_PUBLIC_DOMAIN_APP }}" >> .env.production
+        echo "" >> .env.production
+        echo "# Supabase" >> .env.production
+        echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env.production
         echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env.production
         echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env.production
+        echo "" >> .env.production
+        echo "# Node environment" >> .env.production
         echo "NODE_ENV=production" >> .env.production
         echo "NEXT_TELEMETRY_DISABLED=1" >> .env.production
 
@@ -44,15 +51,15 @@ jobs:
         # Create production package.json
         cat > deployment-package/package.json << 'EOF'
         {
-          "name": "vittamed-app",
+          "name": "vittasami-app",
           "version": "0.1.0",
           "private": true,
           "scripts": {
             "start": "next start",
             "pm2:start": "pm2 start ecosystem.config.js",
-            "pm2:stop": "pm2 stop vittamed-app",
-            "pm2:restart": "pm2 restart vittamed-app",
-            "pm2:status": "pm2 status vittamed-app"
+            "pm2:stop": "pm2 stop vittasami-app",
+            "pm2:restart": "pm2 restart vittasami-app",
+            "pm2:status": "pm2 status vittasami-app"
           },
           "dependencies": {
             "@next/third-parties": "^15.5.3",
@@ -73,10 +80,10 @@ jobs:
         cat > deployment-package/ecosystem.config.js << 'EOF'
         module.exports = {
           apps: [{
-            name: 'vittamed-app',
+            name: 'vittasami-app',
             script: 'node_modules/.bin/next',
             args: 'start',
-            cwd: '/apps/prod/vittamed-app',
+            cwd: '/apps/prod/vittasami-app',
             instances: 1,
             autorestart: true,
             watch: false,
@@ -86,9 +93,9 @@ jobs:
               PORT: 3000,
               HOSTNAME: '0.0.0.0'
             },
-            error_file: '/apps/prod/vittamed-app/logs/err.log',
-            out_file: '/apps/prod/vittamed-app/logs/out.log',
-            log_file: '/apps/prod/vittamed-app/logs/combined.log',
+            error_file: '/apps/prod/vittasami-app/logs/err.log',
+            out_file: '/apps/prod/vittasami-app/logs/out.log',
+            log_file: '/apps/prod/vittasami-app/logs/combined.log',
             time: true,
             log_date_format: 'YYYY-MM-DD HH:mm Z'
           }]
@@ -104,18 +111,18 @@ jobs:
         port: ${{ secrets.DO_PORT || 22 }}
         script: |
           # Create directories
-          sudo mkdir -p /apps/prod/vittamed-app/logs
-          sudo chown -R $USER:$USER /apps/prod/vittamed-app
+          sudo mkdir -p /apps/prod/vittasami-app/logs
+          sudo chown -R $USER:$USER /apps/prod/vittasami-app
 
           # Stop current application
-          cd /apps/prod/vittamed-app
-          pm2 stop vittamed-app || true
+          cd /apps/prod/vittasami-app
+          pm2 stop vittasami-app || true
 
           # Backup current deployment
-          if [ -d "/apps/prod/vittamed-app/.next" ]; then
-            sudo mv /apps/prod/vittamed-app /apps/prod/vittamed-app-backup-$(date +%Y%m%d_%H%M%S) || true
-            sudo mkdir -p /apps/prod/vittamed-app/logs
-            sudo chown -R $USER:$USER /apps/prod/vittamed-app
+          if [ -d "/apps/prod/vittasami-app/.next" ]; then
+            sudo mv /apps/prod/vittasami-app /apps/prod/vittasami-app-backup-$(date +%Y%m%d_%H%M%S) || true
+            sudo mkdir -p /apps/prod/vittasami-app/logs
+            sudo chown -R $USER:$USER /apps/prod/vittasami-app
           fi
 
     - name: 📁 Upload deployment package
@@ -126,7 +133,7 @@ jobs:
         key: ${{ secrets.DO_SSH_KEY }}
         port: ${{ secrets.DO_PORT || 22 }}
         source: "deployment-package/*"
-        target: "/apps/prod/vittamed-app/"
+        target: "/apps/prod/vittasami-app/"
         strip_components: 1
 
     - name: 🎯 Install dependencies and start application
@@ -137,7 +144,7 @@ jobs:
         key: ${{ secrets.DO_SSH_KEY }}
         port: ${{ secrets.DO_PORT || 22 }}
         script: |
-          cd /apps/prod/vittamed-app
+          cd /apps/prod/vittasami-app
 
           # Install production dependencies
           npm install --production
@@ -154,11 +161,11 @@ jobs:
 
           # Health check
           if curl -f http://localhost:3000/api/health > /dev/null 2>&1; then
-            echo "✅ VittaMed deployed successfully!"
-            pm2 status vittamed-app
+            echo "✅ VittaSami deployed successfully!"
+            pm2 status vittasami-app
           else
             echo "❌ Health check failed"
-            pm2 logs vittamed-app --lines 20
+            pm2 logs vittasami-app --lines 20
             exit 1
           fi
 
@@ -172,7 +179,8 @@ jobs:
         port: ${{ secrets.DO_PORT || 22 }}
         script: |
           echo "📊 Final deployment status:"
-          pm2 status vittamed-app
+          pm2 status vittasami-app
           echo ""
-          echo "🌐 Application should be available at: http://${{ secrets.DO_HOST }}:3000"
-          echo "🔍 Health check: http://${{ secrets.DO_HOST }}:3000/api/health"
+          echo "🌐 Marketing site: https://vittasami.com"
+          echo "🌐 SaaS app: https://app.vittasami.lat"
+          echo "🔍 Health check: http://localhost:3000/api/health"
