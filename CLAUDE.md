@@ -83,23 +83,40 @@ Patient: patient@example.com / password
 ### Core Application
 ```
 src/app/
+├── (marketing)/            # Public marketing site (vittasami.com)
+│   ├── page.tsx            # Landing page
+│   ├── pricing/page.tsx    # Pricing page
+│   └── invest/page.tsx     # Investor page
 ├── api/                    # Backend APIs
+│   └── contact-investor/   # Investor contact form API
 ├── auth/                   # Authentication pages
 ├── booking/                # Appointment booking
-├── dashboard/              # Admin dashboard
+├── dashboard/              # Admin dashboard (app.vittasami.lat)
 ├── agenda/                 # Doctor interface
 ├── patients/               # Patient management
 ├── my-appointments/        # Patient view
 └── payment/                # Payment processing
 ```
 
-### Business Logic
+### Business Logic & Configuration
 ```
 src/
 ├── flows/                  # Context7 business flows
 ├── contexts/               # React contexts (Auth)
-├── lib/                    # Utilities (auth, stripe, notifications)
-└── components/             # Reusable UI components
+├── lib/
+│   ├── config.ts           # Centralized domain/routing config
+│   ├── auth.ts             # Supabase authentication
+│   ├── stripe.ts           # Payment processing
+│   └── notifications.ts    # Email/WhatsApp
+├── constants/
+│   ├── pricing.ts          # Freemium plans & features
+│   ├── features.ts         # Product features & use cases
+│   └── investors.ts        # Investor pitch data
+└── components/
+    ├── ui/                 # Design system (Heading, Section, GradientText)
+    ├── marketing/          # PublicHeader, PublicFooter
+    ├── pricing/            # PricingCard, Toggle, Comparison, FAQ
+    └── investors/          # InvestorMetrics, InvestorCTA
 ```
 
 ### Testing
@@ -260,9 +277,157 @@ TWILIO_WHATSAPP_NUMBER=
 4. Run full test suite
 5. Verify database migrations
 
-## 📋 Recent Updates (Sept 2025)
+## 📋 Recent Updates (Oct 2025)
 
-### ✅ **VittaSami Brand Identity**
+### 🏢 **ENTERPRISE RESTRUCTURE - PRODUCTION READY** (Oct 17, 2025)
+
+**CRITICAL:** VittaSami is now a production-ready SaaS product, no longer an MVP. All code must meet enterprise standards.
+
+#### Domain Architecture
+```
+vittasami.com           → Marketing site (landing, pricing, invest)
+app.vittasami.lat       → SaaS application (dashboard, agenda, patients)
+```
+
+**Implementation:** Single Next.js monorepo with Route Groups + middleware-based subdomain routing
+
+#### Route Groups Structure
+```
+src/app/
+├── (marketing)/              # Public marketing pages
+│   ├── layout.tsx            # PublicHeader + PublicFooter
+│   ├── page.tsx              # Landing page
+│   ├── pricing/page.tsx      # Pricing with 4 plans
+│   └── invest/page.tsx       # Investor pitch page
+├── (app)/                    # SaaS application (existing)
+│   ├── dashboard/
+│   ├── agenda/
+│   └── patients/
+└── api/
+    └── contact-investor/     # Pitch deck request API
+```
+
+#### Freemium Pricing Strategy
+- **Free ($0/mes):** Agenda ilimitada, reservas básicas
+- **Care ($39/mes):** + Historias clínicas, recordatorios
+- **Pro ($79/mes):** + IA, telemedicina, pagos online
+- **Enterprise ($149/mes):** Todo + multi-sede, API, soporte priority
+
+**Annual discount:** 15% off (configured in `src/constants/pricing.ts`)
+
+#### Middleware Routing Logic
+```typescript
+// 1. SUBDOMAIN ROUTING
+if (hostname.includes('app.vittasami.lat')) {
+  // Redirect / to /dashboard
+  // Block marketing routes
+}
+
+// 2. SECURITY HEADERS
+- X-Frame-Options: DENY
+- Content-Security-Policy
+- X-Content-Type-Options: nosniff
+```
+
+#### New Components (Design System)
+
+**UI Foundations:**
+- `src/components/ui/Heading.tsx` - Typography with gradient variants
+- `src/components/ui/Section.tsx` - Container with spacing/background system
+- `src/components/ui/GradientText.tsx` - Brand gradient text effects
+
+**Marketing:**
+- `src/components/marketing/PublicHeader.tsx` - Modern nav with sticky, blur, mobile menu
+- `src/components/marketing/PublicFooter.tsx` - 4-column footer with SEO
+
+**Pricing:**
+- `src/components/pricing/PricingCard.tsx` - Plan cards with badges
+- `src/components/pricing/PricingToggle.tsx` - Monthly/annual toggle
+- `src/components/pricing/FeatureComparison.tsx` - Feature comparison table
+- `src/components/pricing/PricingFAQ.tsx` - Accordion FAQ
+
+**Investors:**
+- `src/components/investors/InvestorMetrics.tsx` - Metric displays
+- `src/components/investors/InvestorCTA.tsx` - Contact form for pitch deck
+
+#### Centralized Configuration
+- **`src/lib/config.ts`**: Domain URLs, routing helpers, email config
+- **`src/constants/pricing.ts`**: All 4 plans, features, comparison matrix, FAQs
+- **`src/constants/features.ts`**: Main features, use cases, testimonials, stats
+- **`src/constants/investors.ts`**: Investor pitch data, traction, milestones
+
+#### Key Pages
+
+**Landing (/):**
+- Hero with dual CTAs (Comenzar Gratis, Ver Planes)
+- Platform stats (4 metrics)
+- Features grid (6 features with icons, animations)
+- Use Cases (6 practice types)
+- Final CTA section
+
+**Pricing (/pricing):**
+- Hero with pricing toggle
+- 4 plan cards with annual discount
+- Feature comparison table
+- FAQ accordion
+- Dual CTA (Free signup + Sales contact)
+
+**Invest (/invest):**
+- Hero with investment summary ($40K, 6 months runway, 1K users goal)
+- 6 investor blocks (problem, solution, traction, model, investment, use-of-funds)
+- Milestone roadmap (Q1-Q3 2025)
+- Contact form for pitch deck
+- Trust indicators (Y Combinator, Startup Perú, Innóvate Perú)
+
+#### API Endpoints
+- **POST /api/contact-investor**: Investor contact form
+  - Validates email, name
+  - Returns 400 for invalid data, 200 for success
+  - TODO: Implement actual email sending (currently console.log)
+
+#### SEO & Metadata
+Complete OpenGraph and Twitter cards in `(marketing)/layout.tsx`:
+- Title: "VittaSami - Gestión moderna para salud y bienestar"
+- Description: "Plataforma SaaS para centros de salud y bienestar. Agenda ilimitada gratis, IA, pagos integrados."
+- Keywords: agenda médica, software clínicas, IA salud, etc.
+- Google verification placeholder
+
+#### Security Headers (Production)
+```typescript
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vittasami.com https://*.vittasami.lat; ...
+```
+
+#### Brand Positioning
+- **From:** Medical-focused (médico, clínica, consultorio)
+- **To:** Health & wellness (salud y bienestar, práctica, centro)
+- **Inclusive language:** profesionales, usuarios (not just doctors/patients)
+- **Target:** Clinics, spas, therapists, nutritionists, wellness centers
+
+#### Development Standards
+- **TypeScript:** Strict mode, full type safety
+- **Animations:** Framer Motion for all page transitions and micro-interactions
+- **Responsive:** Mobile-first design with Tailwind breakpoints
+- **Accessibility:** Proper ARIA labels, semantic HTML
+- **Performance:** Lazy loading, optimized images, code splitting
+
+#### Deployment Notes (Digital Ocean)
+- **Existing:** GitHub Actions configured for app.vittasami.lat
+- **Marketing site:** Will use same droplet with Nginx reverse proxy
+- **DNS:** Point vittasami.com and app.vittasami.lat to same server
+- **Nginx config:** Route by Host header to same Next.js app
+
+#### Git Workflow
+- **Branch:** `feature/enterprise-restructure-freemium`
+- **Commits:**
+  1. Phase 1: Foundation + Core Components (17 files, +1,764 lines)
+  2. Phase 2: Landing + Investor Components (5 files, +607 lines)
+  3. Phase 3: Pricing + Invest Pages + API (4 files, +500 lines)
+
+---
+
+### ✅ **VittaSami Brand Identity** (Sept 2025)
 - **Official brand colors:** Primary (#40C9C6), Accent (#A6E3A1), Dark (#003A47), White (#FFFFFF)
 - **Typography:** Inter for UI text, Poppins for titles
 - **Design:** Minimalist, soft gradients, rounded corners, white background
@@ -322,10 +487,18 @@ TWILIO_WHATSAPP_NUMBER=
 - ✅ **Production Ready:** All critical issues resolved
 
 ### 🔗 **Access Points**
-- **Main App:** http://localhost:3003
+
+**Marketing Site (vittasami.com):**
+- **Landing:** http://localhost:3003/
+- **Pricing:** http://localhost:3003/pricing
+- **Investors:** http://localhost:3003/invest
+
+**SaaS Application (app.vittasami.lat):**
 - **Login:** http://localhost:3003/auth/login
-- **Booking:** http://localhost:3003/booking
 - **Dashboard:** http://localhost:3003/dashboard
+- **Booking:** http://localhost:3003/booking
+- **Agenda:** http://localhost:3003/agenda
+- **Patients:** http://localhost:3003/patients
 
 ---
 
