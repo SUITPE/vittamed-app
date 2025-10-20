@@ -10,7 +10,7 @@ import { GradientText } from '@/components/ui/GradientText'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Icons } from '@/components/ui/Icons'
 import { MAIN_FEATURES, USE_CASES, PLATFORM_STATS } from '@/constants/features'
-import PublicHeader from '@/components/PublicHeader'
+import PublicHeader from '@/components/marketing/PublicHeader'
 
 export default function LandingPage() {
   return (
