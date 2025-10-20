@@ -13,7 +13,8 @@ import { DOMAINS } from '@/lib/config'
 const navigation = [
   { name: 'Características', href: '/features' },
   { name: 'Precios', href: '/pricing' },
-  { name: 'Inversores', href: '/invest' },
+  { name: 'Blog', href: '/blog' },
+  { name: 'Ayuda', href: '/ayuda' },
 ]
 
 export default function PublicHeader() {
