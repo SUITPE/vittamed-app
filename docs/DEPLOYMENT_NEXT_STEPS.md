@@ -6,7 +6,7 @@ Tu código está merged en `main` y GitHub Actions ha ejecutado el deployment au
 
 ---
 
-## 🔴 PASO 1: Resolver Conflicto de Nginx (URGENTE)
+## 🔴 PASO 1A: Resolver Conflicto de Nginx (URGENTE)
 
 ### Error Actual:
 ```
@@ -45,6 +45,47 @@ sudo systemctl status nginx
 ```
 
 **📋 Documentación completa:** Ver `docs/FIX_NGINX_CONFLICT.md`
+
+---
+
+## 🔴 PASO 1B: Resolver Error SSL Cipher (URGENTE)
+
+### Error Actual:
+```bash
+curl -I https://vittasami.com
+# curl: (35) LibreSSL/3.3.6: error:1404B417:SSL routines:ST_CONNECT:sslv3 alert illegal parameter
+```
+
+### Diagnóstico:
+- ✅ Certificados SSL válidos (Let's Encrypt)
+- ✅ DNS correcto
+- ❌ SSL Ciphers incompatibles
+
+### Solución (10 minutos):
+
+```bash
+# 1. SSH a tu droplet
+ssh root@178.128.148.111
+
+# 2. Generar DH params (tarda 2-3 minutos)
+sudo openssl dhparam -out /etc/nginx/dhparam.pem 2048
+
+# 3. Copiar configuración actualizada con ciphers correctos
+# Desde tu máquina local:
+scp docs/nginx-sites-available-vittasami.conf root@178.128.148.111:/etc/nginx/sites-available/vittasami
+
+# 4. Test de configuración
+sudo nginx -t
+
+# 5. Si todo OK, reload
+sudo systemctl reload nginx
+
+# 6. Verificar desde tu Mac
+curl -I https://vittasami.com
+# Debe mostrar: HTTP/2 200
+```
+
+**📋 Documentación completa:** Ver `docs/FIX_SSL_CIPHER_ERROR.md`
 
 ---
 
@@ -185,7 +226,8 @@ sudo tail -f /var/log/nginx/vittasami-app-access.log
 
 ## 📊 Checklist de Deployment
 
-- [ ] **Nginx conflict resuelto** (PASO 1)
+- [ ] **Nginx conflict resuelto** (PASO 1A)
+- [ ] **SSL ciphers actualizados** (PASO 1B)
 - [ ] **GitHub Actions deployment exitoso** (PASO 2)
 - [ ] **DNS configurado y propagado** (PASO 3)
 - [ ] **Certificados SSL generados** (PASO 4)
