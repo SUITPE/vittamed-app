@@ -11,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Icons } from '@/components/ui/Icons'
 import { MAIN_FEATURES, USE_CASES, PLATFORM_STATS } from '@/constants/features'
 import PublicHeader from '@/components/PublicHeader'
-import PublicFooter from '@/components/PublicFooter'
 
 export default function LandingPage() {
   return (
@@ -217,8 +216,6 @@ export default function LandingPage() {
           </motion.div>
         </div>
       </Section>
-
-      <PublicFooter />
     </>
   )
 }
