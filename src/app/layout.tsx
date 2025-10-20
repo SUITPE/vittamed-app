@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VittaSami - Sistema de Gestión Médica",
-  description: "Sistema de reservas y gestión médica multi-tenant - Empático, inteligente y centrado en las personas",
+  title: "VittaSami - Gestión moderna para salud y bienestar",
+  description: "Plataforma SaaS para centros de salud y bienestar. Agenda ilimitada gratis, IA, pagos integrados. Desde $0/mes.",
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
