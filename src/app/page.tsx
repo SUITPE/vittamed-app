@@ -1,242 +1,224 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { ArrowRight, CheckCircle, Star } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Heading } from '@/components/ui/Heading'
+import { Section } from '@/components/ui/Section'
+import { GradientText } from '@/components/ui/GradientText'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Icons } from '@/components/ui/Icons'
-import { useAuth } from '@/contexts/AuthContext'
+import { MAIN_FEATURES, USE_CASES, PLATFORM_STATS } from '@/constants/features'
 import PublicHeader from '@/components/PublicHeader'
+import PublicFooter from '@/components/PublicFooter'
 
-export default function Home() {
-  const router = useRouter()
-  const { user, loading } = useAuth()
-
-  useEffect(() => {
-    // Redirect authenticated users to their dashboard
-    if (!loading && user?.profile) {
-      const role = user.profile.role
-      const tenantId = user.profile.tenant_id
-
-      if (role === 'admin_tenant' || role === 'staff' || role === 'receptionist') {
-        router.push(`/dashboard/${tenantId}`)
-      } else if (role === 'doctor') {
-        router.push('/agenda')
-      } else if (role === 'patient') {
-        router.push('/my-appointments')
-      }
-    }
-  }, [user, loading, router])
-
-  // Show loading state while checking authentication
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-[#e6f9f9] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#40C9C6] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Only show landing page if not authenticated
-  if (user?.profile) {
-    return null // Will redirect in useEffect
-  }
-  const services = [
-    {
-      icon: 'calendarDays',
-      title: 'Gestión de Agenda',
-      description: 'Vista calendario intuitiva estilo Google Calendar. Los doctores definen horarios y pacientes reservan online con un par de clics.',
-      color: 'from-[#40C9C6] to-[#33a19e]'
-    },
-    {
-      icon: 'zap',
-      title: 'Reservas Inteligentes',
-      description: 'Flujo tipo wizard con auto-selección. El sistema elige automáticamente el mejor horario y especialista disponible.',
-      color: 'from-[#A6E3A1] to-[#8aca85]'
-    },
-    {
-      icon: 'creditCard',
-      title: 'Pagos Integrados',
-      description: 'Checkout seguro con Stripe, resumen de citas y notificaciones automáticas por email y SMS.',
-      color: 'from-[#40C9C6] to-[#297976]'
-    },
-    {
-      icon: 'activity',
-      title: 'Dashboard Médico',
-      description: 'Estadísticas en tiempo real de citas, ingresos y pacientes con KPIs visuales y reportes.',
-      color: 'from-[#A6E3A1] to-[#6eb269]'
-    },
-    {
-      icon: 'users',
-      title: 'Multi-Tenant',
-      description: 'Escalable para múltiples clínicas y doctores con branding personalizado y gestión independiente.',
-      color: 'from-[#003A47] to-[#40C9C6]'
-    },
-    {
-      icon: 'shield',
-      title: 'Seguro y Confiable',
-      description: 'Cumple con estándares médicos, encriptación de datos y respaldos automáticos.',
-      color: 'from-[#297976] to-[#003A47]'
-    }
-  ]
-
+export default function LandingPage() {
   return (
     <>
       <PublicHeader />
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-[#e6f9f9]">
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#40C9C6]/10 to-[#A6E3A1]/10" />
-        <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl lg:text-7xl font-heading">
-                Gestión médica
-                <span className="block bg-gradient-to-r from-[#40C9C6] to-[#A6E3A1] bg-clip-text text-transparent">
-                  moderna y simple
-                </span>
-              </h1>
-            </motion.div>
+      <Section spacing="xl" background="gradient" className="relative overflow-hidden">
+        <div className="text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <Heading level="h1" gradient="primary" className="mb-6">
+              Gestión moderna para salud y bienestar
+            </Heading>
+          </motion.div>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-600"
-            >
-              Plataforma completa para clínicas modernas. Agenda inteligente, pagos integrados y experiencia fluida inspirada en las mejores apps del mercado.
-            </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mx-auto mt-6 max-w-2xl text-xl leading-8 text-gray-600"
+          >
+            Agenda, evolución y pagos, todo en una sola plataforma inteligente.
+          </motion.p>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mt-10 flex items-center justify-center gap-6"
-            >
-              <Link href="/auth/register-business">
-                <Button size="lg" className="text-base px-8 py-4 h-auto gradient-primary text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <Icons.userPlus className="mr-2 h-5 w-5" />
-                  Registra tu Negocio
-                </Button>
-              </Link>
-              <Link href="/auth/login">
-                <Button variant="outline" size="lg" className="text-base px-8 py-4 h-auto">
-                  <Icons.user className="mr-2 h-5 w-5" />
-                  Iniciar Sesión
-                </Button>
-              </Link>
-            </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+          >
+            <Link href="/auth/register">
+              <Button size="lg" className="gradient-primary text-white border-0 text-lg px-8 py-6">
+                Comenzar Gratis
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link href="/pricing">
+              <Button variant="outline" size="lg" className="text-lg px-8 py-6">
+                Ver Planes
+              </Button>
+            </Link>
+          </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="mt-8 text-sm text-gray-500"
-            >
-              ✓ Gratis por 30 días · ✓ Sin tarjeta de crédito · ✓ Configuración en 5 minutos
-            </motion.div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mt-8 flex items-center justify-center gap-6 text-sm text-gray-600"
+          >
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-[#40C9C6]" />
+              <span>Agenda gratuita y sin límites</span>
+            </div>
+            <div className="hidden sm:flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-[#40C9C6]" />
+              <span>Sin tarjeta de crédito</span>
+            </div>
+          </motion.div>
         </div>
-      </section>
+      </Section>
+
+      {/* Stats Section */}
+      <Section spacing="md" background="white">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+          {PLATFORM_STATS.map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="text-center"
+            >
+              <div className="text-4xl font-bold text-gray-900 mb-2">{stat.value}</div>
+              <div className="text-sm text-gray-600">{stat.label}</div>
+            </motion.div>
+          ))}
+        </div>
+      </Section>
 
       {/* Features Section */}
-      <section className="py-24 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
-            >
-              Todo lo que necesitas en una plataforma
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="mt-4 text-lg text-gray-600"
-            >
-              Diseñado específicamente para clínicas modernas que buscan eficiencia y experiencia premium
-            </motion.p>
-          </div>
-
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {services.map((service, index) => {
-              const Icon = Icons[service.icon as keyof typeof Icons]
-              return (
-                <motion.div
-                  key={service.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                >
-                  <Card className="h-full card-hover group">
-                    <CardHeader>
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${service.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200`}>
-                        <Icon className="w-6 h-6 text-white" />
-                      </div>
-                      <CardTitle className="text-xl">{service.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-base leading-relaxed">
-                        {service.description}
-                      </CardDescription>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )
-            })}
-          </div>
+      <Section spacing="lg" background="gray">
+        <div className="text-center mb-16">
+          <Heading level="h2" className="mb-4">
+            Todo lo que tu centro necesita para{' '}
+            <GradientText gradient="primary">crecer</GradientText>
+          </Heading>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Una herramienta versátil para clínicas, consultorios y centros de bienestar
+          </p>
         </div>
-      </section>
+
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {MAIN_FEATURES.map((feature, index) => {
+            const Icon = Icons[feature.icon as keyof typeof Icons]
+            return (
+              <motion.div
+                key={feature.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <Card className="h-full card-hover">
+                  <CardHeader>
+                    <div
+                      className={`w-12 h-12 rounded-xl bg-gradient-to-r ${feature.gradient} flex items-center justify-center mb-4`}
+                    >
+                      {Icon && <Icon className="w-6 h-6 text-white" />}
+                    </div>
+                    <CardTitle className="text-xl">{feature.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="text-base leading-relaxed">
+                      {feature.description}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )
+          })}
+        </div>
+      </Section>
+
+      {/* Use Cases Section */}
+      <Section spacing="lg" background="white">
+        <div className="text-center mb-16">
+          <Heading level="h2" className="mb-4">
+            Perfecto para <GradientText gradient="primary">todo tipo de práctica</GradientText>
+          </Heading>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Ya seas médico, terapeuta, nutricionista o centro de bienestar
+          </p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {USE_CASES.map((useCase, index) => {
+            const Icon = Icons[useCase.icon as keyof typeof Icons]
+            return (
+              <motion.div
+                key={useCase.type}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <Card className="card-hover h-full">
+                  <CardHeader>
+                    <div className="flex items-center gap-3 mb-2">
+                      {Icon && (
+                        <div className="w-10 h-10 rounded-lg bg-[#40C9C6]/10 flex items-center justify-center">
+                          <Icon className="w-5 h-5 text-[#40C9C6]" />
+                        </div>
+                      )}
+                      <CardTitle className="text-lg">{useCase.title}</CardTitle>
+                    </div>
+                    <CardDescription>{useCase.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {useCase.examples.slice(0, 3).map((example, i) => (
+                        <li key={i} className="flex items-center text-sm text-gray-600">
+                          <CheckCircle className="h-4 w-4 text-[#40C9C6] mr-2 flex-shrink-0" />
+                          {example}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )
+          })}
+        </div>
+      </Section>
 
       {/* CTA Section */}
-      <section className="bg-gradient-to-r from-[#40C9C6] to-[#A6E3A1] py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-3xl font-bold tracking-tight text-white sm:text-4xl font-heading"
-            >
-              ¿Listo para modernizar tu clínica?
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="mt-4 text-lg text-white/90"
-            >
-              Únete a cientos de profesionales que ya transformaron su práctica médica
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mt-8"
-            >
-              <Link href="/auth/register-business">
-                <Button size="lg" variant="secondary" className="text-base px-8 py-4 h-auto bg-white text-[#003A47] hover:bg-gray-50 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <Icons.userPlus className="mr-2 h-5 w-5" />
-                  Comenzar Gratis
-                </Button>
-              </Link>
-            </motion.div>
-          </div>
+      <Section spacing="lg" background="primary" className="text-white">
+        <div className="text-center max-w-3xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <Heading level="h2" className="text-white mb-6">
+              Transforma la forma en que gestionas tu práctica
+            </Heading>
+            <p className="text-xl text-white/90 mb-8">
+              Empieza gratis hoy y descubre cómo VittaSami simplifica tu día a día
+            </p>
+            <Link href="/auth/register">
+              <Button
+                size="lg"
+                variant="secondary"
+                className="text-lg px-8 py-6 bg-white text-[#003A47] hover:bg-gray-50"
+              >
+                Comenzar Gratis
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <p className="mt-6 text-sm text-white/80">
+              ✓ Agenda ilimitada gratis • ✓ Sin tarjeta de crédito • ✓ Setup en 5 minutos
+            </p>
+          </motion.div>
         </div>
-      </section>
-    </div>
+      </Section>
+
+      <PublicFooter />
     </>
   )
 }
