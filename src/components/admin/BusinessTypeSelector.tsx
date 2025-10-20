@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { BusinessType, BUSINESS_TYPE_CONFIGS, BusinessCategory, BUSINESS_CATEGORIES } from '@/types/business'
-import { TenantTypeSelectionFlow } from '@/flows/TenantTypeSelectionFlow'
 import { Search, Check } from 'lucide-react'
 
 interface BusinessTypeSelectorProps {
@@ -11,32 +10,52 @@ interface BusinessTypeSelectorProps {
 }
 
 export default function BusinessTypeSelector({ value, onChange }: BusinessTypeSelectorProps) {
-  const [flow] = useState(() => new TenantTypeSelectionFlow())
   const [selectedCategory, setSelectedCategory] = useState<BusinessCategory | undefined>()
   const [searchQuery, setSearchQuery] = useState('')
   const [filteredTypes, setFilteredTypes] = useState<BusinessType[]>([])
 
+  // Filter types based on category and search
+  const filterTypes = (category: BusinessCategory | undefined, query: string) => {
+    const allTypes = Object.keys(BUSINESS_TYPE_CONFIGS) as BusinessType[]
+
+    let filtered = allTypes
+
+    // Filter by category
+    if (category) {
+      filtered = filtered.filter(type => BUSINESS_TYPE_CONFIGS[type].category === category)
+    }
+
+    // Filter by search query
+    if (query.trim()) {
+      const lowerQuery = query.toLowerCase()
+      filtered = filtered.filter(type => {
+        const config = BUSINESS_TYPE_CONFIGS[type]
+        return (
+          config.label.toLowerCase().includes(lowerQuery) ||
+          config.description.toLowerCase().includes(lowerQuery)
+        )
+      })
+    }
+
+    return filtered
+  }
+
   useEffect(() => {
-    // Initialize flow
-    flow.start({}).then(() => {
-      setFilteredTypes(flow.getFilteredTypes())
-    })
-  }, [flow])
+    // Initialize with all types
+    setFilteredTypes(filterTypes(selectedCategory, searchQuery))
+  }, [])
 
-  const handleCategoryClick = async (category: BusinessCategory | undefined) => {
+  const handleCategoryClick = (category: BusinessCategory | undefined) => {
     setSelectedCategory(category)
-    await flow.selectCategory(category)
-    setFilteredTypes(flow.getFilteredTypes())
+    setFilteredTypes(filterTypes(category, searchQuery))
   }
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = (query: string) => {
     setSearchQuery(query)
-    await flow.searchTypes(query)
-    setFilteredTypes(flow.getFilteredTypes())
+    setFilteredTypes(filterTypes(selectedCategory, query))
   }
 
-  const handleTypeSelect = async (type: BusinessType) => {
-    await flow.selectType(type)
+  const handleTypeSelect = (type: BusinessType) => {
     onChange(type)
   }
 
