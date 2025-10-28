@@ -61,6 +61,13 @@ import {
   Circle,
   FileText,
   ClipboardList,
+  Quote,
+  Lightbulb,
+  Globe,
+  Award,
+  Target,
+  Linkedin,
+  PieChart,
 } from "lucide-react"
 
 export const Icons = {
@@ -153,6 +160,15 @@ export const Icons = {
   circle: Circle,
   fileText: FileText,
   clipboardList: ClipboardList,
+
+  // Investor page
+  quote: Quote,
+  lightbulb: Lightbulb,
+  globe: Globe,
+  award: Award,
+  target: Target,
+  linkedin: Linkedin,
+  pieChart: PieChart,
 }
 
 export type IconName = keyof typeof Icons
