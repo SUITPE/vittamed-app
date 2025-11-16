@@ -1,8 +1,17 @@
 {
+  "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "framework": "nextjs",
   "regions": ["iad1"],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "NEXT_TELEMETRY_DISABLED": "1"
+    }
+  },
   "functions": {
     "src/app/api/process-reminders/route.ts": {
       "maxDuration": 300
@@ -48,5 +57,6 @@
       "source": "/api/webhooks/stripe",
       "destination": "/api/payments/webhook"
     }
-  ]
+  ],
+  "ignoreCommand": "bash -c '[[ \"$VERCEL_GIT_COMMIT_REF\" == \"main\" ]] && exit 1 || exit 0'"
 }

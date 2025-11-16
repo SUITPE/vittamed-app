@@ -1,0 +1,179 @@
+name: Production CI/CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  test:
+    name: Run Full Test Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript check
+        run: npm run type-check
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL_DEV }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY_DEV }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_DEV }}
+
+      - name: Upload test coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          name: vittasami-coverage
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-production
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Build production bundle
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+  notify-ready:
+    name: Notify Deployment Ready
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Notify deployment ready
+        run: |
+          echo "✅ All tests passed! Production deployment ready."
+          echo "📋 Manual deployment required:"
+          echo "   1. SSH into Digital Ocean: ssh root@your-server-ip"
+          echo "   2. Navigate to project: cd /var/www/vittasami"
+          echo "   3. Pull latest: git pull origin main"
+          echo "   4. Deploy: ./deploy.sh"
+          echo ""
+          echo "🔗 Commit: ${{ github.sha }}"
+          echo "👤 Author: ${{ github.actor }}"
+
+      - name: Create deployment issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const commit = context.sha.substring(0, 7);
+            const author = context.actor;
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚀 Production Deployment Ready - ${commit}`,
+              body: `## Production Deployment Checklist
+
+**Commit:** \`${context.sha}\`
+**Author:** @${author}
+**CI/CD Run:** [View tests](${runUrl})
+
+### Pre-deployment Checklist
+- [ ] All tests passed ✅
+- [ ] Code reviewed and approved
+- [ ] Staging environment validated
+- [ ] Database migrations prepared (if any)
+- [ ] Environment variables verified
+
+### Deployment Steps
+\`\`\`bash
+# 1. SSH into Digital Ocean
+ssh root@your-server-ip
+
+# 2. Navigate to project
+cd /var/www/vittasami
+
+# 3. Backup current deployment
+docker-compose down
+cp -r .next .next.backup-$(date +%Y%m%d-%H%M%S)
+
+# 4. Pull latest code
+git pull origin main
+
+# 5. Verify commit
+git log -1 --oneline
+
+# 6. Deploy
+./deploy.sh
+
+# 7. Verify deployment
+curl https://app.vittasami.lat/api/health
+curl https://vittasami.com
+
+# 8. Monitor logs
+docker-compose logs -f --tail=100
+\`\`\`
+
+### Post-deployment Checklist
+- [ ] Health check passing
+- [ ] Login flow working
+- [ ] Booking flow working
+- [ ] Payment processing working
+- [ ] No errors in logs
+- [ ] Performance acceptable
+
+### Rollback (if needed)
+\`\`\`bash
+# Option 1: Restore backup
+docker-compose down
+rm -rf .next
+mv .next.backup-[timestamp] .next
+./deploy.sh
+
+# Option 2: Git revert
+git revert ${context.sha}
+./deploy.sh
+\`\`\`
+
+---
+**⚠️ Close this issue after successful deployment**`,
+              labels: ['deployment', 'production']
+            });
+
+  security-scan:
+    name: Security Scan
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run security audit
+        run: npm audit --production
+
+      - name: Check for vulnerable dependencies
+        run: npm audit --audit-level=high
