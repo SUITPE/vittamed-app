@@ -5,7 +5,7 @@ const nextConfig = {
     optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react']
   },
 
-  // Server external packages (moved from experimental)
+  // Server external packages
   serverExternalPackages: [],
 
   // Image optimization
@@ -45,43 +45,12 @@ const nextConfig = {
     ]
   },
 
-  // Bundle optimization
-  webpack: (config, { dev, isServer }) => {
-    if (!dev && !isServer) {
-      // Production optimizations
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-            priority: 10
-          },
-          supabase: {
-            test: /[\\/]node_modules[\\/]@supabase/,
-            name: 'supabase',
-            chunks: 'all',
-            priority: 20
-          }
-        }
-      }
-    }
-    return config
-  },
+  // Next.js 16: Turbopack is now default
+  // Empty config to acknowledge and silence webpack warning
+  turbopack: {},
 
   // Output configuration for Vercel deployment
-  output: 'standalone', // Required for Vercel/serverless and Next.js 15 route groups
-
-  // Fix for Next.js 15 route groups ENOENT error on Vercel
-  // Issue: https://github.com/vercel/next.js/issues/71884
-  outputFileTracing: true,
-
-  // ESLint configuration for builds
-  eslint: {
-    // Allow production builds to complete even with ESLint errors
-    ignoreDuringBuilds: true,
-  },
+  output: 'standalone',
 
   // TypeScript configuration for builds
   typescript: {
