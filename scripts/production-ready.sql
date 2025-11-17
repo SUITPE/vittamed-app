@@ -1,3 +1,19 @@
+-- =====================================================
+-- VITTASAMI - PRODUCTION DATABASE SCHEMA
+-- =====================================================
+-- Fecha: Sun Nov 16 22:38:05 -05 2025
+-- Base de datos: Production (emtcplanfbmydqjbcuxm)
+-- Descripción: Schema completo con migraciones 015-020
+--
+-- INSTRUCCIONES:
+-- 1. Copiar TODO este archivo
+-- 2. Ir a: https://supabase.com/dashboard/project/emtcplanfbmydqjbcuxm/sql/new
+-- 3. Pegar en SQL Editor
+-- 4. Click en RUN (botón verde)
+-- 5. Esperar ~30 segundos
+-- =====================================================
+
+
 -- Migration: Tenant Feature Flags System
 -- Description: Add feature flags for tenants to enable/disable functionality based on subscription
 
@@ -275,7 +291,7 @@ CREATE POLICY "Tenant features viewable by tenant members" ON tenant_features
   FOR SELECT
   USING (
     tenant_id IN (
-      SELECT tenant_id FROM profiles WHERE id = auth.uid()
+      SELECT tenant_id FROM user_profiles WHERE id = auth.uid()
     )
   );
 
@@ -284,7 +300,7 @@ CREATE POLICY "Only admins can modify tenant features" ON tenant_features
   FOR ALL
   USING (
     EXISTS (
-      SELECT 1 FROM profiles
+      SELECT 1 FROM user_profiles
       WHERE id = auth.uid() AND role = 'super_admin'
     )
   );
@@ -326,7 +342,7 @@ CREATE TABLE IF NOT EXISTS medical_records (
   record_date date NOT NULL DEFAULT CURRENT_DATE,
 
   -- Medical professional
-  doctor_id uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  doctor_id uuid REFERENCES user_profiles(id) ON DELETE SET NULL,
   doctor_name text, -- Denormalized for historical accuracy
 
   -- General medical information (common across all tenant types)
@@ -352,8 +368,8 @@ CREATE TABLE IF NOT EXISTS medical_records (
   allow_cross_tenant_viewing boolean DEFAULT false, -- For future: patient authorization
 
   -- Audit fields
-  created_by uuid REFERENCES profiles(id) ON DELETE SET NULL,
-  updated_by uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  created_by uuid REFERENCES user_profiles(id) ON DELETE SET NULL,
+  updated_by uuid REFERENCES user_profiles(id) ON DELETE SET NULL,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -379,7 +395,7 @@ CREATE TABLE IF NOT EXISTS prescriptions (
   status text DEFAULT 'active' CHECK (status IN ('active', 'completed', 'cancelled', 'refilled')),
 
   -- Prescribed by
-  prescribed_by uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  prescribed_by uuid REFERENCES user_profiles(id) ON DELETE SET NULL,
   prescribed_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
 
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
@@ -408,7 +424,7 @@ CREATE TABLE IF NOT EXISTS diagnoses (
   resolved_date date,
 
   -- Diagnosed by
-  diagnosed_by uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  diagnosed_by uuid REFERENCES user_profiles(id) ON DELETE SET NULL,
 
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
@@ -458,7 +474,7 @@ CREATE TABLE IF NOT EXISTS vaccinations (
   notes text,
 
   -- Administered by
-  administered_by uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  administered_by uuid REFERENCES user_profiles(id) ON DELETE SET NULL,
 
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
@@ -642,12 +658,12 @@ CREATE POLICY "Medical records viewable by tenant members" ON medical_records
   FOR SELECT
   USING (
     tenant_id IN (
-      SELECT tenant_id FROM profiles WHERE id = auth.uid()
+      SELECT tenant_id FROM user_profiles WHERE id = auth.uid()
     )
     OR
     patient_id IN (
       SELECT id FROM patients WHERE email = (
-        SELECT email FROM profiles WHERE id = auth.uid()
+        SELECT email FROM user_profiles WHERE id = auth.uid()
       )
     )
   );
@@ -657,7 +673,7 @@ CREATE POLICY "Only doctors can modify medical records" ON medical_records
   FOR ALL
   USING (
     EXISTS (
-      SELECT 1 FROM profiles
+      SELECT 1 FROM user_profiles
       WHERE id = auth.uid()
       AND tenant_id = medical_records.tenant_id
       AND role IN ('doctor', 'admin_tenant', 'super_admin')
@@ -669,7 +685,7 @@ CREATE POLICY "Prescriptions viewable by tenant members" ON prescriptions
   FOR SELECT
   USING (
     tenant_id IN (
-      SELECT tenant_id FROM profiles WHERE id = auth.uid()
+      SELECT tenant_id FROM user_profiles WHERE id = auth.uid()
     )
   );
 
@@ -677,7 +693,7 @@ CREATE POLICY "Diagnoses viewable by tenant members" ON diagnoses
   FOR SELECT
   USING (
     tenant_id IN (
-      SELECT tenant_id FROM profiles WHERE id = auth.uid()
+      SELECT tenant_id FROM user_profiles WHERE id = auth.uid()
     )
   );
 
@@ -685,7 +701,7 @@ CREATE POLICY "Allergies viewable by tenant members" ON patient_allergies
   FOR SELECT
   USING (
     tenant_id IN (
-      SELECT tenant_id FROM profiles WHERE id = auth.uid()
+      SELECT tenant_id FROM user_profiles WHERE id = auth.uid()
     )
   );
 
