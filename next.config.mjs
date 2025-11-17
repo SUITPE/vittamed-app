@@ -2,10 +2,7 @@
 const nextConfig = {
   // Production optimizations
   experimental: {
-    optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
-    // Force dynamic rendering for all routes (Next.js 15 compatibility)
-    // This prevents static generation errors for pages using cookies()
-    dynamicIO: true,
+    optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react']
   },
 
   // Server external packages (moved from experimental)
