@@ -89,6 +89,13 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_APP_VERSION: process.env.npm_package_version || '1.0.0',
     NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),
+  },
+
+  // Force dynamic rendering for all routes (Next.js 15 compatibility)
+  // This prevents static generation errors for pages using cookies()
+  experimental: {
+    ...nextConfig.experimental,
+    dynamicIO: true,
   }
 }
 
