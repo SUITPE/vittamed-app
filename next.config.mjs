@@ -73,6 +73,10 @@ const nextConfig = {
   // Output configuration for Vercel deployment
   output: 'standalone', // Required for Vercel/serverless and Next.js 15 route groups
 
+  // Fix for Next.js 15 route groups ENOENT error on Vercel
+  // Issue: https://github.com/vercel/next.js/issues/71884
+  outputFileTracing: true,
+
   // ESLint configuration for builds
   eslint: {
     // Allow production builds to complete even with ESLint errors
