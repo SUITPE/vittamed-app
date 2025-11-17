@@ -70,8 +70,8 @@ const nextConfig = {
     return config
   },
 
-  // Output configuration - removed standalone for PM2 compatibility
-  // output: 'standalone', // Only needed for Vercel/serverless
+  // Output configuration for Vercel deployment
+  output: 'standalone', // Required for Vercel/serverless and Next.js 15 route groups
 
   // ESLint configuration for builds
   eslint: {
