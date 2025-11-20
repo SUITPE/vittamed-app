@@ -5,6 +5,9 @@ import AdminHeader from '@/components/AdminHeader'
 import ManageUsersClient from '@/components/admin/ManageUsersClient'
 import { UserRoleView } from '@/types/user'
 
+// Force dynamic rendering for pages using cookies
+export const dynamic = 'force-dynamic'
+
 // Server Component - Fetches data server-side
 export default async function ManageUsersPage() {
   // Server-side authentication
