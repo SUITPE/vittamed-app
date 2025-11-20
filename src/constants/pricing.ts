@@ -329,3 +329,140 @@ export const PRICING_FAQS: PricingFAQ[] = [
       'Sí, no hay contratos de permanencia. Puedes cancelar tu suscripción cuando quieras desde tu panel de configuración. Al cancelar, mantienes acceso hasta el final del período pagado y luego pasas automáticamente al plan Free.',
   },
 ]
+
+// Types para Feature Gating
+export type PlanKey = 'free' | 'care' | 'pro' | 'enterprise'
+
+export type FeatureKey =
+  | 'unlimited_agenda'
+  | 'online_booking'
+  | 'email_reminders'
+  | 'sms_reminders'
+  | 'whatsapp_reminders'
+  | 'multi_calendar'
+  | 'patient_management'
+  | 'medical_records'
+  | 'voice_dictation'
+  | 'ai_assistant'
+  | 'ai_suggestions'
+  | 'ai_predictive'
+  | 'max_professionals'
+  | 'max_patients'
+  | 'max_appointments_per_month'
+  | 'roles_permissions'
+  | 'multi_locations'
+  | 'integrated_payments'
+  | 'financial_reports'
+  | 'accounting_integration'
+  | 'priority_support'
+  | 'dedicated_manager'
+  | 'custom_branding'
+  | 'api_access'
+
+// Mapa de features por plan para el sistema de Feature Gating
+export const PLAN_FEATURES: Record<PlanKey, Record<FeatureKey, boolean | number | null>> = {
+  free: {
+    unlimited_agenda: true,
+    online_booking: true,
+    email_reminders: true,
+    sms_reminders: false,
+    whatsapp_reminders: false,
+    multi_calendar: false,
+    patient_management: false,
+    medical_records: false,
+    voice_dictation: false,
+    ai_assistant: false,
+    ai_suggestions: false,
+    ai_predictive: false,
+    max_professionals: 1,
+    max_patients: 100,
+    max_appointments_per_month: null, // ilimitado
+    roles_permissions: false,
+    multi_locations: false,
+    integrated_payments: false,
+    financial_reports: false,
+    accounting_integration: false,
+    priority_support: false,
+    dedicated_manager: false,
+    custom_branding: false,
+    api_access: false,
+  },
+  care: {
+    unlimited_agenda: true,
+    online_booking: true,
+    email_reminders: true,
+    sms_reminders: true,
+    whatsapp_reminders: false,
+    multi_calendar: false,
+    patient_management: true,
+    medical_records: true,
+    voice_dictation: true,
+    ai_assistant: true,
+    ai_suggestions: true,
+    ai_predictive: false,
+    max_professionals: 1,
+    max_patients: null, // ilimitado
+    max_appointments_per_month: null,
+    roles_permissions: false,
+    multi_locations: false,
+    integrated_payments: false,
+    financial_reports: false,
+    accounting_integration: false,
+    priority_support: true,
+    dedicated_manager: false,
+    custom_branding: false,
+    api_access: false,
+  },
+  pro: {
+    unlimited_agenda: true,
+    online_booking: true,
+    email_reminders: true,
+    sms_reminders: true,
+    whatsapp_reminders: true,
+    multi_calendar: true,
+    patient_management: true,
+    medical_records: true,
+    voice_dictation: true,
+    ai_assistant: true,
+    ai_suggestions: true,
+    ai_predictive: false,
+    max_professionals: 5,
+    max_patients: null,
+    max_appointments_per_month: null,
+    roles_permissions: true,
+    multi_locations: false,
+    integrated_payments: true,
+    financial_reports: true,
+    accounting_integration: false,
+    priority_support: true,
+    dedicated_manager: false,
+    custom_branding: false,
+    api_access: true,
+  },
+  enterprise: {
+    unlimited_agenda: true,
+    online_booking: true,
+    email_reminders: true,
+    sms_reminders: true,
+    whatsapp_reminders: true,
+    multi_calendar: true,
+    patient_management: true,
+    medical_records: true,
+    voice_dictation: true,
+    ai_assistant: true,
+    ai_suggestions: true,
+    ai_predictive: true,
+    max_professionals: null, // ilimitado
+    max_patients: null,
+    max_appointments_per_month: null,
+    roles_permissions: true,
+    multi_locations: true,
+    integrated_payments: true,
+    financial_reports: true,
+    accounting_integration: true,
+    priority_support: true,
+    dedicated_manager: true,
+    custom_branding: true,
+    api_access: true,
+  },
+}
