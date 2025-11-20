@@ -298,7 +298,7 @@ export class CustomAuthService {
   getRedirectPath(profile: UserProfile): string {
     switch (profile.role) {
       case 'super_admin':
-        return '/admin/global'
+        return '/admin/manage-users'
       case 'admin_tenant':
       case 'staff':
       case 'receptionist':

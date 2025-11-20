@@ -24,6 +24,9 @@ export default async function DashboardPage() {
 
   // Redirect based on user role
   switch (role) {
+    case 'super_admin':
+      console.log('✅ Redirecting super_admin to manage-users')
+      redirect('/admin/manage-users')
     case 'admin_tenant':
     case 'staff':
     case 'receptionist':
@@ -34,15 +37,12 @@ export default async function DashboardPage() {
         console.log('⚠️ No tenant_id, redirecting to create-tenant')
         redirect('/admin/create-tenant')
       }
-      break
     case 'doctor':
       console.log('✅ Redirecting doctor to agenda')
       redirect('/agenda')
-      break
     case 'patient':
       console.log('✅ Redirecting patient to appointments')
       redirect('/my-appointments')
-      break
     default:
       console.log('❌ Unknown role, redirecting to login')
       redirect('/auth/login')
