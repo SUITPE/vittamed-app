@@ -1,6 +1,4 @@
 import nodemailer from 'nodemailer'
-// @ts-ignore - Twilio types not available
-import twilio from 'twilio'
 import { generateReminderEmailTemplate, generateReminderSMSTemplate, getTenantBranding } from './reminder-templates'
 import type { EmailReminderTemplateData, SMSReminderTemplateData, TenantBranding } from '@/types/catalog'
 
@@ -14,9 +12,30 @@ const emailTransporter = nodemailer.createTransport({
   },
 })
 
-export const twilioClient = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
-  ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
-  : null
+// Lazy-load Twilio to prevent build-time initialization
+let twilioClientInstance: any = null
+
+function getTwilioClient() {
+  if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
+    return null
+  }
+
+  if (!twilioClientInstance) {
+    try {
+      // @ts-ignore - Twilio types not available
+      const twilio = require('twilio')
+      twilioClientInstance = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
+    } catch (error) {
+      console.error('Error initializing Twilio client:', error)
+      return null
+    }
+  }
+
+  return twilioClientInstance
+}
+
+// Export for backward compatibility
+export const twilioClient = null // Will be lazily initialized
 
 export interface NotificationData {
   recipientEmail?: string
@@ -65,13 +84,14 @@ export async function sendEmailNotification(data: NotificationData): Promise<boo
 }
 
 export async function sendWhatsAppNotification(data: NotificationData): Promise<boolean> {
-  if (!data.recipientPhone || !twilioClient || !process.env.TWILIO_WHATSAPP_NUMBER) {
+  const client = getTwilioClient()
+  if (!data.recipientPhone || !client || !process.env.TWILIO_WHATSAPP_NUMBER) {
     console.warn('WhatsApp configuration missing')
     return false
   }
 
   try {
-    const message = await twilioClient.messages.create({
+    const message = await client.messages.create({
       body: data.content,
       from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
       to: `whatsapp:${data.recipientPhone}`,
@@ -236,7 +256,8 @@ export async function sendReminderSMS(
   data: ReminderNotificationData,
   branding: TenantBranding | null
 ): Promise<boolean> {
-  if (!data.recipientPhone || !twilioClient) {
+  const client = getTwilioClient()
+  if (!data.recipientPhone || !client) {
     console.warn('SMS configuration missing for reminder')
     return false
   }
@@ -245,7 +266,7 @@ export async function sendReminderSMS(
     const templateData = data.templateData as SMSReminderTemplateData
     const messageContent = generateReminderSMSTemplate(templateData, branding)
 
-    const message = await twilioClient.messages.create({
+    const message = await client.messages.create({
       body: messageContent,
       from: process.env.TWILIO_PHONE_NUMBER,
       to: data.recipientPhone,
@@ -264,7 +285,8 @@ export async function sendReminderWhatsApp(
   data: ReminderNotificationData,
   branding: TenantBranding | null
 ): Promise<boolean> {
-  if (!data.recipientPhone || !twilioClient || !process.env.TWILIO_WHATSAPP_NUMBER) {
+  const client = getTwilioClient()
+  if (!data.recipientPhone || !client || !process.env.TWILIO_WHATSAPP_NUMBER) {
     console.warn('WhatsApp configuration missing for reminder')
     return false
   }
@@ -273,7 +295,7 @@ export async function sendReminderWhatsApp(
     const templateData = data.templateData as SMSReminderTemplateData
     const messageContent = generateReminderSMSTemplate(templateData, branding)
 
-    const message = await twilioClient.messages.create({
+    const message = await client.messages.create({
       body: messageContent,
       from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
       to: `whatsapp:${data.recipientPhone}`,
