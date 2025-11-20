@@ -4,6 +4,9 @@ import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
 import DashboardClient from '@/components/admin/DashboardClient'
 
+// Force dynamic rendering for pages using cookies
+export const dynamic = 'force-dynamic'
+
 interface DashboardStats {
   todayAppointments: number
   weekAppointments: number

@@ -4,6 +4,9 @@ import DoctorSidebar from '@/components/DoctorSidebar'
 import AdminHeader from '@/components/AdminHeader'
 import AppointmentsClient from '@/components/appointments/AppointmentsClient'
 
+// Force dynamic rendering for pages using cookies
+export const dynamic = 'force-dynamic'
+
 interface Appointment {
   id: string
   patient_id: string

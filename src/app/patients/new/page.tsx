@@ -2,6 +2,9 @@ import { redirect } from 'next/navigation'
 import { customAuth } from '@/lib/custom-auth'
 import NewPatientForm from '@/components/patients/NewPatientForm'
 
+// Force dynamic rendering for pages using cookies
+export const dynamic = 'force-dynamic'
+
 // Server Component - Only auth check
 export default async function NewPatientPage() {
   // Server-side authentication

@@ -2,6 +2,9 @@ import { redirect } from 'next/navigation'
 import { customAuth } from '@/lib/custom-auth'
 import MyAppointmentsClient from '@/components/appointments/MyAppointmentsClient'
 
+// Force dynamic rendering for pages using cookies
+export const dynamic = 'force-dynamic'
+
 interface Appointment {
   id: string
   service_name: string
