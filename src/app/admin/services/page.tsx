@@ -3,6 +3,9 @@ import { customAuth } from '@/lib/custom-auth'
 import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
 import ServicesManagementClient from '@/components/admin/ServicesManagementClient'
+// Force dynamic rendering for pages using cookies
+export const dynamic = 'force-dynamic'
+
 
 interface Service {
   id: string

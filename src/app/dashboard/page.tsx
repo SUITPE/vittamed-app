@@ -1,5 +1,8 @@
 import { redirect } from 'next/navigation'
 import { customAuth } from '@/lib/custom-auth'
+// Force dynamic rendering for pages using cookies
+export const dynamic = 'force-dynamic'
+
 
 // Server Component - Simple redirect based on role
 export default async function DashboardPage() {

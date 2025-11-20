@@ -3,6 +3,9 @@ import { customAuth } from '@/lib/custom-auth'
 import AdminNavigation from '@/components/AdminNavigation'
 import SettingsClient from '@/components/admin/SettingsClient'
 import { BusinessType } from '@/types/business'
+// Force dynamic rendering for pages using cookies
+export const dynamic = 'force-dynamic'
+
 
 interface TenantSettings {
   id: string

@@ -1,6 +1,9 @@
 import { redirect } from 'next/navigation'
 import { customAuth } from '@/lib/custom-auth'
 import SchedulesClient from '@/components/admin/SchedulesClient'
+// Force dynamic rendering for pages using cookies
+export const dynamic = 'force-dynamic'
+
 
 interface Schedule {
   id: string
