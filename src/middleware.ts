@@ -69,7 +69,7 @@ export async function middleware(request: NextRequest) {
 
           // Redirect based on user role
           if (role === 'super_admin') {
-            return NextResponse.redirect(new URL('/admin/global', request.url))
+            return NextResponse.redirect(new URL('/admin/manage-users', request.url))
           } else if (role === 'admin_tenant' || role === 'staff' || role === 'receptionist') {
             if (tenantId) {
               return NextResponse.redirect(new URL(`/dashboard/${tenantId}`, request.url))
