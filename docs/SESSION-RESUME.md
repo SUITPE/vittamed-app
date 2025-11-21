@@ -89,10 +89,19 @@ curl -d @archivo.json  # ✅ Funciona correctamente
    - Agregado check de `JWT_SECRET` en environment
    - Agregado validación de `jwt_secret_valid`
 
-### Commits
+### Commits (Sesión Original)
 ```
 4fcdfa51 debug: add JWT_SECRET check to health endpoint
 8da798a2 fix: redirect super_admin to /admin/manage-users instead of non-existent /admin/global
+```
+
+### Commits Adicionales (Sesión Continuada - 2025-11-21)
+```
+01b77b8b fix: update middleware super_admin redirect to /admin/manage-users
+83fbada1 fix: add super_admin to authorization checks in admin pages
+ac9fad65 fix: change login link from DOMAINS.app to /auth/login (WRONG FILE)
+09446090 fix: marketing PublicHeader login link - change DOMAINS.app to /auth/login (CORRECT)
+1599a2aa feat: smart login URL - support both staging and production with subdomain architecture
 ```
 
 **Branch:** staging
@@ -101,24 +110,21 @@ curl -d @archivo.json  # ✅ Funciona correctamente
 
 ## 🚀 Deployment Info
 
-### Deployment Actual (Funcionando)
+### Deployment Actual (Funcionando) - FINAL 2025-11-21
 ```
-Deployment ID: vittasami-j4i26yx08-vittameds-projects.vercel.app
+Deployment ID: vittasami-n758cdgj6-vittameds-projects.vercel.app
 Status: ● Ready
 Build Time: ~1 minute
-Commit: 4fcdfa51
+Commit: 1599a2aa (Smart Login URL - Production Ready)
 ```
 
 ### Aliases Configurados
 ```
 ✅ vittasami-git-staging-vittameds-projects.vercel.app
-   → vittasami-j4i26yx08-vittameds-projects.vercel.app
+   → vittasami-n758cdgj6-vittameds-projects.vercel.app
 
 ✅ vittasami-staging.vercel.app
-   → vittasami-j4i26yx08-vittameds-projects.vercel.app
-
-✅ vittasami-suitpe-vittameds-projects.vercel.app
-   → vittasami-j4i26yx08-vittameds-projects.vercel.app
+   → vittasami-n758cdgj6-vittameds-projects.vercel.app
 ```
 
 ### URLs de Acceso
@@ -350,8 +356,92 @@ Agregar validaciones de todas las env vars críticas en el health check para deb
 
 ---
 
-**Última actualización**: 2025-11-21 08:55 (Hora Perú)
+---
+
+## 🔧 Sesión Continuada - Fixes Adicionales (2025-11-21 Continuación)
+
+### Issue #1: Middleware Redirect a /admin/global
+**Problema**: Aunque el API retornaba redirect correcto, middleware seguía redirigiendo a `/admin/global`
+**Archivo**: `src/middleware.ts:71-72`
+**Fix**: Cambió redirect de `/admin/global` a `/admin/manage-users`
+**Commit**: `01b77b8b`
+
+### Issue #2: "Acceso Restringido" en Admin Pages
+**Problema**: Super admin veía mensaje "Acceso Restringido" en `/admin/manage-users` y `/admin/services`
+**Root Cause**:
+1. Authorization check no incluía `super_admin` en roles permitidos
+2. Validación de `tenant_id` bloqueaba super_admin (que tiene `tenant_id = null`)
+
+**Archivos Modificados**:
+- `src/app/admin/manage-users/page.tsx`
+  - Line 22: Agregado `super_admin` a `canManageUsers`
+  - Lines 50-79: Agregado check `isSuperAdmin` para bypass de tenant_id
+  - Lines 81-106: Fetch condicional solo si `tenantId` existe
+- `src/app/admin/services/page.tsx`
+  - Line 45: Agregado `super_admin` a `isAuthorized`
+  - Lines 73-101: Agregado check `isSuperAdmin` para bypass de tenant_id
+
+**Commit**: `83fbada1`
+
+### Issue #3: Login Link No Funciona (FIXED - Round 2)
+**Problema**: Botón "Iniciar Sesión" en header redirigía a home en vez de login
+**Root Cause**: Se editó el archivo incorrecto. Existen DOS componentes PublicHeader:
+  - `/src/components/PublicHeader.tsx` (editado por error ❌)
+  - `/src/components/marketing/PublicHeader.tsx` (el que usa la landing ✅)
+
+**Archivos Modificados**:
+- **Primera edición (incorrecta)**: `src/components/PublicHeader.tsx:29-34` - Commit `ac9fad65` ❌
+- **Segunda edición (correcta)**: `src/components/marketing/PublicHeader.tsx`:
+  - Line 106-114: Desktop login button - cambió `<a href={DOMAINS.app}>` a `<Link href="/auth/login">`
+  - Line 171-179: Mobile login button - cambió `<a href={DOMAINS.app}>` a `<Link href="/auth/login">`
+  - Removió import de `DOMAINS` ya no usado
+
+**Commits**:
+- `ac9fad65` - Fix incorrecto (archivo equivocado)
+- `09446090` - Fix correcto (marketing header)
+
+### Issue #4: Smart Login URL (Production Ready)
+**Mejora**: Login URL que se adapta automáticamente al entorno
+**Motivación**: Prevenir el mismo problema cuando despleguemos con subdominios en producción
+**Archivo**: `src/components/marketing/PublicHeader.tsx`
+**Implementación**:
+```typescript
+useEffect(() => {
+  const hostname = window.location.hostname
+  if (hostname.includes('vittasami.com') && !hostname.includes('app.')) {
+    setLoginUrl(`${DOMAINS.app}/auth/login`)  // Prod: https://app.vittasami.lat/auth/login
+  } else {
+    setLoginUrl('/auth/login')  // Staging: path relativo
+  }
+}, [])
+```
+**Commit**: `1599a2aa`
+
+### Deployment Final
+**URL**: https://vittasami-n758cdgj6-vittameds-projects.vercel.app
+**Aliases**:
+- vittasami-git-staging-vittameds-projects.vercel.app
+- vittasami-staging.vercel.app
+
+### Verificación Pendiente
+El usuario debe verificar el flujo completo:
+1. ✅ Click en "Iniciar Sesión" desde home
+2. ✅ Login con admin@vittasami.com
+3. ✅ Redirect automático a /admin/manage-users
+4. ✅ Sin mensaje "Acceso Restringido"
+5. ✅ Página carga con interfaz de gestión de usuarios
+
+---
+
+**Última actualización**: 2025-11-21 09:45 (Hora Perú)
 **Sesión actualizada por**: Claude Code
 **Branch**: staging
-**Deployment**: vittasami-j4i26yx08-vittameds-projects.vercel.app
-**Status**: ✅ COMPLETADO Y VERIFICADO
+**Deployment**: vittasami-n758cdgj6-vittameds-projects.vercel.app
+**Status**: ✅ TODOS LOS FIXES COMPLETADOS + SMART LOGIN URL - LISTO PARA VERIFICACIÓN
+
+## 📋 Resumen de Commits (5 total)
+1. `01b77b8b` - Middleware redirect fix
+2. `83fbada1` - Admin pages authorization fix
+3. `ac9fad65` - Login link fix (archivo incorrecto)
+4. `09446090` - Login link fix (archivo correcto)
+5. `1599a2aa` - Smart login URL (production ready)

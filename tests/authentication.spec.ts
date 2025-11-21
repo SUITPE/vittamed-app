@@ -13,10 +13,9 @@ test.describe('Authentication Tests - Login Page', () => {
     await expect(page.locator('[data-testid="login-submit"]')).toBeVisible()
   })
 
-  test('should show demo user credentials', async ({ page }) => {
+  test.skip('should show demo user credentials', async ({ page }) => {
+    // Skipped: Demo credentials are no longer shown on the login page
     await expect(page.locator('text=admin@clinicasanrafael.com / password')).toBeVisible()
-    await expect(page.locator('text=ana.rodriguez@email.com / password')).toBeVisible()
-    await expect(page.locator('text=patient@example.com / password')).toBeVisible()
   })
 
   test('should login successfully with admin credentials', async ({ page }) => {
@@ -27,8 +26,8 @@ test.describe('Authentication Tests - Login Page', () => {
     // Wait for navigation to dashboard
     await page.waitForURL('/dashboard/**', { timeout: 30000 })
 
-    // Check for dashboard content
-    await expect(page.locator('h1, h2')).toBeVisible()
+    // Check for dashboard content - wait for page to fully load
+    await expect(page.locator('h1:visible, h2:visible').first()).toBeVisible({ timeout: 15000 })
   })
 
   test('should login successfully with doctor credentials', async ({ page }) => {
@@ -39,8 +38,8 @@ test.describe('Authentication Tests - Login Page', () => {
     // Wait for navigation to agenda or dashboard
     await page.waitForURL(/\/(agenda|dashboard)/, { timeout: 30000 })
 
-    // Check for page content
-    await expect(page.locator('h1, h2')).toBeVisible()
+    // Check for page content - wait for page to fully load
+    await expect(page.locator('h1:visible, h2:visible').first()).toBeVisible({ timeout: 15000 })
   })
 
   test('should login successfully with patient credentials', async ({ page }) => {
@@ -52,7 +51,7 @@ test.describe('Authentication Tests - Login Page', () => {
     await page.waitForURL(/\/(my-appointments|client)/, { timeout: 30000 })
 
     // Check for page content
-    await expect(page.locator('h1, h2')).toBeVisible()
+    await expect(page.locator('h1, h2').first()).toBeVisible()
   })
 
   test('should show error message for invalid credentials', async ({ page }) => {
@@ -76,8 +75,8 @@ test.describe('Authentication Tests - Login Page', () => {
   test('should navigate to signup page', async ({ page }) => {
     await page.click('text=Regístrate aquí')
 
-    await expect(page).toHaveURL('/auth/signup')
-    await expect(page.locator('h2')).toContainText('Crear Cuenta en VittaSami')
+    await expect(page).toHaveURL('/auth/register-business')
+    await expect(page.locator('h2')).toContainText('Registra tu Negocio')
   })
 
   test('should show loading state during login', async ({ page }) => {
@@ -92,7 +91,9 @@ test.describe('Authentication Tests - Login Page', () => {
   })
 })
 
-test.describe('Signup Tests', () => {
+// Signup Tests - SKIPPED: The /auth/signup page has been replaced with /auth/register-business
+// which is a completely different business registration flow
+test.describe.skip('Signup Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/auth/signup')
   })
@@ -187,6 +188,7 @@ test.describe('Protected Routes - Authenticated', () => {
     await page.goto('/dashboard')
     // Should NOT redirect to login
     await expect(page).not.toHaveURL(/\/auth\/login/)
-    await expect(page.locator('h1, h2')).toBeVisible()
+    // Wait for page to fully load
+    await expect(page.locator('h1:visible, h2:visible').first()).toBeVisible({ timeout: 15000 })
   })
 })

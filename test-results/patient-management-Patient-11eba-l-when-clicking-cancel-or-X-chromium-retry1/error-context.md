@@ -7,7 +7,7 @@
       - generic [ref=e4]:
         - generic [ref=e5]:
           - img [ref=e7]
-          - generic [ref=e9]: VittaMed
+          - generic [ref=e9]: VittaSami
         - button [ref=e10] [cursor=pointer]:
           - img [ref=e11] [cursor=pointer]
       - navigation [ref=e13]:

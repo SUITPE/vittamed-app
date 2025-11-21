@@ -1,4 +1,0 @@
-
-> vittamed-app@0.1.0 test
-> playwright test --reporter=json
-

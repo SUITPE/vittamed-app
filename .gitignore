@@ -108,10 +108,25 @@ jspm_packages/
 # webpack build artifacts
 vittamed-production-package/
 .next/cache/webpack/
-vittamed-production-package/
-supabase/migrations/🔑 Credenciales Demo de VittaMed
-supabase/migrations/Despues de hacer el register business me redirige
-.gitignore
-supabase/migrations/Tengo algunas mejoras:
-supabase/migrations/Titular: Cusco Beer Company
-supabase/migrations/Necesito que confirmes si estos endpoints existen
+
+# Test Results & Playwright artifacts
+test-results/
+playwright-report/
+.last-run.json
+playwright/.cache/
+
+# Recovery & Temporary Files
+.recovery/
+.tmp/
+*.tmp
+
+# Build outputs
+dist/
+out/
+
+# Scripts output
+scripts/output/
+scripts/logs/
+
+# Agent working directories
+abpteam/

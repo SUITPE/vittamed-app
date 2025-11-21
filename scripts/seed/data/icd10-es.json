@@ -1,0 +1,511 @@
+[
+  {
+    "code": "A00",
+    "description": "Cólera",
+    "category": "A00-A09 Enfermedades infecciosas intestinales",
+    "chapter_code": "A00-B99",
+    "chapter_name": "Ciertas enfermedades infecciosas y parasitarias",
+    "search_terms": ["colera", "diarrea aguda"],
+    "is_billable": true
+  },
+  {
+    "code": "A09",
+    "description": "Diarrea y gastroenteritis de presunto origen infeccioso",
+    "category": "A00-A09 Enfermedades infecciosas intestinales",
+    "chapter_code": "A00-B99",
+    "chapter_name": "Ciertas enfermedades infecciosas y parasitarias",
+    "search_terms": ["gastroenteritis", "diarrea", "colitis aguda"],
+    "is_billable": true
+  },
+  {
+    "code": "B00",
+    "description": "Infecciones herpéticas [herpes simple]",
+    "category": "B00-B09 Infecciones víricas caracterizadas por lesiones de la piel y de las membranas mucosas",
+    "chapter_code": "A00-B99",
+    "chapter_name": "Ciertas enfermedades infecciosas y parasitarias",
+    "search_terms": ["herpes", "herpes simple", "herpes labial"],
+    "is_billable": true
+  },
+  {
+    "code": "E10",
+    "description": "Diabetes mellitus insulinodependiente",
+    "category": "E10-E14 Diabetes mellitus",
+    "chapter_code": "E00-E90",
+    "chapter_name": "Enfermedades endocrinas, nutricionales y metabólicas",
+    "search_terms": ["diabetes tipo 1", "diabetes insulinodependiente", "DM1"],
+    "is_billable": false
+  },
+  {
+    "code": "E10.9",
+    "description": "Diabetes mellitus insulinodependiente, sin mención de complicación",
+    "category": "E10-E14 Diabetes mellitus",
+    "chapter_code": "E00-E90",
+    "chapter_name": "Enfermedades endocrinas, nutricionales y metabólicas",
+    "parent_code": "E10",
+    "search_terms": ["diabetes tipo 1 sin complicaciones"],
+    "is_billable": true
+  },
+  {
+    "code": "E11",
+    "description": "Diabetes mellitus no insulinodependiente",
+    "category": "E10-E14 Diabetes mellitus",
+    "chapter_code": "E00-E90",
+    "chapter_name": "Enfermedades endocrinas, nutricionales y metabólicas",
+    "search_terms": ["diabetes tipo 2", "diabetes no insulinodependiente", "DM2"],
+    "is_billable": false
+  },
+  {
+    "code": "E11.9",
+    "description": "Diabetes mellitus no insulinodependiente, sin mención de complicación",
+    "category": "E10-E14 Diabetes mellitus",
+    "chapter_code": "E00-E90",
+    "chapter_name": "Enfermedades endocrinas, nutricionales y metabólicas",
+    "parent_code": "E11",
+    "search_terms": ["diabetes tipo 2 sin complicaciones"],
+    "is_billable": true
+  },
+  {
+    "code": "E66",
+    "description": "Obesidad",
+    "category": "E65-E68 Obesidad y otros tipos de hiperalimentación",
+    "chapter_code": "E00-E90",
+    "chapter_name": "Enfermedades endocrinas, nutricionales y metabólicas",
+    "search_terms": ["obesidad", "sobrepeso", "exceso de peso"],
+    "is_billable": false
+  },
+  {
+    "code": "E66.9",
+    "description": "Obesidad, no especificada",
+    "category": "E65-E68 Obesidad y otros tipos de hiperalimentación",
+    "chapter_code": "E00-E90",
+    "chapter_name": "Enfermedades endocrinas, nutricionales y metabólicas",
+    "parent_code": "E66",
+    "search_terms": ["obesidad"],
+    "is_billable": true
+  },
+  {
+    "code": "E78",
+    "description": "Trastornos del metabolismo de las lipoproteínas y otras lipidemias",
+    "category": "E70-E90 Trastornos metabólicos",
+    "chapter_code": "E00-E90",
+    "chapter_name": "Enfermedades endocrinas, nutricionales y metabólicas",
+    "search_terms": ["colesterol alto", "trigliceridos", "dislipidemia", "hiperlipidemia"],
+    "is_billable": false
+  },
+  {
+    "code": "E78.5",
+    "description": "Hiperlipidemia, no especificada",
+    "category": "E70-E90 Trastornos metabólicos",
+    "chapter_code": "E00-E90",
+    "chapter_name": "Enfermedades endocrinas, nutricionales y metabólicas",
+    "parent_code": "E78",
+    "search_terms": ["colesterol alto", "hiperlipidemia"],
+    "is_billable": true
+  },
+  {
+    "code": "F32",
+    "description": "Episodio depresivo",
+    "category": "F30-F39 Trastornos del humor [afectivos]",
+    "chapter_code": "F00-F99",
+    "chapter_name": "Trastornos mentales y del comportamiento",
+    "search_terms": ["depresion", "depresivo", "tristeza"],
+    "is_billable": false
+  },
+  {
+    "code": "F32.9",
+    "description": "Episodio depresivo, no especificado",
+    "category": "F30-F39 Trastornos del humor [afectivos]",
+    "chapter_code": "F00-F99",
+    "chapter_name": "Trastornos mentales y del comportamiento",
+    "parent_code": "F32",
+    "search_terms": ["depresion"],
+    "is_billable": true
+  },
+  {
+    "code": "F41",
+    "description": "Otros trastornos de ansiedad",
+    "category": "F40-F48 Trastornos neuróticos, trastornos relacionados con el estrés y trastornos somatomorfos",
+    "chapter_code": "F00-F99",
+    "chapter_name": "Trastornos mentales y del comportamiento",
+    "search_terms": ["ansiedad", "nerviosismo", "angustia"],
+    "is_billable": false
+  },
+  {
+    "code": "F41.9",
+    "description": "Trastorno de ansiedad, no especificado",
+    "category": "F40-F48 Trastornos neuróticos, trastornos relacionados con el estrés y trastornos somatomorfos",
+    "chapter_code": "F00-F99",
+    "chapter_name": "Trastornos mentales y del comportamiento",
+    "parent_code": "F41",
+    "search_terms": ["ansiedad"],
+    "is_billable": true
+  },
+  {
+    "code": "G43",
+    "description": "Migraña",
+    "category": "G40-G47 Trastornos episódicos y paroxísticos",
+    "chapter_code": "G00-G99",
+    "chapter_name": "Enfermedades del sistema nervioso",
+    "search_terms": ["migraña", "jaqueca", "cefalea migrañosa"],
+    "is_billable": false
+  },
+  {
+    "code": "G43.9",
+    "description": "Migraña, no especificada",
+    "category": "G40-G47 Trastornos episódicos y paroxísticos",
+    "chapter_code": "G00-G99",
+    "chapter_name": "Enfermedades del sistema nervioso",
+    "parent_code": "G43",
+    "search_terms": ["migraña", "jaqueca"],
+    "is_billable": true
+  },
+  {
+    "code": "I10",
+    "description": "Hipertensión esencial (primaria)",
+    "category": "I10-I15 Enfermedades hipertensivas",
+    "chapter_code": "I00-I99",
+    "chapter_name": "Enfermedades del sistema circulatorio",
+    "search_terms": ["hipertension", "presion alta", "HTA", "presion arterial alta"],
+    "is_billable": true
+  },
+  {
+    "code": "I25",
+    "description": "Enfermedad isquémica crónica del corazón",
+    "category": "I20-I25 Enfermedad isquémica del corazón",
+    "chapter_code": "I00-I99",
+    "chapter_name": "Enfermedades del sistema circulatorio",
+    "search_terms": ["cardiopatia isquemica", "enfermedad coronaria", "isquemia cardiaca"],
+    "is_billable": false
+  },
+  {
+    "code": "I25.9",
+    "description": "Enfermedad isquémica crónica del corazón, no especificada",
+    "category": "I20-I25 Enfermedad isquémica del corazón",
+    "chapter_code": "I00-I99",
+    "chapter_name": "Enfermedades del sistema circulatorio",
+    "parent_code": "I25",
+    "search_terms": ["cardiopatia isquemica"],
+    "is_billable": true
+  },
+  {
+    "code": "I50",
+    "description": "Insuficiencia cardíaca",
+    "category": "I30-I52 Otras formas de enfermedad del corazón",
+    "chapter_code": "I00-I99",
+    "chapter_name": "Enfermedades del sistema circulatorio",
+    "search_terms": ["insuficiencia cardiaca", "falla cardiaca", "IC"],
+    "is_billable": false
+  },
+  {
+    "code": "I50.9",
+    "description": "Insuficiencia cardíaca, no especificada",
+    "category": "I30-I52 Otras formas de enfermedad del corazón",
+    "chapter_code": "I00-I99",
+    "chapter_name": "Enfermedades del sistema circulatorio",
+    "parent_code": "I50",
+    "search_terms": ["insuficiencia cardiaca"],
+    "is_billable": true
+  },
+  {
+    "code": "J00",
+    "description": "Rinofaringitis aguda [resfriado común]",
+    "category": "J00-J06 Infecciones agudas de las vías respiratorias superiores",
+    "chapter_code": "J00-J99",
+    "chapter_name": "Enfermedades del sistema respiratorio",
+    "search_terms": ["resfriado", "resfrio", "catarro", "gripe comun"],
+    "is_billable": true
+  },
+  {
+    "code": "J06",
+    "description": "Infecciones agudas de las vías respiratorias superiores, de sitios múltiples o no especificados",
+    "category": "J00-J06 Infecciones agudas de las vías respiratorias superiores",
+    "chapter_code": "J00-J99",
+    "chapter_name": "Enfermedades del sistema respiratorio",
+    "search_terms": ["infeccion respiratoria", "IRA", "infeccion vias respiratorias"],
+    "is_billable": false
+  },
+  {
+    "code": "J06.9",
+    "description": "Infección aguda de las vías respiratorias superiores, no especificada",
+    "category": "J00-J06 Infecciones agudas de las vías respiratorias superiores",
+    "chapter_code": "J00-J99",
+    "chapter_name": "Enfermedades del sistema respiratorio",
+    "parent_code": "J06",
+    "search_terms": ["infeccion respiratoria", "IRA"],
+    "is_billable": true
+  },
+  {
+    "code": "J18",
+    "description": "Neumonía, organismo no especificado",
+    "category": "J10-J18 Influenza [gripe] y neumonía",
+    "chapter_code": "J00-J99",
+    "chapter_name": "Enfermedades del sistema respiratorio",
+    "search_terms": ["neumonia", "pulmonia"],
+    "is_billable": false
+  },
+  {
+    "code": "J18.9",
+    "description": "Neumonía, no especificada",
+    "category": "J10-J18 Influenza [gripe] y neumonía",
+    "chapter_code": "J00-J99",
+    "chapter_name": "Enfermedades del sistema respiratorio",
+    "parent_code": "J18",
+    "search_terms": ["neumonia"],
+    "is_billable": true
+  },
+  {
+    "code": "J45",
+    "description": "Asma",
+    "category": "J40-J47 Enfermedades crónicas de las vías respiratorias inferiores",
+    "chapter_code": "J00-J99",
+    "chapter_name": "Enfermedades del sistema respiratorio",
+    "search_terms": ["asma", "broncoespasmo"],
+    "is_billable": false
+  },
+  {
+    "code": "J45.9",
+    "description": "Asma, no especificada",
+    "category": "J40-J47 Enfermedades crónicas de las vías respiratorias inferiores",
+    "chapter_code": "J00-J99",
+    "chapter_name": "Enfermedades del sistema respiratorio",
+    "parent_code": "J45",
+    "search_terms": ["asma"],
+    "is_billable": true
+  },
+  {
+    "code": "K29",
+    "description": "Gastritis y duodenitis",
+    "category": "K20-K31 Enfermedades del esófago, del estómago y del duodeno",
+    "chapter_code": "K00-K93",
+    "chapter_name": "Enfermedades del sistema digestivo",
+    "search_terms": ["gastritis", "duodenitis", "inflamacion estomago"],
+    "is_billable": false
+  },
+  {
+    "code": "K29.9",
+    "description": "Gastroduodenitis, no especificada",
+    "category": "K20-K31 Enfermedades del esófago, del estómago y del duodeno",
+    "chapter_code": "K00-K93",
+    "chapter_name": "Enfermedades del sistema digestivo",
+    "parent_code": "K29",
+    "search_terms": ["gastritis"],
+    "is_billable": true
+  },
+  {
+    "code": "K80",
+    "description": "Colelitiasis",
+    "category": "K80-K87 Trastornos de la vesícula biliar, de las vías biliares y del páncreas",
+    "chapter_code": "K00-K93",
+    "chapter_name": "Enfermedades del sistema digestivo",
+    "search_terms": ["calculos biliares", "piedras vesicula", "colelitiasis"],
+    "is_billable": false
+  },
+  {
+    "code": "K80.2",
+    "description": "Cálculo de la vesícula biliar sin colecistitis",
+    "category": "K80-K87 Trastornos de la vesícula biliar, de las vías biliares y del páncreas",
+    "chapter_code": "K00-K93",
+    "chapter_name": "Enfermedades del sistema digestivo",
+    "parent_code": "K80",
+    "search_terms": ["calculos biliares", "piedras vesicula"],
+    "is_billable": true
+  },
+  {
+    "code": "L20",
+    "description": "Dermatitis atópica",
+    "category": "L20-L30 Dermatitis y eczema",
+    "chapter_code": "L00-L99",
+    "chapter_name": "Enfermedades de la piel y del tejido subcutáneo",
+    "search_terms": ["dermatitis atopica", "eczema atopico"],
+    "is_billable": false
+  },
+  {
+    "code": "L20.9",
+    "description": "Dermatitis atópica, no especificada",
+    "category": "L20-L30 Dermatitis y eczema",
+    "chapter_code": "L00-L99",
+    "chapter_name": "Enfermedades de la piel y del tejido subcutáneo",
+    "parent_code": "L20",
+    "search_terms": ["dermatitis atopica", "eczema"],
+    "is_billable": true
+  },
+  {
+    "code": "M54",
+    "description": "Dorsalgia",
+    "category": "M50-M54 Dorsopa tías",
+    "chapter_code": "M00-M99",
+    "chapter_name": "Enfermedades del sistema osteomuscular y del tejido conectivo",
+    "search_terms": ["dolor de espalda", "dorsalgia", "lumbalgia"],
+    "is_billable": false
+  },
+  {
+    "code": "M54.5",
+    "description": "Dolor lumbar bajo",
+    "category": "M50-M54 Dorsopa tías",
+    "chapter_code": "M00-M99",
+    "chapter_name": "Enfermedades del sistema osteomuscular y del tejido conectivo",
+    "parent_code": "M54",
+    "search_terms": ["lumbalgia", "dolor lumbar", "dolor espalda baja"],
+    "is_billable": true
+  },
+  {
+    "code": "M79",
+    "description": "Otros trastornos de los tejidos blandos, no clasificados en otra parte",
+    "category": "M70-M79 Otros trastornos de los tejidos blandos",
+    "chapter_code": "M00-M99",
+    "chapter_name": "Enfermedades del sistema osteomuscular y del tejido conectivo",
+    "search_terms": ["dolor muscular", "mialgia", "fibromialgia"],
+    "is_billable": false
+  },
+  {
+    "code": "M79.1",
+    "description": "Mialgia",
+    "category": "M70-M79 Otros trastornos de los tejidos blandos",
+    "chapter_code": "M00-M99",
+    "chapter_name": "Enfermedades del sistema osteomuscular y del tejido conectivo",
+    "parent_code": "M79",
+    "search_terms": ["dolor muscular", "mialgia"],
+    "is_billable": true
+  },
+  {
+    "code": "N39",
+    "description": "Otros trastornos del sistema urinario",
+    "category": "N30-N39 Otras enfermedades del sistema urinario",
+    "chapter_code": "N00-N99",
+    "chapter_name": "Enfermedades del sistema genitourinario",
+    "search_terms": ["infeccion urinaria", "ITU"],
+    "is_billable": false
+  },
+  {
+    "code": "N39.0",
+    "description": "Infección de vías urinarias, sitio no especificado",
+    "category": "N30-N39 Otras enfermedades del sistema urinario",
+    "chapter_code": "N00-N99",
+    "chapter_name": "Enfermedades del sistema genitourinario",
+    "parent_code": "N39",
+    "search_terms": ["infeccion urinaria", "ITU", "cistitis"],
+    "is_billable": true
+  },
+  {
+    "code": "O80",
+    "description": "Parto único espontáneo",
+    "category": "O80-O84 Parto",
+    "chapter_code": "O00-O99",
+    "chapter_name": "Embarazo, parto y puerperio",
+    "search_terms": ["parto", "parto normal", "parto espontaneo"],
+    "is_billable": true
+  },
+  {
+    "code": "R10",
+    "description": "Dolor abdominal y pélvico",
+    "category": "R10-R19 Síntomas y signos que involucran el sistema digestivo y el abdomen",
+    "chapter_code": "R00-R99",
+    "chapter_name": "Síntomas, signos y hallazgos anormales clínicos y de laboratorio",
+    "search_terms": ["dolor abdominal", "dolor de estomago", "dolor pelvico"],
+    "is_billable": false
+  },
+  {
+    "code": "R10.9",
+    "description": "Dolor abdominal y pélvico, no especificado",
+    "category": "R10-R19 Síntomas y signos que involucran el sistema digestivo y el abdomen",
+    "chapter_code": "R00-R99",
+    "chapter_name": "Síntomas, signos y hallazgos anormales clínicos y de laboratorio",
+    "parent_code": "R10",
+    "search_terms": ["dolor abdominal", "dolor de estomago"],
+    "is_billable": true
+  },
+  {
+    "code": "R50",
+    "description": "Fiebre de origen desconocido y de otros orígenes",
+    "category": "R50-R69 Síntomas y signos generales",
+    "chapter_code": "R00-R99",
+    "chapter_name": "Síntomas, signos y hallazgos anormales clínicos y de laboratorio",
+    "search_terms": ["fiebre", "temperatura", "hipertermia"],
+    "is_billable": false
+  },
+  {
+    "code": "R50.9",
+    "description": "Fiebre, no especificada",
+    "category": "R50-R69 Síntomas y signos generales",
+    "chapter_code": "R00-R99",
+    "chapter_name": "Síntomas, signos y hallazgos anormales clínicos y de laboratorio",
+    "parent_code": "R50",
+    "search_terms": ["fiebre"],
+    "is_billable": true
+  },
+  {
+    "code": "R51",
+    "description": "Cefalea",
+    "category": "R50-R69 Síntomas y signos generales",
+    "chapter_code": "R00-R99",
+    "chapter_name": "Síntomas, signos y hallazgos anormales clínicos y de laboratorio",
+    "search_terms": ["cefalea", "dolor de cabeza", "jaqueca"],
+    "is_billable": true
+  },
+  {
+    "code": "S06",
+    "description": "Traumatismo intracraneal",
+    "category": "S00-S09 Traumatismos de la cabeza",
+    "chapter_code": "S00-T98",
+    "chapter_name": "Traumatismos, envenenamientos y algunas otras consecuencias de causas externas",
+    "search_terms": ["traumatismo craneal", "golpe cabeza", "TEC"],
+    "is_billable": false
+  },
+  {
+    "code": "S06.0",
+    "description": "Conmoción cerebral",
+    "category": "S00-S09 Traumatismos de la cabeza",
+    "chapter_code": "S00-T98",
+    "chapter_name": "Traumatismos, envenenamientos y algunas otras consecuencias de causas externas",
+    "parent_code": "S06",
+    "search_terms": ["conmocion cerebral", "traumatismo craneal"],
+    "is_billable": true
+  },
+  {
+    "code": "T78",
+    "description": "Efectos adversos, no clasificados en otra parte",
+    "category": "T66-T78 Otros efectos y los no especificados de causas externas",
+    "chapter_code": "S00-T98",
+    "chapter_name": "Traumatismos, envenenamientos y algunas otras consecuencias de causas externas",
+    "search_terms": ["alergia", "reaccion alergica", "efecto adverso"],
+    "is_billable": false
+  },
+  {
+    "code": "T78.4",
+    "description": "Alergia no especificada",
+    "category": "T66-T78 Otros efectos y los no especificados de causas externas",
+    "chapter_code": "S00-T98",
+    "chapter_name": "Traumatismos, envenenamientos y algunas otras consecuencias de causas externas",
+    "parent_code": "T78",
+    "search_terms": ["alergia", "reaccion alergica"],
+    "is_billable": true
+  },
+  {
+    "code": "Z00",
+    "description": "Examen general e investigación de personas sin quejas o sin diagnóstico informado",
+    "category": "Z00-Z13 Personas en contacto con los servicios de salud para examen e investigación",
+    "chapter_code": "Z00-Z99",
+    "chapter_name": "Factores que influyen en el estado de salud y contacto con los servicios de salud",
+    "search_terms": ["examen medico", "chequeo", "control de salud"],
+    "is_billable": false
+  },
+  {
+    "code": "Z00.0",
+    "description": "Examen médico general",
+    "category": "Z00-Z13 Personas en contacto con los servicios de salud para examen e investigación",
+    "chapter_code": "Z00-Z99",
+    "chapter_name": "Factores que influyen en el estado de salud y contacto con los servicios de salud",
+    "parent_code": "Z00",
+    "search_terms": ["examen medico", "chequeo general", "control de salud"],
+    "is_billable": true
+  },
+  {
+    "code": "Z23",
+    "description": "Necesidad de inmunización contra enfermedad bacteriana única",
+    "category": "Z20-Z29 Personas en contacto con los servicios de salud en circunstancias relacionadas con enfermedades transmisibles",
+    "chapter_code": "Z00-Z99",
+    "chapter_name": "Factores que influyen en el estado de salud y contacto con los servicios de salud",
+    "search_terms": ["vacunacion", "inmunizacion", "vacuna"],
+    "is_billable": true
+  }
+]
