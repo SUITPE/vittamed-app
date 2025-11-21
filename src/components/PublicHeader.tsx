@@ -26,12 +26,12 @@ export default function PublicHeader() {
 
           {/* Right side - Auth buttons */}
           <div className="flex items-center space-x-3">
-            <a
-              href={DOMAINS.app}
+            <Link
+              href="/auth/login"
               className="text-sm font-medium text-gray-700 hover:text-[#40C9C6] transition-colors px-4 py-2"
             >
               Iniciar Sesión
-            </a>
+            </Link>
             <Link
               href="/auth/register-business"
               className="text-sm font-medium text-white bg-gradient-to-r from-[#40C9C6] to-[#A6E3A1] hover:from-[#33a19e] hover:to-[#8aca85] transition-all duration-300 px-4 py-2 rounded-lg shadow-md hover:shadow-lg"
