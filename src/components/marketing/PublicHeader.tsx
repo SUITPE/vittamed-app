@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
-import { DOMAINS } from '@/lib/config'
 
 const navigation = [
   { name: 'Características', href: '/features' },
@@ -103,7 +102,7 @@ export default function PublicHeader() {
 
           {/* Desktop CTA Buttons */}
           <div className="hidden md:flex md:items-center md:space-x-3">
-            <a href={DOMAINS.app}>
+            <Link href="/auth/login">
               <Button
                 variant="ghost"
                 size="sm"
@@ -111,7 +110,7 @@ export default function PublicHeader() {
               >
                 Iniciar Sesión
               </Button>
-            </a>
+            </Link>
             <Link href="/auth/register">
               <Button
                 size="sm"
@@ -168,7 +167,7 @@ export default function PublicHeader() {
 
               {/* Mobile CTA Buttons */}
               <div className="mt-4 space-y-2">
-                <a href={DOMAINS.app} className="block">
+                <Link href="/auth/login" className="block">
                   <Button
                     variant="outline"
                     className="w-full justify-center"
@@ -176,7 +175,7 @@ export default function PublicHeader() {
                   >
                     Iniciar Sesión
                   </Button>
-                </a>
+                </Link>
                 <Link href="/auth/register" className="block">
                   <Button
                     className="w-full justify-center gradient-primary text-white border-0"
