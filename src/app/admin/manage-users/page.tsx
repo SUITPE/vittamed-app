@@ -48,8 +48,8 @@ export default async function ManageUsersPage() {
   }
 
   const tenantId = user.profile?.tenant_id
-  const tenantName = 'Clínica San Rafael' // TODO: Fetch from DB
   const isSuperAdmin = role === 'super_admin'
+  const tenantName = isSuperAdmin ? 'Todos los Tenants' : 'Clínica San Rafael' // TODO: Fetch from DB
 
   // Only check for tenant_id if not super_admin
   if (!tenantId && !isSuperAdmin) {
@@ -81,28 +81,27 @@ export default async function ManageUsersPage() {
   // Fetch users server-side
   let users: UserRoleView[] = []
 
-  // Only fetch if we have a tenant_id
-  // TODO: Create /api/admin/users endpoint for super_admin to view all users
-  if (tenantId) {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/tenants/${tenantId}/users`,
-        {
-          // Pass cookies for authentication
-          headers: {
-            Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
-          },
-          cache: 'no-store' // Always fetch fresh data
-        }
-      )
+  try {
+    // Super admin fetches ALL users, others fetch only their tenant's users
+    const apiUrl = isSuperAdmin
+      ? `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/admin/users`
+      : `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/tenants/${tenantId}/users`
 
-      if (response.ok) {
-        const data = await response.json()
-        users = data.users || []
-      }
-    } catch (error) {
-      console.error('Error fetching users server-side:', error)
+    const response = await fetch(apiUrl, {
+      headers: {
+        Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
+      },
+      cache: 'no-store' // Always fetch fresh data
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      users = data.users || []
+    } else {
+      console.error('Failed to fetch users:', response.status, response.statusText)
     }
+  } catch (error) {
+    console.error('Error fetching users server-side:', error)
   }
 
   return (
