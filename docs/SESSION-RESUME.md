@@ -433,15 +433,53 @@ El usuario debe verificar el flujo completo:
 
 ---
 
-**Última actualización**: 2025-11-21 09:45 (Hora Perú)
+**Última actualización**: 2025-11-21 (Hora Perú)
 **Sesión actualizada por**: Claude Code
-**Branch**: staging
+**Branch**: main (merged from staging)
 **Deployment**: vittasami-n758cdgj6-vittameds-projects.vercel.app
-**Status**: ✅ TODOS LOS FIXES COMPLETADOS + SMART LOGIN URL - LISTO PARA VERIFICACIÓN
+**Status**: ✅ COMPLETADO - MERGED TO MAIN
 
-## 📋 Resumen de Commits (5 total)
+## 📋 Resumen de Commits (6 total)
 1. `01b77b8b` - Middleware redirect fix
 2. `83fbada1` - Admin pages authorization fix
 3. `ac9fad65` - Login link fix (archivo incorrecto)
 4. `09446090` - Login link fix (archivo correcto)
 5. `1599a2aa` - Smart login URL (production ready)
+6. `b4396524` - Repository reorganization and cleanup
+
+---
+
+## ✅ PASO 4 COMPLETADO: Merge to Main (2025-11-21)
+
+### Merge Summary
+```bash
+git checkout main
+git pull origin main
+git merge staging  # Fast-forward merge
+git push origin main
+```
+
+**Result**: Fast-forward merge from `6fb54bc3` to `b4396524`
+- **326 files changed**: +19,098 insertions, -1,002 deletions
+- **Branch**: staging → main
+- **Merge type**: Fast-forward (no conflicts)
+- **Push status**: ✅ Successful
+
+### Changes Merged to Main
+1. ✅ Super admin redirect fixes (middleware + API)
+2. ✅ Super admin authorization in admin pages
+3. ✅ Marketing header login link fixes
+4. ✅ Smart login URL (production ready)
+5. ✅ Complete repository reorganization:
+   - docs/ subdirectories (deployment, technical, testing, setup, nginx, features, investor)
+   - scripts/ subdirectories (database, setup, admin, users, debug, seed)
+   - New features (Culqi payments, ICD-10, voice dictation, feature flags)
+6. ✅ Git cleanup (abpteam/ in .gitignore)
+
+### Next Steps for Production
+- [ ] Apply same fixes to Production database
+  - Execute: `scripts/database/create-custom-users-table-production.sql`
+  - Database: https://emtcplanfbmydqjbcuxm.supabase.co
+- [ ] Verify admin login in Production
+- [ ] Monitor Production deployment (GitHub Actions should trigger automatically)
+- [ ] Fix failing test: patient-management modal cancel/X button
