@@ -87,6 +87,13 @@ export default async function ManageUsersPage() {
       ? `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/admin/users`
       : `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/tenants/${tenantId}/users`
 
+    console.log('[ManageUsers] Fetching users:', {
+      role,
+      isSuperAdmin,
+      tenantId,
+      apiUrl
+    })
+
     const response = await fetch(apiUrl, {
       headers: {
         Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
@@ -94,14 +101,29 @@ export default async function ManageUsersPage() {
       cache: 'no-store' // Always fetch fresh data
     })
 
+    console.log('[ManageUsers] Fetch response:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    })
+
     if (response.ok) {
       const data = await response.json()
       users = data.users || []
+      console.log('[ManageUsers] Users fetched:', {
+        count: users.length,
+        users: users.map(u => ({ email: u.email, role: u.role }))
+      })
     } else {
-      console.error('Failed to fetch users:', response.status, response.statusText)
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+      console.error('[ManageUsers] Failed to fetch users:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      })
     }
   } catch (error) {
-    console.error('Error fetching users server-side:', error)
+    console.error('[ManageUsers] Error fetching users:', error)
   }
 
   return (
