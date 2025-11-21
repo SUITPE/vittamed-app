@@ -42,7 +42,7 @@ export default async function ServicesPage() {
 
   // Check authorization
   const role = user.profile?.role
-  const isAuthorized = role === 'admin_tenant' || role === 'staff' || role === 'receptionist'
+  const isAuthorized = role === 'super_admin' || role === 'admin_tenant' || role === 'staff' || role === 'receptionist'
 
   if (!isAuthorized) {
     return (
@@ -71,8 +71,10 @@ export default async function ServicesPage() {
   }
 
   const tenantId = user.profile?.tenant_id
+  const isSuperAdmin = role === 'super_admin'
 
-  if (!tenantId) {
+  // Only check for tenant_id if not super_admin
+  if (!tenantId && !isSuperAdmin) {
     return (
       <div className="min-h-screen bg-gray-50">
         <AdminSidebar tenantId={undefined} />

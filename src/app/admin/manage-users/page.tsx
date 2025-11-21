@@ -19,7 +19,7 @@ export default async function ManageUsersPage() {
 
   // Check authorization
   const role = user.profile?.role
-  const canManageUsers = role === 'admin_tenant' || role === 'staff' || role === 'receptionist'
+  const canManageUsers = role === 'super_admin' || role === 'admin_tenant' || role === 'staff' || role === 'receptionist'
 
   if (!canManageUsers) {
     return (
@@ -49,8 +49,10 @@ export default async function ManageUsersPage() {
 
   const tenantId = user.profile?.tenant_id
   const tenantName = 'Clínica San Rafael' // TODO: Fetch from DB
+  const isSuperAdmin = role === 'super_admin'
 
-  if (!tenantId) {
+  // Only check for tenant_id if not super_admin
+  if (!tenantId && !isSuperAdmin) {
     return (
       <div className="min-h-screen bg-gray-50">
         <AdminSidebar tenantId={undefined} />
@@ -78,24 +80,29 @@ export default async function ManageUsersPage() {
 
   // Fetch users server-side
   let users: UserRoleView[] = []
-  try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/tenants/${tenantId}/users`,
-      {
-        // Pass cookies for authentication
-        headers: {
-          Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
-        },
-        cache: 'no-store' // Always fetch fresh data
-      }
-    )
 
-    if (response.ok) {
-      const data = await response.json()
-      users = data.users || []
+  // Only fetch if we have a tenant_id
+  // TODO: Create /api/admin/users endpoint for super_admin to view all users
+  if (tenantId) {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/tenants/${tenantId}/users`,
+        {
+          // Pass cookies for authentication
+          headers: {
+            Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
+          },
+          cache: 'no-store' // Always fetch fresh data
+        }
+      )
+
+      if (response.ok) {
+        const data = await response.json()
+        users = data.users || []
+      }
+    } catch (error) {
+      console.error('Error fetching users server-side:', error)
     }
-  } catch (error) {
-    console.error('Error fetching users server-side:', error)
   }
 
   return (
