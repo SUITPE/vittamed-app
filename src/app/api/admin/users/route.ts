@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { customAuth } from '@/lib/custom-auth'
-import { createAdminClient } from '@/lib/supabase-admin'
+import { createAdminClient } from '@/lib/supabase-server'
 
 // GET /api/admin/users - Get all users (super_admin only)
 export async function GET(request: NextRequest) {
