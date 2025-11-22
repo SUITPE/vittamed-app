@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { customAuth } from '@/lib/custom-auth'
+import { createClient } from '@/lib/supabase-server'
 import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
 import DashboardClient from '@/components/admin/DashboardClient'
@@ -54,7 +55,9 @@ export default async function TenantDashboard({ params }: PageProps) {
     redirect('/auth/login')
   }
 
-  // Fetch tenant info server-side
+  const supabase = await createClient()
+
+  // Fetch tenant info directly from Supabase
   let tenantInfo: TenantInfo = {
     id: tenantId,
     name: 'Clínica Demo',
@@ -62,55 +65,69 @@ export default async function TenantDashboard({ params }: PageProps) {
   }
 
   try {
-    const tenantResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/tenants`,
-      {
-        headers: {
-          Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
-        },
-        cache: 'no-store'
-      }
-    )
+    const { data: tenant, error: tenantError } = await supabase
+      .from('tenants')
+      .select('id, name, tenant_type')
+      .eq('id', tenantId)
+      .single()
 
-    if (tenantResponse.ok) {
-      const tenants = await tenantResponse.json()
-      const tenant = tenants.find((t: any) => t.id === tenantId)
-      if (tenant) {
-        tenantInfo = {
-          id: tenant.id,
-          name: tenant.name,
-          tenant_type: tenant.tenant_type
-        }
+    if (tenantError) {
+      console.error('[Dashboard] Error fetching tenant:', tenantError)
+    } else if (tenant) {
+      tenantInfo = {
+        id: tenant.id,
+        name: tenant.name,
+        tenant_type: tenant.tenant_type
       }
     }
   } catch (error) {
-    console.warn('Failed to fetch tenant info, using fallback')
+    console.warn('[Dashboard] Failed to fetch tenant info, using fallback')
   }
 
   // Get today's date
   const today = new Date().toISOString().split('T')[0]
 
-  // Fetch today's appointments server-side
+  // Fetch today's appointments directly from Supabase
   let todayAppointments: TodayAppointment[] = []
   try {
-    const appointmentsResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/dashboard/${tenantId}/appointments?date=${today}`,
-      {
-        headers: {
-          Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
-        },
-        cache: 'no-store'
-      }
-    )
+    const { data: appointmentsData, error: appointmentsError } = await supabase
+      .from('appointments')
+      .select(`
+        id,
+        appointment_date,
+        start_time,
+        end_time,
+        status,
+        patients!inner(first_name, last_name),
+        doctors!inner(first_name, last_name),
+        services!inner(name)
+      `)
+      .eq('tenant_id', tenantId)
+      .eq('appointment_date', today)
+      .order('start_time', { ascending: true })
 
-    if (appointmentsResponse.ok) {
-      todayAppointments = await appointmentsResponse.json()
+    if (appointmentsError) {
+      console.error('[Dashboard] Error fetching appointments:', appointmentsError)
+    } else if (appointmentsData) {
+      todayAppointments = appointmentsData.map((appointment: any) => ({
+        id: appointment.id,
+        patient_name: `${appointment.patients.first_name} ${appointment.patients.last_name}`,
+        doctor_name: `${appointment.doctors.first_name} ${appointment.doctors.last_name}`,
+        service_name: appointment.services.name,
+        start_time: appointment.start_time,
+        status: appointment.status
+      }))
+      console.log('[Dashboard] Today appointments fetched:', {
+        count: todayAppointments.length,
+        tenantId,
+        date: today
+      })
     }
   } catch (error) {
-    console.warn('Failed to fetch appointments, using empty list')
+    console.warn('[Dashboard] Failed to fetch appointments, using empty list')
   }
 
-  // Fetch dashboard stats server-side
+  // Fetch dashboard stats directly from Supabase
   let stats: DashboardStats = {
     todayAppointments: 0,
     weekAppointments: 0,
@@ -120,21 +137,85 @@ export default async function TenantDashboard({ params }: PageProps) {
   }
 
   try {
-    const statsResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/dashboard/${tenantId}/stats`,
-      {
-        headers: {
-          Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
-        },
-        cache: 'no-store'
-      }
-    )
+    const now = new Date()
+    const todayString = now.toISOString().split('T')[0]
 
-    if (statsResponse.ok) {
-      stats = await statsResponse.json()
+    const startOfWeek = new Date(now)
+    startOfWeek.setDate(now.getDate() - now.getDay())
+    const weekString = startOfWeek.toISOString().split('T')[0]
+
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const monthString = startOfMonth.toISOString().split('T')[0]
+
+    const [
+      todayAppointmentsResult,
+      weekAppointmentsResult,
+      monthRevenueResult,
+      activePatientsResult,
+      pendingAppointmentsResult
+    ] = await Promise.all([
+      supabase
+        .from('appointments')
+        .select('id', { count: 'exact' })
+        .eq('tenant_id', tenantId)
+        .eq('appointment_date', todayString),
+
+      supabase
+        .from('appointments')
+        .select('id', { count: 'exact' })
+        .eq('tenant_id', tenantId)
+        .gte('appointment_date', weekString),
+
+      supabase
+        .from('appointments')
+        .select('total_amount')
+        .eq('tenant_id', tenantId)
+        .eq('status', 'completed')
+        .gte('appointment_date', monthString),
+
+      supabase
+        .from('patients')
+        .select('id', { count: 'exact' })
+        .eq('tenant_id', tenantId),
+
+      supabase
+        .from('appointments')
+        .select('id', { count: 'exact' })
+        .eq('tenant_id', tenantId)
+        .eq('status', 'pending')
+    ])
+
+    if (todayAppointmentsResult.error) {
+      console.error('[Dashboard] Error fetching today appointments count:', todayAppointmentsResult.error)
     }
+    if (weekAppointmentsResult.error) {
+      console.error('[Dashboard] Error fetching week appointments count:', weekAppointmentsResult.error)
+    }
+    if (monthRevenueResult.error) {
+      console.error('[Dashboard] Error fetching month revenue:', monthRevenueResult.error)
+    }
+    if (activePatientsResult.error) {
+      console.error('[Dashboard] Error fetching active patients:', activePatientsResult.error)
+    }
+    if (pendingAppointmentsResult.error) {
+      console.error('[Dashboard] Error fetching pending appointments:', pendingAppointmentsResult.error)
+    }
+
+    const monthRevenue = monthRevenueResult.data?.reduce((sum, appointment) => {
+      return sum + (appointment.total_amount || 0)
+    }, 0) || 0
+
+    stats = {
+      todayAppointments: todayAppointmentsResult.count || 0,
+      weekAppointments: weekAppointmentsResult.count || 0,
+      monthRevenue: Math.round(monthRevenue),
+      activePatients: activePatientsResult.count || 0,
+      pendingAppointments: pendingAppointmentsResult.count || 0
+    }
+
+    console.log('[Dashboard] Stats fetched:', stats)
   } catch (error) {
-    console.warn('Failed to fetch stats, using defaults')
+    console.warn('[Dashboard] Failed to fetch stats, using defaults')
   }
 
   return (

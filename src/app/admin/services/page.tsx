@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { customAuth } from '@/lib/custom-auth'
+import { createClient } from '@/lib/supabase-server'
 import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
 import ServicesManagementClient from '@/components/admin/ServicesManagementClient'
@@ -100,51 +101,54 @@ export default async function ServicesPage() {
     )
   }
 
-  // Fetch services server-side
+  const supabase = await createClient()
+
+  // Fetch services directly from Supabase
   let services: Service[] = []
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/tenants/${tenantId}/services`,
-      {
-        headers: {
-          Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
-        },
-        cache: 'no-store' // Always fetch fresh data
-      }
-    )
+    const { data: servicesData, error: servicesError } = await supabase
+      .from('services')
+      .select(`
+        *,
+        category:service_categories(id, name)
+      `)
+      .eq('tenant_id', tenantId)
+      .eq('is_active', true)
+      .order('name')
 
-    if (response.ok) {
-      const data = await response.json()
-      services = data.services || []
+    if (servicesError) {
+      console.error('[Services] Error fetching services:', servicesError)
+    } else {
+      services = servicesData || []
+      console.log('[Services] Services fetched:', { count: services.length, tenantId })
     }
   } catch (error) {
-    console.error('Error fetching services server-side:', error)
+    console.error('[Services] Error fetching services server-side:', error)
   }
 
-  // Fetch categories server-side (tenant-specific)
+  // Fetch categories directly from Supabase (tenant-specific + global)
   let categories: ServiceCategory[] = []
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/tenants/${tenantId}/categories?is_active=true`,
-      {
-        headers: {
-          Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
-        },
-        cache: 'no-store' // Always fetch fresh data
-      }
-    )
+    const { data: categoriesData, error: categoriesError } = await supabase
+      .from('service_categories')
+      .select('*')
+      .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
+      .eq('is_active', true)
+      .order('name', { ascending: true })
 
-    if (response.ok) {
-      const data = await response.json()
-      categories = data || []
+    if (categoriesError) {
+      console.error('[Services] Error fetching categories:', categoriesError)
+    } else {
+      categories = categoriesData || []
+      console.log('[Services] Categories fetched:', { count: categories.length, tenantId })
     }
   } catch (error) {
-    console.error('Error fetching categories server-side:', error)
+    console.error('[Services] Error fetching categories server-side:', error)
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AdminSidebar tenantId={tenantId} />
+      <AdminSidebar tenantId={tenantId || undefined} />
       <AdminHeader />
       <div className="md:ml-64 pt-16">
         <div className="p-6">
@@ -152,7 +156,7 @@ export default async function ServicesPage() {
             <ServicesManagementClient
               initialServices={services}
               initialCategories={categories}
-              tenantId={tenantId}
+              tenantId={tenantId || ''}
             />
           </div>
         </div>

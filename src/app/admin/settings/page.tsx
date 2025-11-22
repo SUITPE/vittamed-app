@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { customAuth } from '@/lib/custom-auth'
+import { createClient } from '@/lib/supabase-server'
 import AdminNavigation from '@/components/AdminNavigation'
 import SettingsClient from '@/components/admin/SettingsClient'
 import { BusinessType } from '@/types/business'
@@ -69,30 +70,26 @@ export default async function SettingsPage() {
     )
   }
 
-  // Fetch tenant settings server-side
+  const supabase = await createClient()
+
+  // Fetch tenant settings directly from Supabase
   let tenantData: TenantSettings | null = null
 
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/tenants`,
-      {
-        headers: {
-          Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
-        },
-        cache: 'no-store'
-      }
-    )
+    const { data: tenant, error: tenantError } = await supabase
+      .from('tenants')
+      .select('id, name, tenant_type, address, phone, email')
+      .eq('id', currentTenantId)
+      .single()
 
-    if (response.ok) {
-      const tenants = await response.json()
-      const currentTenant = tenants.find((t: TenantSettings) => t.id === currentTenantId)
-
-      if (currentTenant) {
-        tenantData = currentTenant
-      }
+    if (tenantError) {
+      console.error('[Settings] Error fetching tenant settings:', tenantError)
+    } else if (tenant) {
+      tenantData = tenant
+      console.log('[Settings] Tenant fetched:', { tenantId: tenant.id, name: tenant.name })
     }
   } catch (error) {
-    console.error('Error fetching tenant settings:', error)
+    console.error('[Settings] Error fetching tenant settings:', error)
   }
 
   if (!tenantData) {
