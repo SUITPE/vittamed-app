@@ -145,24 +145,29 @@ export async function PUT(
       diagnoses
     } = body
 
+    // Build update object with only provided fields
+    const updateData: Record<string, any> = {
+      updated_by: user.id,
+      updated_at: new Date().toISOString()
+    }
+
+    // Only include fields that are explicitly provided
+    if (record_type !== undefined) updateData.record_type = record_type
+    if (record_date !== undefined) updateData.record_date = record_date
+    if (appointment_id !== undefined) updateData.appointment_id = appointment_id
+    if (chief_complaint !== undefined) updateData.chief_complaint = chief_complaint
+    if (subjective !== undefined) updateData.subjective = subjective
+    if (objective !== undefined) updateData.objective = objective
+    if (assessment !== undefined) updateData.assessment = assessment
+    if (plan !== undefined) updateData.plan = plan
+    if (vital_signs !== undefined) updateData.vital_signs = vital_signs
+    if (tenant_specific_data !== undefined) updateData.tenant_specific_data = tenant_specific_data
+    if (attachments !== undefined) updateData.attachments = attachments
+
     // Update medical record
     const { data: updatedRecord, error: updateError } = await supabase
       .from('medical_records')
-      .update({
-        record_type: record_type || existingRecord.record_type,
-        record_date: record_date || existingRecord.record_date,
-        appointment_id: appointment_id !== undefined ? appointment_id : existingRecord.appointment_id,
-        chief_complaint: chief_complaint !== undefined ? chief_complaint : existingRecord.chief_complaint,
-        subjective: subjective !== undefined ? subjective : existingRecord.subjective,
-        objective: objective !== undefined ? objective : existingRecord.objective,
-        assessment: assessment !== undefined ? assessment : existingRecord.assessment,
-        plan: plan !== undefined ? plan : existingRecord.plan,
-        vital_signs: vital_signs !== undefined ? vital_signs : existingRecord.vital_signs,
-        tenant_specific_data: tenant_specific_data !== undefined ? tenant_specific_data : existingRecord.tenant_specific_data,
-        attachments: attachments !== undefined ? attachments : existingRecord.attachments,
-        updated_by: user.id,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', recordId)
       .select()
       .single()
