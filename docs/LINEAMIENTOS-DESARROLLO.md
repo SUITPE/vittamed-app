@@ -1,7 +1,7 @@
 # Lineamientos y Consideraciones de Desarrollo - VittaSami
 
-**Versión:** 1.0
-**Fecha:** Noviembre 2025
+**Versión:** 1.1
+**Fecha:** Noviembre 22, 2025
 **Proyecto:** VittaSami - Sistema de Gestión para Salud y Bienestar
 
 ---
@@ -369,8 +369,166 @@ export default function DashboardClient({ data }) {
 **Reglas:**
 - Server Components NO pueden usar `useState`, `useEffect`, event handlers
 - Client Components necesitan `'use client'` en la primera línea
-- Server Components pueden hacer fetch directo de DB
+- **Server Components deben consultar DB directamente (NO hacer fetch a APIs internas)**
 - Client Components hacen fetch a API routes
+
+### Data Fetching Patterns ⚡
+
+**⚠️ CRÍTICO:** Esta es una de las reglas MÁS IMPORTANTES del proyecto.
+
+#### ❌ ANTI-PATTERN: Server Component haciendo fetch a API interna
+
+```tsx
+// ❌ MAL - Server Component haciendo fetch a su propia API
+// src/app/patients/page.tsx
+export default async function PatientsPage() {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/patients`,
+    { cache: 'no-store' }
+  )
+  const patients = await response.json()
+
+  return <PatientsList patients={patients} />
+}
+```
+
+**Problemas:**
+- ❌ Round-trip HTTP innecesario (Server → HTTP → API Route → Supabase)
+- ❌ Depende de `NEXT_PUBLIC_BASE_URL` (puede no estar configurado en Vercel)
+- ❌ Más lento (~50-100ms de latencia adicional)
+- ❌ Más puntos de falla (URL, headers, cookies)
+- ❌ Falla silenciosamente si URL está mal configurada
+
+#### ✅ BEST PRACTICE: Consulta directa a Supabase
+
+```tsx
+// ✅ BIEN - Server Component consultando DB directamente
+// src/app/patients/page.tsx
+import { createClient } from '@/lib/supabase-server'
+
+export default async function PatientsPage() {
+  const user = await customAuth.getCurrentUser()
+  const supabase = await createClient()
+
+  const { data: patients, error } = await supabase
+    .from('patients')
+    .select('*')
+    .eq('tenant_id', user.profile?.tenant_id)
+
+  return <PatientsList patients={patients || []} />
+}
+```
+
+**Ventajas:**
+- ✅ Directo (Server Component → Supabase)
+- ✅ No depende de configuración de URL
+- ✅ Más rápido (1 salto en vez de 3)
+- ✅ Más robusto (menos moving parts)
+- ✅ Errores más claros
+
+#### 📊 Matriz de Decisión: ¿Cuándo usar qué?
+
+| Caso | Solución | Razón |
+|------|----------|-------|
+| Server Component necesita datos | ✅ Query directo a Supabase | Más rápido, sin HTTP overhead |
+| Client Component necesita datos | ✅ fetch() a API Route | Navegador no tiene acceso a DB |
+| Webhook externo (Culqi, Stripe) | ✅ API Route | Terceros llaman desde internet |
+| Mutación desde cliente (POST/PUT/DELETE) | ✅ API Route | Validación centralizada |
+| Lógica de negocio compleja con transacciones | ✅ API Route + Context7 | Rollbacks, múltiples operaciones |
+| Simple SELECT en Server Component | ✅ Query directo | Sin complejidad adicional |
+
+#### 🔧 Cuándo SÍ usar API Routes
+
+API Routes son para:
+
+1. **Client Components que necesitan datos**
+   ```tsx
+   'use client'
+   // Cliente no tiene acceso directo a DB
+   const response = await fetch('/api/patients')
+   ```
+
+2. **Webhooks externos**
+   ```tsx
+   // Culqi, Stripe, Twilio llaman desde internet
+   export async function POST(request) { ... }
+   ```
+
+3. **Mutaciones con validación compleja**
+   ```tsx
+   // Lógica de negocio centralizada
+   export async function POST(request) {
+     // Validar datos
+     // Ejecutar Context7 flow
+     // Retornar resultado
+   }
+   ```
+
+4. **APIs públicas para terceros**
+   ```tsx
+   // Si exponemos API para partners
+   export async function GET(request) { ... }
+   ```
+
+#### 🚫 Cuándo NO usar API Routes
+
+NO uses API Routes para:
+
+1. **Server Components obteniendo datos simples**
+   ```tsx
+   // ❌ NO hacer esto:
+   const data = await fetch('/api/data')
+
+   // ✅ Hacer esto:
+   const { data } = await supabase.from('table').select()
+   ```
+
+2. **Server-to-server dentro de tu app**
+   ```tsx
+   // ❌ NO hacer esto:
+   const response = await fetch('http://localhost:3000/api/internal')
+
+   // ✅ Hacer esto:
+   import { getInternalData } from '@/lib/data'
+   const data = await getInternalData()
+   ```
+
+#### 📝 Archivos que NECESITAN refactorización
+
+**⚠️ DEUDA TÉCNICA IDENTIFICADA:**
+
+Los siguientes archivos usan el anti-pattern y deben ser refactorizados:
+
+1. **src/app/patients/page.tsx** (líneas 65-96)
+   - `fetch('/api/tenants')` → Consulta directa a `tenants`
+   - `fetch('/api/patients')` → Consulta directa a `patients`
+
+2. **src/app/admin/services/page.tsx** (líneas 106-135)
+   - `fetch('/api/tenants/{id}/services')` → Consulta a `services`
+   - `fetch('/api/tenants/{id}/categories')` → Consulta a `service_categories`
+
+3. **src/app/admin/settings/page.tsx** (líneas 76-84)
+   - `fetch('/api/tenants')` → Consulta directa a `tenants`
+
+4. **src/app/dashboard/[tenantId]/page.tsx** (líneas 65-131)
+   - `fetch('/api/tenants')` → Consulta directa a `tenants`
+   - `fetch('/api/dashboard/{id}/appointments')` → Consulta a `appointments`
+   - `fetch('/api/dashboard/{id}/stats')` → MANTENER (lógica de agregación)
+
+5. **src/app/my-appointments/page.tsx** (líneas 34-42)
+   - `fetch('/api/appointments/my-appointments')` → Consulta a `appointments`
+
+6. **src/app/appointments/page.tsx** (líneas 82-106)
+   - `fetch('/api/tenants/{id}/doctors')` → Consulta a `custom_users`
+   - `fetch('/api/tenants/{id}/appointments')` → Consulta a `appointments`
+
+**Nota:** Estos deben ser refactorizados en sprints futuros siguiendo el patrón de `manage-users/page.tsx`.
+
+#### 📚 Referencias
+
+- [Next.js Docs: Data Fetching](https://nextjs.org/docs/app/building-your-application/data-fetching/patterns)
+- [Next.js: Server Components can fetch data directly](https://nextjs.org/docs/app/building-your-application/data-fetching/patterns#fetching-data-on-the-server)
+- Sesión de debugging: `docs/SESSION-DEBUG-MANAGE-USERS.md`
 
 ### Estilos y Design System
 
@@ -947,11 +1105,19 @@ Mantener actualizado con:
    // Solo usar 'use client' cuando necesites interactividad
    ```
 
-2. **Cargar datos en server:**
+2. **⚡ NUNCA hacer fetch a APIs internas desde Server Components:**
    ```tsx
-   // ✅ En Server Component
+   // ❌ INCORRECTO
    export default async function Page() {
      const data = await fetch('/api/data', { cache: 'no-store' })
+     return <ClientComponent data={data} />
+   }
+
+   // ✅ CORRECTO - Consulta directa a Supabase
+   import { createClient } from '@/lib/supabase-server'
+   export default async function Page() {
+     const supabase = await createClient()
+     const { data } = await supabase.from('table').select()
      return <ClientComponent data={data} />
    }
    ```
@@ -969,6 +1135,8 @@ Mantener actualizado con:
    // Usar Next.js Image component
    <Image src="..." alt="..." width={...} height={...} />
    ```
+
+5. **Ver sección completa:** [Data Fetching Patterns](#data-fetching-patterns-) para más detalles
 
 ### Git
 
@@ -1117,6 +1285,20 @@ Product Owner: [Nombre]
 
 ---
 
-**Última actualización:** Noviembre 2025
+**Última actualización:** Noviembre 22, 2025
 **Mantenido por:** Tech Team VittaSami
-**Versión documento:** 1.0
+**Versión documento:** 1.1
+
+## 📝 Changelog
+
+### v1.1 - Noviembre 22, 2025
+- ➕ Agregada sección crítica: **Data Fetching Patterns**
+- 🔍 Identificados 6 archivos con anti-pattern (Server Component → fetch API interna)
+- ✅ Documentado best practice: Consulta directa a Supabase desde Server Components
+- 📊 Agregada matriz de decisión: ¿Cuándo usar API Routes vs Supabase directo?
+- 📝 Listada deuda técnica a refactorizar
+
+### v1.0 - Noviembre 2025
+- 📄 Versión inicial del documento
+- 📚 Documentación completa de arquitectura, backend, frontend
+- ✅ Lineamientos de Git, testing, y mejores prácticas
