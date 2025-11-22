@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { customAuth } from '@/lib/custom-auth'
+import { createClient } from '@/lib/supabase-server'
 import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
 import PatientsClient from '@/components/patients/PatientsClient'
@@ -58,48 +59,46 @@ export default async function PatientsPage() {
   }
 
   const currentTenantId = user.profile?.tenant_id
+  const supabase = await createClient()
 
-  // Fetch tenant info server-side
+  // Fetch tenant info directly from Supabase
   let tenantName = 'Cargando...'
   try {
-    const tenantResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/tenants`,
-      {
-        headers: {
-          Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
-        },
-        cache: 'no-store'
-      }
-    )
-    if (tenantResponse.ok) {
-      const tenants = await tenantResponse.json()
-      const tenant = tenants.find((t: any) => t.id === currentTenantId)
-      if (tenant) {
-        tenantName = tenant.name
-      }
+    const { data: tenant, error: tenantError } = await supabase
+      .from('tenants')
+      .select('name')
+      .eq('id', currentTenantId)
+      .single()
+
+    if (tenantError) {
+      console.error('[Patients] Error fetching tenant:', tenantError)
+    } else if (tenant) {
+      tenantName = tenant.name
     }
   } catch (error) {
-    console.warn('Failed to fetch tenant info')
+    console.warn('[Patients] Failed to fetch tenant info:', error)
   }
 
-  // Fetch patients server-side
+  // Fetch patients directly from Supabase
   let patients: Patient[] = []
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/patients`,
-      {
-        headers: {
-          Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
-        },
-        cache: 'no-store'
-      }
-    )
+    const { data: patientsData, error: patientsError } = await supabase
+      .from('patients')
+      .select('*')
+      .eq('tenant_id', currentTenantId)
+      .order('created_at', { ascending: false })
 
-    if (response.ok) {
-      patients = await response.json()
+    if (patientsError) {
+      console.error('[Patients] Error fetching patients:', patientsError)
+    } else {
+      patients = patientsData || []
+      console.log('[Patients] Patients fetched:', {
+        count: patients.length,
+        tenantId: currentTenantId
+      })
     }
   } catch (error) {
-    console.error('Error fetching patients:', error)
+    console.error('[Patients] Error fetching patients:', error)
   }
 
   return (
