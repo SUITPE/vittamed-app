@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase-server'
 import { customAuth } from '@/lib/custom-auth'
+import { sendAssignmentEmail } from '@/lib/email'
 
 interface RouteParams {
   userId: string
@@ -60,6 +61,46 @@ export async function PATCH(
 
     console.log('[Users PATCH] User updated successfully:', userId)
 
+    // Get tenant information for email
+    const { data: tenant } = await adminClient
+      .from('tenants')
+      .select('name')
+      .eq('id', tenant_id)
+      .single()
+
+    const tenantName = tenant?.name || 'VittaSami'
+
+    // Send assignment notification email
+    let emailSent = false
+    let emailError: string | null = null
+
+    if (updatedUser.email) {
+      try {
+        const assignedByName = user.profile?.first_name && user.profile?.last_name
+          ? `${user.profile.first_name} ${user.profile.last_name}`
+          : user.profile?.email || 'Administrador'
+
+        await sendAssignmentEmail({
+          recipientEmail: updatedUser.email,
+          recipientName: `${updatedUser.first_name || ''} ${updatedUser.last_name || ''}`.trim() || updatedUser.email,
+          tenantName,
+          role: updatedUser.role,
+          assignedBy: assignedByName
+        })
+
+        emailSent = true
+        console.log('[Users PATCH] Assignment notification email sent to:', updatedUser.email)
+      } catch (error) {
+        console.error('[Users PATCH] Failed to send assignment notification email:', {
+          error,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          recipient: updatedUser.email
+        })
+        emailError = error instanceof Error ? error.message : 'Failed to send email'
+        // Don't fail the whole operation if email fails - user was already assigned
+      }
+    }
+
     return NextResponse.json({
       user: {
         id: updatedUser.id,
@@ -69,7 +110,9 @@ export async function PATCH(
         role: updatedUser.role,
         tenant_id: updatedUser.tenant_id
       },
-      message: 'Usuario asignado exitosamente al negocio'
+      message: 'Usuario asignado exitosamente al negocio',
+      emailSent,
+      emailError
     })
 
   } catch (error) {

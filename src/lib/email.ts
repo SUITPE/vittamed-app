@@ -9,6 +9,14 @@ interface InvitationEmailData {
   tenantName?: string
 }
 
+interface AssignmentEmailData {
+  recipientEmail: string
+  recipientName: string
+  tenantName: string
+  role: string
+  assignedBy?: string
+}
+
 interface EmailConfig {
   host: string
   port: number
@@ -299,5 +307,205 @@ export async function verifyEmailConfig(): Promise<boolean> {
       message: error instanceof Error ? error.message : 'Unknown error'
     })
     return false
+  }
+}
+
+/**
+ * Generates HTML template for assignment notification email
+ */
+function generateAssignmentEmailHTML(data: AssignmentEmailData): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vittasami.com'
+  const { recipientName, tenantName, role, assignedBy } = data
+  const loginUrl = `${baseUrl}/auth/login`
+
+  const roleNames: Record<string, string> = {
+    'admin_tenant': 'Administrador',
+    'doctor': 'Doctor/a',
+    'staff': 'Personal',
+    'receptionist': 'Recepcionista',
+    'patient': 'Paciente',
+    'member': 'Miembro',
+    'client': 'Cliente'
+  }
+
+  const roleName = roleNames[role] || role
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Nuevo Acceso en VittaSami</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5;">
+      <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td align="center" style="padding: 40px 0;">
+            <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+
+              <!-- Header -->
+              <tr>
+                <td style="padding: 40px 40px 20px 40px; text-align: center; background: linear-gradient(135deg, #40C9C6 0%, #A6E3A1 100%); border-radius: 12px 12px 0 0;">
+                  <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">
+                    Nuevo Acceso Asignado
+                  </h1>
+                </td>
+              </tr>
+
+              <!-- Content -->
+              <tr>
+                <td style="padding: 40px;">
+                  <p style="margin: 0 0 20px 0; color: #003A47; font-size: 16px; line-height: 1.6;">
+                    Hola <strong>${recipientName}</strong>,
+                  </p>
+
+                  <p style="margin: 0 0 20px 0; color: #003A47; font-size: 16px; line-height: 1.6;">
+                    Has sido agregado a <strong>${tenantName}</strong> en VittaSami.
+                  </p>
+
+                  <!-- Assignment Details -->
+                  <div style="background-color: #f0f9ff; border-left: 4px solid #40C9C6; padding: 20px; margin: 20px 0; border-radius: 4px;">
+                    <p style="margin: 0 0 10px 0; color: #003A47; font-size: 14px;">
+                      <strong>Negocio:</strong> ${tenantName}
+                    </p>
+                    <p style="margin: 0 0 10px 0; color: #003A47; font-size: 14px;">
+                      <strong>Tu rol:</strong> ${roleName}
+                    </p>
+                    ${assignedBy ? `
+                    <p style="margin: 0; color: #003A47; font-size: 14px;">
+                      <strong>Asignado por:</strong> ${assignedBy}
+                    </p>
+                    ` : ''}
+                  </div>
+
+                  <p style="margin: 0 0 20px 0; color: #003A47; font-size: 16px; line-height: 1.6;">
+                    Ahora puedes acceder al sistema con tu cuenta existente.
+                  </p>
+
+                  <!-- Login Button -->
+                  <div style="text-align: center; margin: 30px 0;">
+                    <a href="${loginUrl}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #40C9C6 0%, #A6E3A1 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 2px 4px rgba(64, 201, 198, 0.3);">
+                      Iniciar Sesión
+                    </a>
+                  </div>
+
+                  <p style="margin: 20px 0 0 0; color: #666; font-size: 14px; line-height: 1.6;">
+                    Si tienes alguna pregunta o necesitas ayuda, no dudes en contactar al administrador de ${tenantName}.
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="padding: 20px 40px; background-color: #f8f9fa; border-radius: 0 0 12px 12px;">
+                  <p style="margin: 0; color: #666; font-size: 12px; text-align: center; line-height: 1.6;">
+                    VittaSami - Gestión moderna para salud y bienestar<br>
+                    © ${new Date().getFullYear()} VittaSami. Todos los derechos reservados.
+                  </p>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `
+}
+
+/**
+ * Generates plain text template for assignment notification email
+ */
+function generateAssignmentEmailText(data: AssignmentEmailData): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vittasami.com'
+  const { recipientName, tenantName, role, assignedBy } = data
+  const loginUrl = `${baseUrl}/auth/login`
+
+  const roleNames: Record<string, string> = {
+    'admin_tenant': 'Administrador',
+    'doctor': 'Doctor/a',
+    'staff': 'Personal',
+    'receptionist': 'Recepcionista',
+    'patient': 'Paciente',
+    'member': 'Miembro',
+    'client': 'Cliente'
+  }
+
+  const roleName = roleNames[role] || role
+
+  return `
+Nuevo Acceso Asignado en VittaSami
+
+Hola ${recipientName},
+
+Has sido agregado a ${tenantName} en VittaSami.
+
+DETALLES DE ASIGNACIÓN:
+━━━━━━━━━━━━━━━━━━━━━━
+Negocio: ${tenantName}
+Tu rol: ${roleName}
+${assignedBy ? `Asignado por: ${assignedBy}\n` : ''}
+━━━━━━━━━━━━━━━━━━━━━━
+
+Ahora puedes acceder al sistema con tu cuenta existente.
+
+Iniciar sesión: ${loginUrl}
+
+Si tienes alguna pregunta o necesitas ayuda, no dudes en contactar al administrador de ${tenantName}.
+
+---
+VittaSami - Gestión moderna para salud y bienestar
+© ${new Date().getFullYear()} VittaSami. Todos los derechos reservados.
+  `.trim()
+}
+
+/**
+ * Sends an assignment notification email to an existing user
+ * @throws Error if email configuration is missing or email fails to send
+ */
+export async function sendAssignmentEmail(data: AssignmentEmailData): Promise<void> {
+  try {
+    const transporter = createTransporter()
+    const config = getEmailConfig()
+
+    const mailOptions = {
+      from: {
+        name: 'VittaSami',
+        address: config.user
+      },
+      to: {
+        name: data.recipientName,
+        address: data.recipientEmail
+      },
+      subject: `Nuevo acceso a ${data.tenantName} - VittaSami`,
+      text: generateAssignmentEmailText(data),
+      html: generateAssignmentEmailHTML(data)
+    }
+
+    console.log('[Email] Sending assignment notification email to:', data.recipientEmail)
+
+    const info = await transporter.sendMail(mailOptions)
+
+    console.log('[Email] Assignment notification email sent successfully:', {
+      messageId: info.messageId,
+      recipient: data.recipientEmail,
+      accepted: info.accepted,
+      rejected: info.rejected
+    })
+
+    // Verify the connection worked
+    if (info.rejected && info.rejected.length > 0) {
+      throw new Error(`Email was rejected by server for: ${info.rejected.join(', ')}`)
+    }
+
+  } catch (error) {
+    console.error('[Email] Failed to send assignment notification email:', {
+      error,
+      message: error instanceof Error ? error.message : 'Unknown error',
+      recipient: data.recipientEmail
+    })
+    throw error
   }
 }
