@@ -22,6 +22,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if email is verified
+    if (!userProfile.email_verified) {
+      return NextResponse.json({
+        error: 'Debes activar tu cuenta antes de iniciar sesión. Revisa tu email.',
+        requiresActivation: true
+      }, { status: 403 })
+    }
+
+    // Check if user must change password (legacy users)
+    if (userProfile.must_change_password) {
+      // Generate temporary token for password change
+      const tempToken = customAuth.generateToken({
+        userId: userProfile.id,
+        email: userProfile.email,
+        role: userProfile.role,
+        tenantId: userProfile.tenant_id || undefined
+      })
+
+      return NextResponse.json({
+        requiresPasswordChange: true,
+        redirectPath: '/auth/change-password',
+        tempToken
+      })
+    }
+
     // Generate JWT token
     const token = customAuth.generateToken({
       userId: userProfile.id,
