@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { customAuth } from '@/lib/custom-auth'
+import { createClient } from '@/lib/supabase-server'
 import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
 import ManageUsersClient from '@/components/admin/ManageUsersClient'
@@ -47,12 +48,14 @@ export default async function ManageUsersPage() {
     )
   }
 
-  const tenantId = user.profile?.tenant_id
   const isSuperAdmin = role === 'super_admin'
+  // For super_admin, use empty string as tenant_id (they see all users)
+  const rawTenantId = user.profile?.tenant_id
+  const tenantId: string = rawTenantId || (isSuperAdmin ? '' : '')
   const tenantName = isSuperAdmin ? 'Todos los Tenants' : 'Clínica San Rafael' // TODO: Fetch from DB
 
   // Only check for tenant_id if not super_admin
-  if (!tenantId && !isSuperAdmin) {
+  if (!rawTenantId && !isSuperAdmin) {
     return (
       <div className="min-h-screen bg-gray-50">
         <AdminSidebar tenantId={undefined} />
@@ -78,50 +81,81 @@ export default async function ManageUsersPage() {
     )
   }
 
-  // Fetch users server-side
+  // Fetch users server-side directly from Supabase
   let users: UserRoleView[] = []
 
   try {
-    // Super admin fetches ALL users, others fetch only their tenant's users
-    const apiUrl = isSuperAdmin
-      ? `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/admin/users`
-      : `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/tenants/${tenantId}/users`
+    const supabase = await createClient()
 
     console.log('[ManageUsers] Fetching users:', {
       role,
       isSuperAdmin,
-      tenantId,
-      apiUrl
+      tenantId
     })
 
-    const response = await fetch(apiUrl, {
-      headers: {
-        Cookie: `vittasami-auth-token=${await customAuth.getTokenFromCookie()}`
-      },
-      cache: 'no-store' // Always fetch fresh data
-    })
+    if (isSuperAdmin) {
+      // Super admin: fetch ALL users from user_role_view
+      const { data: allUsers, error: usersError } = await supabase
+        .from('user_role_view')
+        .select('*')
+        .order('created_at', { ascending: false })
 
-    console.log('[ManageUsers] Fetch response:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
-    })
-
-    if (response.ok) {
-      const data = await response.json()
-      users = data.users || []
-      console.log('[ManageUsers] Users fetched:', {
-        count: users.length,
-        users: users.map(u => ({ email: u.email, role: u.role }))
-      })
+      if (usersError) {
+        console.error('[ManageUsers] Error fetching all users:', usersError)
+      } else {
+        users = allUsers || []
+      }
     } else {
-      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-      console.error('[ManageUsers] Failed to fetch users:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorData
-      })
+      // Regular admin: fetch only tenant's users from custom_users
+      const { data: tenantUsers, error: usersError } = await supabase
+        .from('custom_users')
+        .select(`
+          id,
+          email,
+          first_name,
+          last_name,
+          role,
+          tenant_id,
+          schedulable,
+          created_at,
+          updated_at
+        `)
+        .eq('tenant_id', tenantId)
+
+      if (usersError) {
+        console.error('[ManageUsers] Error fetching tenant users:', usersError)
+      } else {
+        // Transform to match UserRoleView format
+        users = (tenantUsers || []).map(user => {
+          const schedulable = user.schedulable !== undefined
+            ? user.schedulable
+            : (user.role === 'doctor' || user.role === 'member')
+
+          return {
+            user_id: user.id,
+            email: user.email,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            tenant_id: user.tenant_id,
+            tenant_name: '',
+            tenant_type: '',
+            role: user.role,
+            is_active: true,
+            schedulable,
+            doctor_id: undefined,
+            doctor_first_name: undefined,
+            doctor_last_name: undefined,
+            is_current_tenant: user.tenant_id === tenantId,
+            role_assigned_at: user.created_at
+          }
+        })
+      }
     }
+
+    console.log('[ManageUsers] Users fetched:', {
+      count: users.length,
+      users: users.map(u => ({ email: u.email, role: u.role }))
+    })
   } catch (error) {
     console.error('[ManageUsers] Error fetching users:', error)
   }
