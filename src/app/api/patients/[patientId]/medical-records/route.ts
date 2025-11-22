@@ -50,7 +50,7 @@ export async function GET(
         prescriptions (*),
         diagnoses (*),
         patient:patients (id, first_name, last_name, email, date_of_birth),
-        doctor:user_profiles!medical_records_doctor_id_fkey (id, first_name, last_name, email)
+        doctor:custom_users!medical_records_doctor_id_fkey (id, first_name, last_name, email)
       `)
       .eq('patient_id', patientId)
       .eq('is_visible', true)
