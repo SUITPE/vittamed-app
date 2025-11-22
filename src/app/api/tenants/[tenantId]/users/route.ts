@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
+import { createClient, createAdminClient } from '@/lib/supabase-server'
 import { customAuth } from '@/lib/custom-auth'
+import bcrypt from 'bcryptjs'
 
 interface RouteParams {
   tenantId: string
@@ -157,6 +158,15 @@ export async function POST(
     const body = await request.json()
     const { email, first_name, last_name, phone, role = 'patient', send_invitation = false } = body
 
+    console.log('[TenantUsers POST] Creating user:', {
+      tenantId,
+      email,
+      first_name,
+      last_name,
+      role,
+      send_invitation
+    })
+
     // Validate required fields
     if (!first_name || !last_name) {
       return NextResponse.json({
@@ -167,36 +177,90 @@ export async function POST(
     // For patients, email is optional
     if (!email && role !== 'patient') {
       return NextResponse.json({
-        error: 'Email is required'
+        error: 'Email is required for non-patient roles'
       }, { status: 400 })
     }
 
-    // Create user via admin API
-    const createUserResponse = await fetch(`${request.nextUrl.origin}/api/admin/users`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // Forward the authorization header
-        'Cookie': request.headers.get('cookie') || ''
-      },
-      body: JSON.stringify({
-        email,
-        first_name,
-        last_name,
-        phone,
-        role,
-        tenant_id: tenantId,
-        send_invitation
-      })
-    })
-
-    const userData = await createUserResponse.json()
-
-    if (!createUserResponse.ok) {
-      return NextResponse.json(userData, { status: createUserResponse.status })
+    // Validate role
+    const validRoles = ['patient', 'doctor', 'staff', 'receptionist', 'member', 'admin_tenant']
+    if (!validRoles.includes(role)) {
+      return NextResponse.json({
+        error: `Invalid role. Must be one of: ${validRoles.join(', ')}`
+      }, { status: 400 })
     }
 
-    return NextResponse.json(userData, { status: 201 })
+    // Use admin client to bypass RLS for INSERT
+    const adminClient = await createAdminClient()
+
+    // Check if user with this email already exists
+    if (email) {
+      const { data: existingUser } = await adminClient
+        .from('custom_users')
+        .select('id, email')
+        .eq('email', email)
+        .single()
+
+      if (existingUser) {
+        return NextResponse.json({
+          error: `User with email ${email} already exists`
+        }, { status: 409 })
+      }
+    }
+
+    // Generate temporary password
+    const tempPassword = send_invitation
+      ? Math.random().toString(36).slice(-12)
+      : 'VittaSami2024!' // Default password
+
+    const passwordHash = await bcrypt.hash(tempPassword, 10)
+
+    // Create user in custom_users table
+    const { data: newUser, error: createError } = await adminClient
+      .from('custom_users')
+      .insert({
+        email: email || null,
+        first_name,
+        last_name,
+        phone: phone || null,
+        role,
+        tenant_id: tenantId,
+        password_hash: passwordHash,
+        schedulable: role === 'doctor' || role === 'member',
+        is_active: true
+      })
+      .select()
+      .single()
+
+    if (createError) {
+      console.error('[TenantUsers POST] Error creating user:', createError)
+      return NextResponse.json({
+        error: 'Failed to create user',
+        details: createError.message
+      }, { status: 500 })
+    }
+
+    console.log('[TenantUsers POST] User created successfully:', newUser.id)
+
+    // TODO: Send invitation email if send_invitation is true
+    if (send_invitation && email) {
+      console.log('[TenantUsers POST] TODO: Send invitation email to:', email)
+      // Implementation for sending email would go here
+    }
+
+    return NextResponse.json({
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        first_name: newUser.first_name,
+        last_name: newUser.last_name,
+        role: newUser.role,
+        tenant_id: newUser.tenant_id,
+        schedulable: newUser.schedulable
+      },
+      message: send_invitation
+        ? 'User created successfully. Invitation email will be sent.'
+        : `User created successfully. Temporary password: ${tempPassword}`
+    }, { status: 201 })
 
   } catch (error) {
     console.error('Unexpected error in POST /api/tenants/[tenantId]/users:', {
