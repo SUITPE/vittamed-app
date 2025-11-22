@@ -41,6 +41,8 @@ export default function AddTeamMemberModal({
   const [emailSent, setEmailSent] = useState(false)
   const [emailError, setEmailError] = useState<string | null>(null)
   const [tempPassword, setTempPassword] = useState<string | null>(null)
+  const [userExists, setUserExists] = useState(false)
+  const [existingUserId, setExistingUserId] = useState<string | null>(null)
 
   if (!isOpen) return null
 
@@ -88,7 +90,10 @@ export default function AddTeamMemberModal({
         onSuccess(data.user)
       } else {
         if (response.status === 409) {
-          setError('Un usuario con este email ya existe. ¿Deseas asignarlo a este negocio?')
+          // Usuario ya existe, mostrar confirmación
+          setUserExists(true)
+          setExistingUserId(data.existingUserId || null)
+          setError('')
         } else {
           setError(data.error || 'Error al crear el miembro del equipo')
         }
@@ -98,6 +103,51 @@ export default function AddTeamMemberModal({
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const handleAssignExistingUser = async () => {
+    if (!existingUserId) {
+      setError('No se pudo obtener el ID del usuario existente')
+      return
+    }
+
+    setSubmitting(true)
+    setError('')
+
+    try {
+      // Update the existing user's tenant_id to assign them to this tenant
+      const response = await fetch(`/api/users/${existingUserId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tenant_id: tenantId,
+          role: formData.role
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setCreatedMember(data.user)
+        setStep('success')
+        setUserExists(false)
+        onSuccess(data.user)
+      } else {
+        setError(data.error || 'Error al asignar el usuario al negocio')
+      }
+    } catch (error) {
+      setError('Error inesperado al asignar el usuario')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleCancelAssignment = () => {
+    setUserExists(false)
+    setExistingUserId(null)
+    setError('')
   }
 
   const handleClose = () => {
@@ -114,6 +164,8 @@ export default function AddTeamMemberModal({
     setEmailSent(false)
     setEmailError(null)
     setTempPassword(null)
+    setUserExists(false)
+    setExistingUserId(null)
     onClose()
   }
 
@@ -164,7 +216,49 @@ export default function AddTeamMemberModal({
               </div>
             )}
 
+            {/* User Exists Confirmation */}
+            {userExists && (
+              <div className="mb-6">
+                <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-yellow-800">
+                        Usuario Existente
+                      </h3>
+                      <div className="mt-2 text-sm text-yellow-700">
+                        <p>Un usuario con el email <strong>{formData.email}</strong> ya existe en el sistema.</p>
+                        <p className="mt-2">¿Deseas asignar este usuario a <strong>{tenantName}</strong>?</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={handleCancelAssignment}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 rounded-md transition-colors"
+                  >
+                    No, Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAssignExistingUser}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 border border-transparent rounded-md transition-colors"
+                  >
+                    Sí, Asignar a este Negocio
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Form */}
+            {!userExists && (
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email */}
               <div>
@@ -289,6 +383,7 @@ export default function AddTeamMemberModal({
                 </button>
               </div>
             </form>
+            )}
           </>
         )}
 
