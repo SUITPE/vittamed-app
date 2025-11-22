@@ -151,10 +151,43 @@ if (isSuperAdmin) {
 - ✅ Funciona igual en local y Vercel
 - ✅ Menos puntos de falla
 
-### 10. Próximos Pasos
+### 10. Verificación Final
 
-1. ✅ Usuario debe recargar /admin/manage-users después del deployment
-2. ✅ Verificar que la lista de usuarios aparezca correctamente
+**Deployment:** https://vittasami-staging.vercel.app (vittasami-4ebdvv21q)
+
+**Test realizado:**
+```bash
+curl -s -c /tmp/cookies.txt -X POST \
+  https://vittasami-staging.vercel.app/api/auth/login \
+  -d '{"email":"guscass@gmail.com","password":"wasaberto"}'
+
+curl -s -b /tmp/cookies.txt \
+  https://vittasami-staging.vercel.app/admin/manage-users
+```
+
+**Resultado:**
+- ✅ Login exitoso con guscass@gmail.com / wasaberto
+- ✅ User guscass@gmail.com aparece en la lista
+- ✅ User alvaro@abp.pe aparece en la lista
+- ✅ User prueba@test.com aparece en la lista
+- ✅ No se muestra mensaje de "No hay miembros del equipo"
+
+### 11. Resumen Final
+
+**Problema Resuelto:** ✅
+
+El usuario `guscass@gmail.com` ahora puede ver correctamente la lista completa de usuarios de su tenant (Dr. Gus) en `/admin/manage-users`.
+
+**Causa:** Falta de variable `NEXT_PUBLIC_BASE_URL` en Vercel causaba que el fetch intentara conectarse a `localhost:3000` en el servidor.
+
+**Solución:** Cambio de arquitectura - fetch HTTP → consulta directa Supabase en Server Component.
+
+**Cambios aplicados:**
+1. src/app/admin/manage-users/page.tsx - Query directa a Supabase
+2. Documentación completa del proceso de debugging
+3. Scripts de debug para futuras investigaciones
+
+**Usuario puede continuar:** Sí, el sistema funciona correctamente.
 
 ## Archivos Modificados
 
