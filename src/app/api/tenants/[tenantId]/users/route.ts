@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase-server'
 import { customAuth } from '@/lib/custom-auth'
 import { sendInvitationEmail } from '@/lib/email'
+import { createVerificationToken } from '@/lib/verification-tokens'
 import bcrypt from 'bcryptjs'
 
 interface RouteParams {
@@ -208,14 +209,12 @@ export async function POST(
       }
     }
 
-    // Generate temporary password
-    const tempPassword = send_invitation
-      ? Math.random().toString(36).slice(-12)
-      : 'VittaSami2024!' // Default password
-
+    // Generate temporary password (will be replaced when user activates account)
+    const tempPassword = Math.random().toString(36).slice(-12)
     const passwordHash = await bcrypt.hash(tempPassword, 10)
 
     // Create user in custom_users table
+    // User starts inactive and unverified, must activate via email
     const { data: newUser, error: createError } = await adminClient
       .from('custom_users')
       .insert({
@@ -225,9 +224,11 @@ export async function POST(
         phone: phone || null,
         role,
         tenant_id: tenantId,
-        password_hash: passwordHash,
+        password_hash: passwordHash, // Temporary, user will set their own
         schedulable: role === 'doctor' || role === 'member',
-        is_active: true
+        is_active: false, // User must activate first
+        email_verified: false, // Email must be verified
+        must_change_password: true // Must set password on activation
       })
       .select()
       .single()
@@ -251,25 +252,41 @@ export async function POST(
 
     const tenantName = tenant?.name || 'VittaSami'
 
-    // Send invitation email if requested
-    let emailSent = false
-    let emailError: string | null = null
+    // Generate activation token
+    let activationToken: string | null = null
+    let tokenExpiresAt: Date | null = null
 
     if (send_invitation && email) {
       try {
-        console.log('[TenantUsers POST] Sending invitation email to:', email)
+        const tokenData = await createVerificationToken(newUser.id)
+        activationToken = tokenData.token
+        tokenExpiresAt = tokenData.expiresAt
+        console.log('[TenantUsers POST] Activation token generated for user:', newUser.id)
+      } catch (error) {
+        console.error('[TenantUsers POST] Failed to generate activation token:', error)
+        // Continue without token - will need to resend later
+      }
+    }
+
+    // Send invitation email with activation token
+    let emailSent = false
+    let emailError: string | null = null
+
+    if (send_invitation && email && activationToken) {
+      try {
+        console.log('[TenantUsers POST] Sending activation email to:', email)
 
         await sendInvitationEmail({
           recipientEmail: email,
           recipientName: `${first_name} ${last_name}`,
-          tempPassword,
+          activationToken, // Send token instead of password
           tenantName
         })
 
         emailSent = true
-        console.log('[TenantUsers POST] Invitation email sent successfully to:', email)
+        console.log('[TenantUsers POST] Activation email sent successfully to:', email)
       } catch (error) {
-        console.error('[TenantUsers POST] Failed to send invitation email:', {
+        console.error('[TenantUsers POST] Failed to send activation email:', {
           error,
           message: error instanceof Error ? error.message : 'Unknown error',
           recipient: email
@@ -287,16 +304,18 @@ export async function POST(
         last_name: newUser.last_name,
         role: newUser.role,
         tenant_id: newUser.tenant_id,
-        schedulable: newUser.schedulable
+        schedulable: newUser.schedulable,
+        email_verified: newUser.email_verified,
+        must_change_password: newUser.must_change_password
       },
       message: send_invitation
         ? (emailSent
-          ? 'User created successfully. Invitation email sent.'
-          : `User created successfully but email failed to send. Temporary password: ${tempPassword}`)
-        : `User created successfully. Temporary password: ${tempPassword}`,
+          ? 'Usuario creado exitosamente. Se ha enviado un email de activación.'
+          : `Usuario creado pero el email no pudo ser enviado. ${emailError || 'Error desconocido'}`)
+        : 'Usuario creado exitosamente. Debe ser activado manualmente.',
       emailSent,
       emailError,
-      tempPassword: !emailSent ? tempPassword : undefined // Only return password if email wasn't sent
+      requiresActivation: true
     }, { status: 201 })
 
   } catch (error) {

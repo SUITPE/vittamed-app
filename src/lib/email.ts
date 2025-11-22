@@ -3,7 +3,8 @@ import nodemailer from 'nodemailer'
 interface InvitationEmailData {
   recipientEmail: string
   recipientName: string
-  tempPassword: string
+  tempPassword?: string  // Optional: only if activation not required
+  activationToken?: string  // Optional: for account activation
   senderName?: string
   tenantName?: string
 }
@@ -57,8 +58,13 @@ function createTransporter() {
  * Generates HTML template for invitation email
  */
 function generateInvitationEmailHTML(data: InvitationEmailData): string {
-  const loginUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vittasami.com'
-  const { recipientName, tempPassword, tenantName } = data
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vittasami.com'
+  const { recipientName, tempPassword, activationToken, tenantName } = data
+
+  // Determine which flow to use: activation or direct login
+  const requiresActivation = !!activationToken
+  const activationUrl = requiresActivation ? `${baseUrl}/auth/activate?token=${activationToken}` : null
+  const loginUrl = `${baseUrl}/auth/login`
 
   return `
     <!DOCTYPE html>
@@ -94,6 +100,30 @@ function generateInvitationEmailHTML(data: InvitationEmailData): string {
                     Has sido invitado a unirte a <strong>${tenantName || 'VittaSami'}</strong>. Tu cuenta ha sido creada exitosamente.
                   </p>
 
+                  ${requiresActivation ? `
+                  <!-- ACTIVATION FLOW -->
+                  <p style="margin: 0 0 20px 0; color: #003A47; font-size: 16px; line-height: 1.6;">
+                    Para activar tu cuenta y establecer tu contraseña, haz clic en el siguiente botón:
+                  </p>
+
+                  <!-- CTA Button - Activation -->
+                  <div style="text-align: center; margin: 30px 0;">
+                    <a href="${activationUrl}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #40C9C6 0%, #A6E3A1 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600;">
+                      Activar Mi Cuenta
+                    </a>
+                  </div>
+
+                  <p style="margin: 20px 0; color: #6c757d; font-size: 14px; line-height: 1.6;">
+                    <strong>⏱️ Este enlace es válido por 1 hora.</strong><br>
+                    Si no activas tu cuenta dentro de este tiempo, deberás solicitar un nuevo enlace de activación.
+                  </p>
+
+                  <p style="margin: 20px 0; color: #6c757d; font-size: 12px; line-height: 1.6;">
+                    Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
+                    <a href="${activationUrl}" style="color: #40C9C6; word-break: break-all;">${activationUrl}</a>
+                  </p>
+                  ` : `
+                  <!-- LEGACY FLOW (Direct Login with Password) -->
                   <p style="margin: 0 0 10px 0; color: #003A47; font-size: 16px; line-height: 1.6;">
                     Tus credenciales de acceso son:
                   </p>
@@ -109,15 +139,16 @@ function generateInvitationEmailHTML(data: InvitationEmailData): string {
                   </div>
 
                   <p style="margin: 20px 0; color: #003A47; font-size: 16px; line-height: 1.6;">
-                    Por seguridad, te recomendamos cambiar tu contraseña después del primer inicio de sesión.
+                    ⚠️ <strong>Por seguridad, deberás cambiar tu contraseña al iniciar sesión por primera vez.</strong>
                   </p>
 
-                  <!-- CTA Button -->
+                  <!-- CTA Button - Direct Login -->
                   <div style="text-align: center; margin: 30px 0;">
-                    <a href="${loginUrl}/auth/login" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #40C9C6 0%, #A6E3A1 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600;">
+                    <a href="${loginUrl}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #40C9C6 0%, #A6E3A1 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600;">
                       Iniciar Sesión
                     </a>
                   </div>
+                  `}
 
                   <p style="margin: 30px 0 0 0; color: #6c757d; font-size: 14px; line-height: 1.6;">
                     Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.
@@ -150,10 +181,36 @@ function generateInvitationEmailHTML(data: InvitationEmailData): string {
  * Generates plain text version of invitation email
  */
 function generateInvitationEmailText(data: InvitationEmailData): string {
-  const loginUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vittasami.com'
-  const { recipientName, recipientEmail, tempPassword, tenantName } = data
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vittasami.com'
+  const { recipientName, recipientEmail, tempPassword, activationToken, tenantName } = data
 
-  return `
+  const requiresActivation = !!activationToken
+  const activationUrl = requiresActivation ? `${baseUrl}/auth/activate?token=${activationToken}` : null
+  const loginUrl = `${baseUrl}/auth/login`
+
+  if (requiresActivation) {
+    return `
+Bienvenido a VittaSami
+
+Hola ${recipientName},
+
+Has sido invitado a unirte a ${tenantName || 'VittaSami'}. Tu cuenta ha sido creada exitosamente.
+
+Para activar tu cuenta y establecer tu contraseña, visita el siguiente enlace:
+
+${activationUrl}
+
+⏱️ Este enlace es válido por 1 hora.
+Si no activas tu cuenta dentro de este tiempo, deberás solicitar un nuevo enlace de activación.
+
+Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.
+
+---
+VittaSami - Gestión moderna para salud y bienestar
+© ${new Date().getFullYear()} VittaSami. Todos los derechos reservados.
+    `.trim()
+  } else {
+    return `
 Bienvenido a VittaSami
 
 Hola ${recipientName},
@@ -165,16 +222,17 @@ Tus credenciales de acceso son:
 Email: ${recipientEmail}
 Contraseña temporal: ${tempPassword}
 
-Por seguridad, te recomendamos cambiar tu contraseña después del primer inicio de sesión.
+⚠️ Por seguridad, deberás cambiar tu contraseña al iniciar sesión por primera vez.
 
-Iniciar sesión: ${loginUrl}/auth/login
+Iniciar sesión: ${loginUrl}
 
 Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.
 
 ---
 VittaSami - Gestión moderna para salud y bienestar
 © ${new Date().getFullYear()} VittaSami. Todos los derechos reservados.
-  `.trim()
+    `.trim()
+  }
 }
 
 /**
