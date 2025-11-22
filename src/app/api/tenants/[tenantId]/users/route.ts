@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase-server'
 import { customAuth } from '@/lib/custom-auth'
+import { sendInvitationEmail } from '@/lib/email'
 import bcrypt from 'bcryptjs'
 
 interface RouteParams {
@@ -241,10 +242,41 @@ export async function POST(
 
     console.log('[TenantUsers POST] User created successfully:', newUser.id)
 
-    // TODO: Send invitation email if send_invitation is true
+    // Get tenant information for email
+    const { data: tenant } = await adminClient
+      .from('tenants')
+      .select('name')
+      .eq('id', tenantId)
+      .single()
+
+    const tenantName = tenant?.name || 'VittaSami'
+
+    // Send invitation email if requested
+    let emailSent = false
+    let emailError: string | null = null
+
     if (send_invitation && email) {
-      console.log('[TenantUsers POST] TODO: Send invitation email to:', email)
-      // Implementation for sending email would go here
+      try {
+        console.log('[TenantUsers POST] Sending invitation email to:', email)
+
+        await sendInvitationEmail({
+          recipientEmail: email,
+          recipientName: `${first_name} ${last_name}`,
+          tempPassword,
+          tenantName
+        })
+
+        emailSent = true
+        console.log('[TenantUsers POST] Invitation email sent successfully to:', email)
+      } catch (error) {
+        console.error('[TenantUsers POST] Failed to send invitation email:', {
+          error,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          recipient: email
+        })
+        emailError = error instanceof Error ? error.message : 'Failed to send email'
+        // Don't fail the whole operation if email fails - user was already created
+      }
     }
 
     return NextResponse.json({
@@ -258,8 +290,13 @@ export async function POST(
         schedulable: newUser.schedulable
       },
       message: send_invitation
-        ? 'User created successfully. Invitation email will be sent.'
-        : `User created successfully. Temporary password: ${tempPassword}`
+        ? (emailSent
+          ? 'User created successfully. Invitation email sent.'
+          : `User created successfully but email failed to send. Temporary password: ${tempPassword}`)
+        : `User created successfully. Temporary password: ${tempPassword}`,
+      emailSent,
+      emailError,
+      tempPassword: !emailSent ? tempPassword : undefined // Only return password if email wasn't sent
     }, { status: 201 })
 
   } catch (error) {

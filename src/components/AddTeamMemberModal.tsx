@@ -38,6 +38,9 @@ export default function AddTeamMemberModal({
   const [error, setError] = useState('')
   const [step, setStep] = useState<'form' | 'success'>('form')
   const [createdMember, setCreatedMember] = useState<any>(null)
+  const [emailSent, setEmailSent] = useState(false)
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [tempPassword, setTempPassword] = useState<string | null>(null)
 
   if (!isOpen) return null
 
@@ -78,6 +81,9 @@ export default function AddTeamMemberModal({
 
       if (response.ok) {
         setCreatedMember(data.user)
+        setEmailSent(data.emailSent || false)
+        setEmailError(data.emailError || null)
+        setTempPassword(data.tempPassword || null)
         setStep('success')
         onSuccess(data.user)
       } else {
@@ -105,6 +111,9 @@ export default function AddTeamMemberModal({
     setError('')
     setStep('form')
     setCreatedMember(null)
+    setEmailSent(false)
+    setEmailError(null)
+    setTempPassword(null)
     onClose()
   }
 
@@ -314,13 +323,42 @@ export default function AddTeamMemberModal({
                 </div>
               </div>
 
-              {formData.send_invitation ? (
+              {/* Email Status - Show accurate information */}
+              {formData.send_invitation && emailSent && !emailError && (
                 <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-4">
                   <p className="text-sm text-green-800">
-                    📧 Se ha enviado una invitación por email con las credenciales de acceso.
+                    ✅ Se ha enviado una invitación por email con las credenciales de acceso.
                   </p>
                 </div>
-              ) : (
+              )}
+
+              {formData.send_invitation && !emailSent && emailError && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+                  <p className="text-sm text-red-800 font-medium mb-2">
+                    ❌ No se pudo enviar el email de invitación
+                  </p>
+                  <p className="text-xs text-red-700">
+                    Error: {emailError}
+                  </p>
+                </div>
+              )}
+
+              {/* Show temporary password if email wasn't sent */}
+              {tempPassword && (
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+                  <p className="text-sm text-blue-800 font-medium mb-2">
+                    🔑 Contraseña temporal generada
+                  </p>
+                  <div className="bg-white border border-blue-300 rounded px-3 py-2 mb-2">
+                    <code className="text-blue-900 font-mono text-sm">{tempPassword}</code>
+                  </div>
+                  <p className="text-xs text-blue-700">
+                    ⚠️ Proporciona esta contraseña al nuevo miembro. Por seguridad, se recomienda cambiarla después del primer inicio de sesión.
+                  </p>
+                </div>
+              )}
+
+              {!formData.send_invitation && !tempPassword && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
                   <p className="text-sm text-yellow-800">
                     ⚠️ Recuerda proporcionar las credenciales de acceso al nuevo miembro.
