@@ -408,23 +408,25 @@ export default function MedicalRecordForm({
                     <div className="border-t border-gray-200 pt-4">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-gray-900">Notas SOAP</h3>
-                        <VoiceDictation
-                          onTranscriptionComplete={(text) => {
-                            // Parser inteligente para mapear a campos SOAP
-                            const parsed = parseSOAPTranscription(text)
-                            setFormData(prev => ({
-                              ...prev,
-                              chief_complaint: parsed.chief_complaint || prev.chief_complaint,
-                              subjective: parsed.subjective || prev.subjective,
-                              objective: parsed.objective || prev.objective,
-                              assessment: parsed.assessment || prev.assessment,
-                              plan: parsed.plan || prev.plan
-                            }))
-                          }}
-                          variant="default"
-                          language="es-ES"
-                          buttonLabel="Dictar Notas SOAP"
-                        />
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600">Dictar notas:</span>
+                          <VoiceDictation
+                            onTranscriptionComplete={(text) => {
+                              // Parser inteligente para mapear a campos SOAP
+                              const parsed = parseSOAPTranscription(text)
+                              setFormData(prev => ({
+                                ...prev,
+                                chief_complaint: parsed.chief_complaint || prev.chief_complaint,
+                                subjective: parsed.subjective || prev.subjective,
+                                objective: parsed.objective || prev.objective,
+                                assessment: parsed.assessment || prev.assessment,
+                                plan: parsed.plan || prev.plan
+                              }))
+                            }}
+                            variant="compact"
+                            language="es-ES"
+                          />
+                        </div>
                       </div>
 
                       <div className="space-y-4">

@@ -76,6 +76,7 @@ export function VoiceDictation({
     <div className="space-y-3">
       {/* Botón de dictado */}
       <motion.button
+        type="button"
         onClick={handleToggle}
         disabled={disabled}
         className={`
