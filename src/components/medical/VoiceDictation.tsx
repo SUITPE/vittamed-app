@@ -46,7 +46,10 @@ export function VoiceDictation({
       },
     })
 
-  const handleToggle = () => {
+  const handleToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+
     if (isListening) {
       stopListening()
       onRecordingStateChange?.(false)
