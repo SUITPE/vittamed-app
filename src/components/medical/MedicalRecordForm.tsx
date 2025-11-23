@@ -30,6 +30,49 @@ const VITAL_RANGES = {
 
 type VitalSign = keyof typeof VITAL_RANGES
 
+// Parser inteligente para detectar secciones SOAP en el dictado
+function parseSOAPTranscription(text: string) {
+  const result: {
+    chief_complaint?: string
+    subjective?: string
+    objective?: string
+    assessment?: string
+    plan?: string
+  } = {}
+
+  // Normalizar texto
+  const normalized = text.toLowerCase()
+
+  // Patrones para detectar cada sección (usando [\s\S] en vez de flag 's' para compatibilidad)
+  const patterns = {
+    chief_complaint: /(?:motivo de consulta|motivo|chief complaint)[:\s]*([\s\S]+?)(?=(?:subjetivo|objetivo|evaluación|assessment|plan|$))/i,
+    subjective: /(?:subjetivo|s|subjective)[:\s]*([\s\S]+?)(?=(?:objetivo|evaluación|assessment|plan|$))/i,
+    objective: /(?:objetivo|o|objective)[:\s]*([\s\S]+?)(?=(?:evaluación|assessment|plan|$))/i,
+    assessment: /(?:evaluación|assessment|a|diagnóstico)[:\s]*([\s\S]+?)(?=(?:plan|$))/i,
+    plan: /(?:plan|p|tratamiento)[:\s]*([\s\S]+?)$/i
+  }
+
+  // Intentar detectar cada sección
+  for (const [field, pattern] of Object.entries(patterns)) {
+    const match = normalized.match(pattern)
+    if (match && match[1]) {
+      // Obtener el texto original (no normalizado) de la misma posición
+      const startIndex = match.index! + match[0].indexOf(match[1])
+      const length = match[1].length
+      const originalText = text.substring(startIndex, startIndex + length).trim()
+
+      result[field as keyof typeof result] = originalText
+    }
+  }
+
+  // Si no se detectaron secciones, todo va a subjetivo
+  if (Object.keys(result).length === 0) {
+    result.subjective = text.trim()
+  }
+
+  return result
+}
+
 export default function MedicalRecordForm({
   isOpen,
   onClose,
@@ -353,129 +396,88 @@ export default function MedicalRecordForm({
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Motivo de Consulta
                       </label>
-                      <div className="flex gap-2">
-                        <textarea
-                          rows={2}
-                          value={formData.chief_complaint}
-                          onChange={(e) => setFormData({ ...formData, chief_complaint: e.target.value })}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="¿Por qué acude el paciente?"
-                        />
-                        <VoiceDictation
-                          onTranscriptionComplete={(text) => {
-                            setFormData(prev => ({
-                              ...prev,
-                              chief_complaint: prev.chief_complaint ? `${prev.chief_complaint} ${text}` : text
-                            }))
-                          }}
-                          variant="compact"
-                          language="es-ES"
-                        />
-                      </div>
+                      <textarea
+                        rows={2}
+                        value={formData.chief_complaint}
+                        onChange={(e) => setFormData({ ...formData, chief_complaint: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="¿Por qué acude el paciente?"
+                      />
                     </div>
 
                     <div className="border-t border-gray-200 pt-4">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Notas SOAP</h3>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900">Notas SOAP</h3>
+                        <VoiceDictation
+                          onTranscriptionComplete={(text) => {
+                            // Parser inteligente para mapear a campos SOAP
+                            const parsed = parseSOAPTranscription(text)
+                            setFormData(prev => ({
+                              ...prev,
+                              chief_complaint: parsed.chief_complaint || prev.chief_complaint,
+                              subjective: parsed.subjective || prev.subjective,
+                              objective: parsed.objective || prev.objective,
+                              assessment: parsed.assessment || prev.assessment,
+                              plan: parsed.plan || prev.plan
+                            }))
+                          }}
+                          variant="default"
+                          language="es-ES"
+                          buttonLabel="Dictar Notas SOAP"
+                        />
+                      </div>
 
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             <span className="text-blue-600 font-bold">S</span> Subjetivo
                           </label>
-                          <div className="flex gap-2">
-                            <textarea
-                              rows={3}
-                              value={formData.subjective}
-                              onChange={(e) => setFormData({ ...formData, subjective: e.target.value })}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="Síntomas reportados por el paciente, historia del presente..."
-                            />
-                            <VoiceDictation
-                              onTranscriptionComplete={(text) => {
-                                setFormData(prev => ({
-                                  ...prev,
-                                  subjective: prev.subjective ? `${prev.subjective} ${text}` : text
-                                }))
-                              }}
-                              variant="compact"
-                              language="es-ES"
-                            />
-                          </div>
+                          <textarea
+                            rows={3}
+                            value={formData.subjective}
+                            onChange={(e) => setFormData({ ...formData, subjective: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Síntomas reportados por el paciente, historia del presente..."
+                          />
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             <span className="text-green-600 font-bold">O</span> Objetivo
                           </label>
-                          <div className="flex gap-2">
-                            <textarea
-                              rows={3}
-                              value={formData.objective}
-                              onChange={(e) => setFormData({ ...formData, objective: e.target.value })}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="Hallazgos del examen físico, observaciones clínicas..."
-                            />
-                            <VoiceDictation
-                              onTranscriptionComplete={(text) => {
-                                setFormData(prev => ({
-                                  ...prev,
-                                  objective: prev.objective ? `${prev.objective} ${text}` : text
-                                }))
-                              }}
-                              variant="compact"
-                              language="es-ES"
-                            />
-                          </div>
+                          <textarea
+                            rows={3}
+                            value={formData.objective}
+                            onChange={(e) => setFormData({ ...formData, objective: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Hallazgos del examen físico, observaciones clínicas..."
+                          />
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             <span className="text-purple-600 font-bold">A</span> Evaluación/Assessment
                           </label>
-                          <div className="flex gap-2">
-                            <textarea
-                              rows={3}
-                              value={formData.assessment}
-                              onChange={(e) => setFormData({ ...formData, assessment: e.target.value })}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="Diagnóstico o impresión clínica..."
-                            />
-                            <VoiceDictation
-                              onTranscriptionComplete={(text) => {
-                                setFormData(prev => ({
-                                  ...prev,
-                                  assessment: prev.assessment ? `${prev.assessment} ${text}` : text
-                                }))
-                              }}
-                              variant="compact"
-                              language="es-ES"
-                            />
-                          </div>
+                          <textarea
+                            rows={3}
+                            value={formData.assessment}
+                            onChange={(e) => setFormData({ ...formData, assessment: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Diagnóstico o impresión clínica..."
+                          />
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             <span className="text-orange-600 font-bold">P</span> Plan
                           </label>
-                          <div className="flex gap-2">
-                            <textarea
-                              rows={3}
-                              value={formData.plan}
-                              onChange={(e) => setFormData({ ...formData, plan: e.target.value })}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="Plan de tratamiento, seguimiento, recomendaciones..."
-                            />
-                            <VoiceDictation
-                              onTranscriptionComplete={(text) => {
-                                setFormData(prev => ({
-                                  ...prev,
-                                  plan: prev.plan ? `${prev.plan} ${text}` : text
-                                }))
-                              }}
-                              variant="compact"
-                              language="es-ES"
-                            />
-                          </div>
+                          <textarea
+                            rows={3}
+                            value={formData.plan}
+                            onChange={(e) => setFormData({ ...formData, plan: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Plan de tratamiento, seguimiento, recomendaciones..."
+                          />
                         </div>
                       </div>
                     </div>
