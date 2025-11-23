@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Icons } from '@/components/ui/Icons'
+import { VoiceDictation } from '@/components/medical/VoiceDictation'
 import type { RecordType, MedicalRecordFormData, PrescriptionFormData, DiagnosisFormData } from '@/types/medical-history'
 
 interface MedicalRecordFormProps {
@@ -352,13 +353,25 @@ export default function MedicalRecordForm({
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Motivo de Consulta
                       </label>
-                      <textarea
-                        rows={2}
-                        value={formData.chief_complaint}
-                        onChange={(e) => setFormData({ ...formData, chief_complaint: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="¿Por qué acude el paciente?"
-                      />
+                      <div className="flex gap-2">
+                        <textarea
+                          rows={2}
+                          value={formData.chief_complaint}
+                          onChange={(e) => setFormData({ ...formData, chief_complaint: e.target.value })}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="¿Por qué acude el paciente?"
+                        />
+                        <VoiceDictation
+                          onTranscriptionComplete={(text) => {
+                            setFormData(prev => ({
+                              ...prev,
+                              chief_complaint: prev.chief_complaint ? `${prev.chief_complaint} ${text}` : text
+                            }))
+                          }}
+                          variant="compact"
+                          language="es-ES"
+                        />
+                      </div>
                     </div>
 
                     <div className="border-t border-gray-200 pt-4">
@@ -369,52 +382,100 @@ export default function MedicalRecordForm({
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             <span className="text-blue-600 font-bold">S</span> Subjetivo
                           </label>
-                          <textarea
-                            rows={3}
-                            value={formData.subjective}
-                            onChange={(e) => setFormData({ ...formData, subjective: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Síntomas reportados por el paciente, historia del presente..."
-                          />
+                          <div className="flex gap-2">
+                            <textarea
+                              rows={3}
+                              value={formData.subjective}
+                              onChange={(e) => setFormData({ ...formData, subjective: e.target.value })}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Síntomas reportados por el paciente, historia del presente..."
+                            />
+                            <VoiceDictation
+                              onTranscriptionComplete={(text) => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  subjective: prev.subjective ? `${prev.subjective} ${text}` : text
+                                }))
+                              }}
+                              variant="compact"
+                              language="es-ES"
+                            />
+                          </div>
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             <span className="text-green-600 font-bold">O</span> Objetivo
                           </label>
-                          <textarea
-                            rows={3}
-                            value={formData.objective}
-                            onChange={(e) => setFormData({ ...formData, objective: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Hallazgos del examen físico, observaciones clínicas..."
-                          />
+                          <div className="flex gap-2">
+                            <textarea
+                              rows={3}
+                              value={formData.objective}
+                              onChange={(e) => setFormData({ ...formData, objective: e.target.value })}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Hallazgos del examen físico, observaciones clínicas..."
+                            />
+                            <VoiceDictation
+                              onTranscriptionComplete={(text) => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  objective: prev.objective ? `${prev.objective} ${text}` : text
+                                }))
+                              }}
+                              variant="compact"
+                              language="es-ES"
+                            />
+                          </div>
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             <span className="text-purple-600 font-bold">A</span> Evaluación/Assessment
                           </label>
-                          <textarea
-                            rows={3}
-                            value={formData.assessment}
-                            onChange={(e) => setFormData({ ...formData, assessment: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Diagnóstico o impresión clínica..."
-                          />
+                          <div className="flex gap-2">
+                            <textarea
+                              rows={3}
+                              value={formData.assessment}
+                              onChange={(e) => setFormData({ ...formData, assessment: e.target.value })}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Diagnóstico o impresión clínica..."
+                            />
+                            <VoiceDictation
+                              onTranscriptionComplete={(text) => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  assessment: prev.assessment ? `${prev.assessment} ${text}` : text
+                                }))
+                              }}
+                              variant="compact"
+                              language="es-ES"
+                            />
+                          </div>
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             <span className="text-orange-600 font-bold">P</span> Plan
                           </label>
-                          <textarea
-                            rows={3}
-                            value={formData.plan}
-                            onChange={(e) => setFormData({ ...formData, plan: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Plan de tratamiento, seguimiento, recomendaciones..."
-                          />
+                          <div className="flex gap-2">
+                            <textarea
+                              rows={3}
+                              value={formData.plan}
+                              onChange={(e) => setFormData({ ...formData, plan: e.target.value })}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Plan de tratamiento, seguimiento, recomendaciones..."
+                            />
+                            <VoiceDictation
+                              onTranscriptionComplete={(text) => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  plan: prev.plan ? `${prev.plan} ${text}` : text
+                                }))
+                              }}
+                              variant="compact"
+                              language="es-ES"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
