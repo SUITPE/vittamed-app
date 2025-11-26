@@ -32,33 +32,30 @@ export async function GET(
       }, { status: 403 })
     }
 
-    const { data: doctorTenants, error } = await supabase
-      .from('doctor_tenants')
+    // Get all schedulable users (not just doctors from doctor_tenants table)
+    const { data: schedulableUsers, error } = await supabase
+      .from('custom_users')
       .select(`
         id,
-        doctor_id,
-        doctors (
-          id,
-          first_name,
-          last_name,
-          specialty
-        )
+        first_name,
+        last_name,
+        role
       `)
       .eq('tenant_id', tenantId)
+      .eq('schedulable', true)
       .eq('is_active', true)
 
     if (error) {
-      console.error('Error fetching doctors:', error)
-      return NextResponse.json({ error: 'Failed to fetch doctors' }, { status: 500 })
+      console.error('Error fetching schedulable users:', error)
+      return NextResponse.json({ error: 'Failed to fetch schedulable users' }, { status: 500 })
     }
 
-    // Transform the data to flatten the doctor information
-    const doctors = doctorTenants?.map((dt: any) => ({
-      id: dt.doctors?.id,
-      first_name: dt.doctors?.first_name,
-      last_name: dt.doctors?.last_name,
-      specialty: dt.doctors?.specialty,
-      doctor_tenant_id: dt.id
+    // Transform the data to match the expected format
+    const doctors = schedulableUsers?.map((user: any) => ({
+      id: user.id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      specialty: undefined // No specialty field in custom_users
     })) || []
 
     return NextResponse.json({ doctors })
