@@ -45,8 +45,18 @@ export default function ManageUsersClient({
       })
 
       if (response.ok) {
-        refreshUsers()
+        // Fetch fresh data immediately to update UI
+        const usersResponse = await fetch(`/api/tenants/${tenantId}/users`, {
+          cache: 'no-store'
+        })
+
+        if (usersResponse.ok) {
+          const freshData = await usersResponse.json()
+          setUsers(freshData.users || freshData)
+        }
+
         setError('')
+        router.refresh() // Also refresh server components
       } else {
         const errorData = await response.json()
         if (errorData.migration_required) {
