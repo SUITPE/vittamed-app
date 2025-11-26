@@ -76,33 +76,30 @@ export default async function AppointmentsPage() {
   let doctors: Doctor[] = []
 
   try {
-    // Fetch doctors if not a doctor user
+    // Fetch all schedulable users (not just doctors) if not a doctor user
     if (!isDoctor) {
-      const { data: doctorTenants, error: doctorsError } = await supabase
-        .from('doctor_tenants')
+      const { data: schedulableUsers, error: doctorsError } = await supabase
+        .from('custom_users')
         .select(`
           id,
-          doctor_id,
-          doctors (
-            id,
-            first_name,
-            last_name,
-            specialty
-          )
+          first_name,
+          last_name,
+          role
         `)
         .eq('tenant_id', currentTenantId)
+        .eq('schedulable', true)
         .eq('is_active', true)
 
       if (doctorsError) {
-        console.error('[Appointments] Error fetching doctors:', doctorsError)
-      } else if (doctorTenants) {
-        doctors = doctorTenants.map((dt: any) => ({
-          id: dt.doctors?.id,
-          first_name: dt.doctors?.first_name,
-          last_name: dt.doctors?.last_name,
-          specialty: dt.doctors?.specialty
+        console.error('[Appointments] Error fetching schedulable users:', doctorsError)
+      } else if (schedulableUsers) {
+        doctors = schedulableUsers.map((user: any) => ({
+          id: user.id,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          specialty: undefined // No specialty field in custom_users
         }))
-        console.log('[Appointments] Doctors fetched:', { count: doctors.length })
+        console.log('[Appointments] Schedulable users fetched:', { count: doctors.length })
       }
     }
 

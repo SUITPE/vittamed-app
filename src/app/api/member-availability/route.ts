@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     // Get user profile to check permissions
     const { data: profile } = await supabase
       .from('custom_users')
-      .select('tenant_id, role')
+      .select('tenant_id, role, schedulable')
       .eq('id', user.id)
       .single()
 
@@ -68,15 +68,12 @@ export async function GET(request: NextRequest) {
         )
       `)
 
-    // Apply filters based on user role
-    if (profile.role === 'member') {
-      // Members can only see their own availability
+    // Apply filters based on user role and schedulable status
+    if (profile.schedulable && !['admin_tenant', 'receptionist'].includes(profile.role)) {
+      // Schedulable users (including members, doctors, staff) can only see their own availability
       query = query.eq('member_user_id', user.id)
     } else if (['admin_tenant', 'receptionist'].includes(profile.role)) {
       // Admins and receptionists can see availability in their tenant
-      query = query.eq('tenant_id', profile.tenant_id)
-    } else if (profile.role === 'doctor') {
-      // Doctors can view member availability in their tenant (for reference)
       query = query.eq('tenant_id', profile.tenant_id)
     }
 
@@ -187,13 +184,13 @@ export async function POST(request: NextRequest) {
     // Get user profile to check permissions
     const { data: profile } = await supabase
       .from('custom_users')
-      .select('tenant_id, role')
+      .select('tenant_id, role, schedulable')
       .eq('id', user.id)
       .single()
 
-    // Check permissions
+    // Check permissions: schedulable users can create their own availability, admins/receptionists can create for anyone
     const canCreate =
-      (profile?.role === 'member' && user.id === member_user_id) ||
+      (profile?.schedulable && user.id === member_user_id) ||
       (['admin_tenant', 'receptionist'].includes(profile?.role || '') && profile?.tenant_id === tenant_id)
 
     if (!canCreate) {
@@ -203,18 +200,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify the member exists and belongs to the tenant
+    // Verify the user exists, is schedulable, and belongs to the tenant
     const { data: memberExists, error: memberError } = await supabase
       .from('custom_users')
-      .select('id, role, tenant_id')
+      .select('id, role, tenant_id, schedulable')
       .eq('id', member_user_id)
-      .eq('role', 'member')
+      .eq('schedulable', true)
       .eq('tenant_id', tenant_id)
       .single()
 
     if (memberError || !memberExists) {
       return NextResponse.json(
-        { error: 'Member not found or not associated with this tenant' },
+        { error: 'Schedulable user not found or not associated with this tenant' },
         { status: 400 }
       )
     }
