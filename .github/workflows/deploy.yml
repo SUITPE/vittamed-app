@@ -33,6 +33,9 @@ jobs:
         echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env.production
         echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env.production
         echo "" >> .env.production
+        echo "# Culqi" >> .env.production
+        echo "CULQI_SECRET_KEY=${{ secrets.CULQI_SECRET_KEY }}" >> .env.production
+        echo "" >> .env.production
         echo "# Node environment" >> .env.production
         echo "NODE_ENV=production" >> .env.production
         echo "NEXT_TELEMETRY_DISABLED=1" >> .env.production
