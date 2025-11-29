@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase-server'
 import { customAuth } from '@/lib/custom-auth'
 
 // GET /api/patients/:patientId/allergies - Get all allergies for a patient
@@ -10,16 +10,7 @@ export async function GET(
   const { patientId } = await params
 
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const supabase = await createAdminClient()
 
     const user = await customAuth.getCurrentUser()
     if (!user) {
@@ -72,16 +63,7 @@ export async function POST(
   const { patientId } = await params
 
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const supabase = await createAdminClient()
 
     const user = await customAuth.getCurrentUser()
     if (!user) {
