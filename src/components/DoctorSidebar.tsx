@@ -5,11 +5,16 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Icons } from '@/components/ui/Icons'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function DoctorSidebar() {
   const pathname = usePathname()
+  const { user } = useAuth()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+
+  // Check if user can configure their own availability
+  const isSchedulable = user?.profile?.schedulable === true
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -43,6 +48,13 @@ export default function DoctorSidebar() {
       icon: Icons.calendarDays,
       description: 'Horarios y disponibilidad'
     },
+    // Only show availability config for schedulable users
+    ...(isSchedulable ? [{
+      name: 'Mi Disponibilidad',
+      href: '/agenda?tab=settings',
+      icon: Icons.clock,
+      description: 'Configurar horarios'
+    }] : []),
     {
       name: 'Mis Citas',
       href: '/appointments',

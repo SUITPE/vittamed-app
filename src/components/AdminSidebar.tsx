@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Icons } from '@/components/ui/Icons'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface AdminSidebarProps {
   tenantId?: string
@@ -12,8 +13,12 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
   const pathname = usePathname()
+  const { user } = useAuth()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+
+  // Check if user can configure their own availability
+  const isSchedulable = user?.profile?.schedulable === true
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -70,7 +75,14 @@ export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
       href: '/patients',
       icon: Icons.users,
       description: 'Base de pacientes'
-    }
+    },
+    // Only show availability config for schedulable users
+    ...(isSchedulable ? [{
+      name: 'Mi Disponibilidad',
+      href: '/agenda?tab=settings',
+      icon: Icons.clock,
+      description: 'Configurar horarios'
+    }] : [])
   ]
 
   const handleSignOut = async () => {

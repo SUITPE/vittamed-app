@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import DoctorSidebar from '@/components/DoctorSidebar'
 import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
@@ -34,11 +34,14 @@ interface Appointment {
 export default function AgendaPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [availability, setAvailability] = useState<DoctorAvailability[]>([])
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [loadingData, setLoadingData] = useState(true)
-  const [activeTab, setActiveTab] = useState<'calendar' | 'settings'>('calendar')
+  // Read initial tab from URL query param
+  const initialTab = searchParams.get('tab') === 'settings' ? 'settings' : 'calendar'
+  const [activeTab, setActiveTab] = useState<'calendar' | 'settings'>(initialTab)
   const [isMobile, setIsMobile] = useState(false)
   const [viewType, setViewType] = useState<'day' | 'week'>('week')
   const [showCreateModal, setShowCreateModal] = useState(false)
