@@ -57,8 +57,10 @@ export default function CreateAppointmentModal({
     doctor_id: doctorId || '',
     appointment_date: selectedDate || new Date().toISOString().split('T')[0],
     start_time: selectedTime || '09:00',
-    notes: ''
+    notes: '',
+    allow_overbooking: false
   })
+  const [showConflictWarning, setShowConflictWarning] = useState(false)
 
   // Load data when modal opens
   useEffect(() => {
@@ -141,6 +143,10 @@ export default function CreateAppointmentModal({
         resetForm()
       } else {
         const errorData = await response.json()
+        // Show conflict warning if there's a scheduling conflict
+        if (errorData.code === 'CONFLICT') {
+          setShowConflictWarning(true)
+        }
         setError(errorData.error || 'Error al crear la cita')
       }
     } catch (err) {
@@ -158,9 +164,11 @@ export default function CreateAppointmentModal({
       doctor_id: doctorId || '',
       appointment_date: selectedDate || new Date().toISOString().split('T')[0],
       start_time: selectedTime || '09:00',
-      notes: ''
+      notes: '',
+      allow_overbooking: false
     })
     setError('')
+    setShowConflictWarning(false)
   }
 
   function handleClose() {
@@ -301,6 +309,39 @@ export default function CreateAppointmentModal({
                 />
               </div>
             </div>
+
+            {/* Overbooking Option */}
+            {showConflictWarning && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Icons.alertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-amber-800">
+                      Conflicto de horario detectado
+                    </p>
+                    <p className="text-sm text-amber-700 mt-1">
+                      Ya existe una cita programada en este horario. Puedes activar overbooking para agendar de todas formas.
+                    </p>
+                    <label className="flex items-center gap-2 mt-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.allow_overbooking}
+                        onChange={(e) => {
+                          setFormData({ ...formData, allow_overbooking: e.target.checked })
+                          if (e.target.checked) {
+                            setError('')
+                          }
+                        }}
+                        className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                      />
+                      <span className="text-sm font-medium text-amber-800">
+                        Permitir overbooking
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Notes */}
             <div>

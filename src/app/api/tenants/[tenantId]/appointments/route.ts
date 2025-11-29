@@ -142,7 +142,7 @@ export async function POST(
 
     // Parse request body
     const body = await request.json()
-    const { patient_id, service_id, doctor_id, appointment_date, start_time, notes } = body
+    const { patient_id, service_id, doctor_id, appointment_date, start_time, notes, allow_overbooking } = body
 
     // Validate required fields
     if (!patient_id || !service_id || !doctor_id || !appointment_date || !start_time) {
@@ -171,6 +171,42 @@ export async function POST(
 
     const endDate = new Date(startDate.getTime() + service.duration_minutes * 60000) // duration in minutes
     const end_time = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}:00`
+
+    // Check for conflicts (double booking) unless overbooking is allowed
+    if (!allow_overbooking) {
+      const { data: conflicts, error: conflictError } = await supabase
+        .from('appointments')
+        .select('id, start_time, end_time')
+        .eq('tenant_id', tenantId)
+        .eq('doctor_id', doctor_id)
+        .eq('appointment_date', appointment_date)
+        .not('status', 'eq', 'cancelled')
+
+      if (conflictError) {
+        console.error('Error checking conflicts:', conflictError)
+        return NextResponse.json({ error: 'Failed to check availability' }, { status: 500 })
+      }
+
+      // Check if any existing appointment overlaps with the new one
+      const hasConflict = conflicts?.some(existing => {
+        const existingStart = existing.start_time.substring(0, 5)
+        const existingEnd = existing.end_time.substring(0, 5)
+        const newStart = start_time.substring(0, 5)
+        const newEnd = end_time.substring(0, 5)
+
+        // Check for overlap: new appointment starts during existing OR new appointment ends during existing
+        return (newStart >= existingStart && newStart < existingEnd) ||
+               (newEnd > existingStart && newEnd <= existingEnd) ||
+               (newStart <= existingStart && newEnd >= existingEnd)
+      })
+
+      if (hasConflict) {
+        return NextResponse.json({
+          error: 'El horario seleccionado ya tiene una cita programada. Activa "Permitir overbooking" para agendar de todas formas.',
+          code: 'CONFLICT'
+        }, { status: 409 })
+      }
+    }
 
     // Create appointment
     const { data: appointment, error: createError } = await supabase
