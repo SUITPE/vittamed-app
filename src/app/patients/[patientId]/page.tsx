@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation'
 import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
 import { Icons } from '@/components/ui/Icons'
-import { RECORD_TYPE_CONFIG, SEVERITY_CONFIG } from '@/types/medical-history'
-import type { MedicalRecordWithRelations } from '@/types/medical-history'
+import { RECORD_TYPE_CONFIG, SEVERITY_CONFIG, ALLERGY_TYPE_CONFIG } from '@/types/medical-history'
+import type { MedicalRecordWithRelations, PatientAllergy } from '@/types/medical-history'
 import MedicalRecordForm from '@/components/medical/MedicalRecordForm'
+import AllergyForm from '@/components/medical/AllergyForm'
 
 interface Patient {
   id: string
@@ -33,6 +34,10 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
   const [patientId, setPatientId] = useState<string>('')
   const [showRecordForm, setShowRecordForm] = useState(false)
   const [recordToEdit, setRecordToEdit] = useState<MedicalRecordWithRelations | null>(null)
+  const [allergies, setAllergies] = useState<PatientAllergy[]>([])
+  const [showAllergyForm, setShowAllergyForm] = useState(false)
+  const [allergyToEdit, setAllergyToEdit] = useState<PatientAllergy | null>(null)
+  const [allergiesLoading, setAllergiesLoading] = useState(false)
 
   const currentTenantId = user?.profile?.tenant_id
 
@@ -69,10 +74,65 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
         const recordsData = await recordsResponse.json()
         setMedicalRecords(recordsData.medical_records || [])
       }
+
+      // Fetch allergies
+      const allergiesResponse = await fetch(`/api/patients/${patientId}/allergies`)
+      if (allergiesResponse.ok) {
+        const allergiesData = await allergiesResponse.json()
+        setAllergies(allergiesData.allergies || [])
+      }
     } catch (error) {
       console.error('Error fetching patient data:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchAllergies = async () => {
+    try {
+      setAllergiesLoading(true)
+      const response = await fetch(`/api/patients/${patientId}/allergies`)
+      if (response.ok) {
+        const data = await response.json()
+        setAllergies(data.allergies || [])
+      }
+    } catch (error) {
+      console.error('Error fetching allergies:', error)
+    } finally {
+      setAllergiesLoading(false)
+    }
+  }
+
+  const handleDeleteAllergy = async (allergyId: string) => {
+    if (!confirm('¿Está seguro de eliminar esta alergia?')) return
+
+    try {
+      const response = await fetch(`/api/patients/${patientId}/allergies/${allergyId}`, {
+        method: 'DELETE'
+      })
+      if (response.ok) {
+        fetchAllergies()
+      } else {
+        alert('Error al eliminar la alergia')
+      }
+    } catch (error) {
+      console.error('Error deleting allergy:', error)
+      alert('Error al eliminar la alergia')
+    }
+  }
+
+  const handleToggleAllergyStatus = async (allergy: PatientAllergy) => {
+    try {
+      const response = await fetch(`/api/patients/${patientId}/allergies/${allergy.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !allergy.is_active })
+      })
+      if (response.ok) {
+        fetchAllergies()
+      }
+    } catch (error) {
+      console.error('Error toggling allergy status:', error)
     }
   }
 
@@ -219,7 +279,7 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
                     } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
                   >
                     <Icons.alertCircle className="w-4 h-4" />
-                    Alergias
+                    Alergias ({allergies.filter(a => a.is_active).length})
                   </button>
                 </nav>
               </div>
@@ -492,14 +552,173 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
             )}
 
             {activeTab === 'allergies' && (
-              <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Icons.alertCircle className="w-8 h-8 text-yellow-600" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Alergias</h3>
-                <p className="text-gray-500">
-                  Función de alergias próximamente disponible
-                </p>
+              <div className="space-y-4">
+                {/* Add Allergy Button */}
+                {canCreateRecords && (
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => setShowAllergyForm(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                    >
+                      <Icons.plus className="w-4 h-4" />
+                      Nueva Alergia
+                    </button>
+                  </div>
+                )}
+
+                {allergiesLoading ? (
+                  <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500 mx-auto mb-4"></div>
+                    <p className="text-gray-500">Cargando alergias...</p>
+                  </div>
+                ) : allergies.length === 0 ? (
+                  <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Icons.checkCircle className="w-8 h-8 text-green-600" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Sin alergias registradas</h3>
+                    <p className="text-gray-500 max-w-md mx-auto mb-6">
+                      Este paciente no tiene alergias registradas en el sistema.
+                    </p>
+                    {canCreateRecords && (
+                      <button
+                        onClick={() => setShowAllergyForm(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                      >
+                        <Icons.plus className="w-4 h-4" />
+                        Registrar Alergia
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {/* Active Allergies */}
+                    {allergies.filter(a => a.is_active).length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                          Alergias Activas
+                        </h3>
+                        <div className="space-y-2">
+                          {allergies.filter(a => a.is_active).map((allergy) => (
+                            <div key={allergy.id} className="bg-white rounded-lg shadow-sm border-l-4 border-red-500 p-4">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xl">{ALLERGY_TYPE_CONFIG[allergy.allergy_type]?.icon || '⚠️'}</span>
+                                    <h4 className="font-semibold text-gray-900">{allergy.allergen}</h4>
+                                    <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
+                                      {ALLERGY_TYPE_CONFIG[allergy.allergy_type]?.label || allergy.allergy_type}
+                                    </span>
+                                    {allergy.severity && (
+                                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                                        allergy.severity === 'life_threatening' ? 'bg-red-100 text-red-800' :
+                                        allergy.severity === 'severe' ? 'bg-orange-100 text-orange-800' :
+                                        allergy.severity === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
+                                        'bg-green-100 text-green-800'
+                                      }`}>
+                                        {SEVERITY_CONFIG[allergy.severity]?.label || allergy.severity}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {allergy.reaction && (
+                                    <p className="text-sm text-gray-600 mt-1">
+                                      <span className="font-medium">Reacción:</span> {allergy.reaction}
+                                    </p>
+                                  )}
+                                  {allergy.notes && (
+                                    <p className="text-sm text-gray-500 mt-1 italic">{allergy.notes}</p>
+                                  )}
+                                  {allergy.first_observed && (
+                                    <p className="text-xs text-gray-400 mt-2">
+                                      Primera observación: {new Date(allergy.first_observed).toLocaleDateString('es-ES')}
+                                    </p>
+                                  )}
+                                </div>
+                                {canCreateRecords && (
+                                  <div className="flex items-center gap-2 ml-4">
+                                    <button
+                                      onClick={() => {
+                                        setAllergyToEdit(allergy)
+                                        setShowAllergyForm(true)
+                                      }}
+                                      className="p-1 text-blue-600 hover:text-blue-800"
+                                      title="Editar"
+                                    >
+                                      <Icons.edit className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleToggleAllergyStatus(allergy)}
+                                      className="p-1 text-gray-600 hover:text-gray-800"
+                                      title="Marcar como inactiva"
+                                    >
+                                      <Icons.eyeOff className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteAllergy(allergy.id)}
+                                      className="p-1 text-red-600 hover:text-red-800"
+                                      title="Eliminar"
+                                    >
+                                      <Icons.trash className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Inactive Allergies */}
+                    {allergies.filter(a => !a.is_active).length > 0 && (
+                      <div className="mt-6">
+                        <h3 className="text-sm font-semibold text-gray-500 mb-2 flex items-center gap-2">
+                          <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+                          Alergias Inactivas/Resueltas
+                        </h3>
+                        <div className="space-y-2">
+                          {allergies.filter(a => !a.is_active).map((allergy) => (
+                            <div key={allergy.id} className="bg-gray-50 rounded-lg shadow-sm border-l-4 border-gray-300 p-4 opacity-70">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xl grayscale">{ALLERGY_TYPE_CONFIG[allergy.allergy_type]?.icon || '⚠️'}</span>
+                                    <h4 className="font-medium text-gray-700">{allergy.allergen}</h4>
+                                    <span className="px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-600">
+                                      {ALLERGY_TYPE_CONFIG[allergy.allergy_type]?.label || allergy.allergy_type}
+                                    </span>
+                                  </div>
+                                  {allergy.reaction && (
+                                    <p className="text-sm text-gray-500 mt-1">{allergy.reaction}</p>
+                                  )}
+                                </div>
+                                {canCreateRecords && (
+                                  <div className="flex items-center gap-2 ml-4">
+                                    <button
+                                      onClick={() => handleToggleAllergyStatus(allergy)}
+                                      className="p-1 text-green-600 hover:text-green-800"
+                                      title="Reactivar"
+                                    >
+                                      <Icons.eye className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteAllergy(allergy.id)}
+                                      className="p-1 text-red-600 hover:text-red-800"
+                                      title="Eliminar"
+                                    >
+                                      <Icons.trash className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -523,6 +742,24 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
             fetchPatientData()
             setShowRecordForm(false)
             setRecordToEdit(null)
+          }}
+        />
+      )}
+
+      {/* Allergy Form Modal */}
+      {showAllergyForm && (
+        <AllergyForm
+          isOpen={showAllergyForm}
+          onClose={() => {
+            setShowAllergyForm(false)
+            setAllergyToEdit(null)
+          }}
+          patientId={patientId}
+          allergyToEdit={allergyToEdit}
+          onSuccess={() => {
+            fetchAllergies()
+            setShowAllergyForm(false)
+            setAllergyToEdit(null)
           }}
         />
       )}
