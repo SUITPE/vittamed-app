@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { Icons } from '@/components/ui/Icons'
 import { VoiceDictation } from '@/components/medical/VoiceDictation'
+import SpecialtyFields from '@/components/medical/SpecialtyFields'
+import { getFieldsForSpecialty, getSpecialtyFromTenantType, SPECIALTY_CONFIG } from '@/lib/medical-fields'
 import type { RecordType, MedicalRecordFormData, PrescriptionFormData, DiagnosisFormData } from '@/types/medical-history'
 
 interface MedicalRecordFormProps {
@@ -10,6 +12,7 @@ interface MedicalRecordFormProps {
   onClose: () => void
   patientId: string
   tenantId: string
+  tenantType?: string // For specialty-specific fields
   doctorId: string
   doctorName: string
   recordToEdit?: any // For future edit functionality
@@ -78,14 +81,21 @@ export default function MedicalRecordForm({
   onClose,
   patientId,
   tenantId,
+  tenantType = 'clinic',
   doctorId,
   doctorName,
   recordToEdit,
   onSuccess
 }: MedicalRecordFormProps) {
   const [loading, setLoading] = useState(false)
-  const [activeSection, setActiveSection] = useState<'basic' | 'vitals' | 'prescriptions' | 'diagnoses'>('basic')
+  const [activeSection, setActiveSection] = useState<'basic' | 'vitals' | 'specialty' | 'prescriptions' | 'diagnoses'>('basic')
   const [vitalWarnings, setVitalWarnings] = useState<Record<string, string>>({})
+
+  // Specialty-specific fields
+  const specialty = getSpecialtyFromTenantType(tenantType)
+  const specialtyFields = getFieldsForSpecialty(specialty)
+  const specialtyInfo = SPECIALTY_CONFIG[specialty]
+  const [specialtyData, setSpecialtyData] = useState<Record<string, unknown>>({})
 
   // Form state
   const [formData, setFormData] = useState<MedicalRecordFormData>({
@@ -134,6 +144,8 @@ export default function MedicalRecordForm({
         notes: d.notes || '',
         status: d.status || 'active'
       })) || [])
+      // Load specialty-specific data
+      setSpecialtyData(recordToEdit.tenant_specific_data || {})
     }
   }, [recordToEdit])
 
@@ -150,6 +162,7 @@ export default function MedicalRecordForm({
         doctor_name: doctorName,
         created_by: doctorId,
         updated_by: doctorId,
+        tenant_specific_data: specialtyData,
         prescriptions,
         diagnoses
       }
@@ -186,6 +199,7 @@ export default function MedicalRecordForm({
       })
       setPrescriptions([])
       setDiagnoses([])
+      setSpecialtyData({})
 
       onSuccess()
       onClose()
@@ -329,6 +343,18 @@ export default function MedicalRecordForm({
                 >
                   Signos Vitales
                 </button>
+                {specialtyFields.length > 0 && (
+                  <button
+                    onClick={() => setActiveSection('specialty')}
+                    className={`py-3 px-1 border-b-2 font-medium text-sm ${
+                      activeSection === 'specialty'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    {specialtyInfo.icon} {specialtyInfo.name}
+                  </button>
+                )}
                 <button
                   onClick={() => setActiveSection('prescriptions')}
                   className={`py-3 px-1 border-b-2 font-medium text-sm ${
@@ -637,6 +663,31 @@ export default function MedicalRecordForm({
                         )}
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {activeSection === 'specialty' && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="text-2xl">{specialtyInfo.icon}</span>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Campos de {specialtyInfo.name}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          Información específica para esta especialidad
+                        </p>
+                      </div>
+                    </div>
+
+                    <SpecialtyFields
+                      fields={specialtyFields.filter(f => f.category !== 'vital_signs')}
+                      formData={specialtyData}
+                      onFieldChange={(fieldName, value) => {
+                        setSpecialtyData(prev => ({ ...prev, [fieldName]: value }))
+                      }}
+                      showCategories={true}
+                    />
                   </div>
                 )}
 
