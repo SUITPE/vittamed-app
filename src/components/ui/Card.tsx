@@ -1,19 +1,33 @@
 import * as React from "react"
+import { motion, HTMLMotionProps } from "framer-motion"
 import { cn } from "@/lib/utils"
 
-const Card = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "rounded-2xl border border-gray-200/60 bg-white shadow-sm transition-shadow hover:shadow-md",
-      className
-    )}
-    {...props}
-  />
-))
+interface CardProps extends Omit<HTMLMotionProps<"div">, "children"> {
+  children?: React.ReactNode
+  disableAnimation?: boolean
+}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, disableAnimation = false, ...props }, ref) => {
+    // Animation config for hover lift effect
+    const motionProps = disableAnimation ? {} : {
+      whileHover: { y: -4, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" },
+      transition: { type: "spring" as const, stiffness: 300, damping: 20 }
+    }
+
+    return (
+      <motion.div
+        ref={ref}
+        className={cn(
+          "rounded-2xl border border-gray-200/60 bg-white shadow-sm",
+          className
+        )}
+        {...motionProps}
+        {...props}
+      />
+    )
+  }
+)
 Card.displayName = "Card"
 
 const CardHeader = React.forwardRef<
