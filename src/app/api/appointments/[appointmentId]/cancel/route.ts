@@ -26,12 +26,12 @@ export async function PUT(
       .from('appointments')
       .select(`
         id,
-        patient_email,
-        service_name,
         start_time,
         status,
         tenant_id,
-        stripe_payment_intent_id
+        stripe_payment_intent_id,
+        patient:patients!appointments_patient_id_fkey(email),
+        service:services!appointments_service_id_fkey(name)
       `)
       .eq('id', appointmentId)
       .single()
@@ -40,7 +40,10 @@ export async function PUT(
       return NextResponse.json({ error: 'Appointment not found' }, { status: 404 })
     }
 
-    if (appointment.patient_email !== userEmail) {
+    // Extract patient email from joined data
+    const patientEmail = appointment.patient?.email
+
+    if (patientEmail !== userEmail) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -76,14 +79,17 @@ export async function PUT(
       return NextResponse.json({ error: 'Failed to cancel appointment' }, { status: 500 })
     }
 
+    // Extract service name from joined data
+    const serviceName = appointment.service?.name || 'servicio'
+
     const { error: notificationError } = await supabase
       .from('notifications')
       .insert({
         tenant_id: appointment.tenant_id,
         type: 'appointment_cancelled',
-        recipient_email: appointment.patient_email,
+        recipient_email: patientEmail,
         subject: 'Cita cancelada - VittaSami',
-        content: `Tu cita para ${appointment.service_name} programada para el ${appointmentDate.toLocaleDateString('es-ES')} ha sido cancelada exitosamente.`,
+        content: `Tu cita para ${serviceName} programada para el ${appointmentDate.toLocaleDateString('es-ES')} ha sido cancelada exitosamente.`,
         appointment_id: appointmentId,
         status: 'pending',
         created_at: new Date().toISOString()
