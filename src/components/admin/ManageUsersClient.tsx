@@ -342,7 +342,6 @@ export default function ManageUsersClient({
                     <option value="receptionist">Recepcionista</option>
                     <option value="doctor">Doctor</option>
                     <option value="member">Miembro</option>
-                    <option value="patient">Paciente</option>
                   </select>
                 </div>
               </div>
