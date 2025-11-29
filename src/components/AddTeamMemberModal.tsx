@@ -320,7 +320,7 @@ export default function AddTeamMemberModal({
                   <option value="staff">Personal</option>
                   <option value="doctor">Doctor/a</option>
                   <option value="admin_tenant">Administrador</option>
-                  <option value="patient">Paciente</option>
+                  <option value="receptionist">Recepcionista</option>
                 </select>
 
                 {/* Role Description */}
