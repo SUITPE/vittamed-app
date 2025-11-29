@@ -4,16 +4,21 @@ import { useState, useEffect } from 'react'
 import { Icons } from '@/components/ui/Icons'
 import MobileDayView from './MobileDayView'
 
+interface AppointmentDetails {
+  id: string
+  patientName: string
+  serviceName: string
+  status: string
+}
+
 interface TimeSlot {
   hour: number
   isAvailable: boolean
   hasAppointment?: boolean
-  appointmentDetails?: {
-    id: string
-    patientName: string
-    serviceName: string
-    status: string
-  }
+  appointmentDetails?: AppointmentDetails
+  // Support for multiple appointments (overbooking)
+  appointmentCount?: number
+  allAppointments?: AppointmentDetails[]
 }
 
 interface DaySchedule {
@@ -94,9 +99,9 @@ export default function WeekCalendarView({
           hour >= parseInt(dayAvailability.lunch_start.split(':')[0]) &&
           hour < parseInt(dayAvailability.lunch_end.split(':')[0])
 
-        // Check for appointments in this slot
+        // Check for ALL appointments in this slot (support overbooking)
         const dateStr = date.toISOString().split('T')[0]
-        const appointment = appointments.find(apt => {
+        const slotAppointments = appointments.filter(apt => {
           const aptDate = apt.appointment_date || apt.start_time?.split('T')[0]
           // Parse hour from start_time (handles both "HH:MM:SS" and "YYYY-MM-DDTHH:MM:SS" formats)
           const timeStr = apt.start_time?.includes('T')
@@ -106,16 +111,20 @@ export default function WeekCalendarView({
           return aptDate === dateStr && aptHour === hour
         })
 
+        const allAppointments: AppointmentDetails[] = slotAppointments.map(apt => ({
+          id: apt.id,
+          patientName: apt.patient_name,
+          serviceName: apt.service_name,
+          status: apt.status
+        }))
+
         slots.push({
           hour,
           isAvailable: isInWorkHours && !isLunchHour,
-          hasAppointment: !!appointment,
-          appointmentDetails: appointment ? {
-            id: appointment.id,
-            patientName: appointment.patient_name,
-            serviceName: appointment.service_name,
-            status: appointment.status
-          } : undefined
+          hasAppointment: slotAppointments.length > 0,
+          appointmentDetails: allAppointments[0], // First appointment for backwards compatibility
+          appointmentCount: slotAppointments.length,
+          allAppointments
         })
       }
 
@@ -259,7 +268,9 @@ export default function WeekCalendarView({
                         day.isToday ? 'bg-blue-50/30' : ''
                       } ${
                         slot?.hasAppointment
-                          ? getAppointmentColor(slot.appointmentDetails?.status || '')
+                          ? (slot.appointmentCount && slot.appointmentCount > 1)
+                            ? 'bg-amber-100 border-l-4 border-amber-500' // Overbooking color
+                            : getAppointmentColor(slot.appointmentDetails?.status || '')
                           : slot?.isAvailable
                           ? 'hover:bg-green-50 cursor-pointer'
                           : 'bg-gray-50 cursor-not-allowed'
@@ -267,12 +278,23 @@ export default function WeekCalendarView({
                     >
                       {slot?.hasAppointment && (
                         <div className="text-xs">
-                          <div className="font-medium text-gray-900 truncate">
+                          {/* Overbooking badge */}
+                          {slot.appointmentCount && slot.appointmentCount > 1 && (
+                            <div className="absolute top-1 right-1 bg-amber-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                              {slot.appointmentCount}
+                            </div>
+                          )}
+                          <div className="font-medium text-gray-900 truncate pr-6">
                             {slot.appointmentDetails?.patientName}
                           </div>
                           <div className="text-gray-600 truncate">
                             {slot.appointmentDetails?.serviceName}
                           </div>
+                          {slot.appointmentCount && slot.appointmentCount > 1 && (
+                            <div className="text-amber-700 text-xs mt-1">
+                              +{slot.appointmentCount - 1} más
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -292,7 +314,7 @@ export default function WeekCalendarView({
 
       {/* Legend */}
       <div className="p-4 border-t bg-gray-50">
-        <div className="flex items-center gap-6 text-sm">
+        <div className="flex flex-wrap items-center gap-4 md:gap-6 text-sm">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-green-100 border border-green-300 rounded"></div>
             <span className="text-gray-600">Disponible</span>
@@ -304,6 +326,10 @@ export default function WeekCalendarView({
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-yellow-100 border border-yellow-300 rounded"></div>
             <span className="text-gray-600">Pendiente</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-amber-100 border border-amber-500 rounded"></div>
+            <span className="text-gray-600">Overbooking</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded"></div>
