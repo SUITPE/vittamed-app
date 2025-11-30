@@ -41,20 +41,20 @@ async function checkAdminUser() {
       users.forEach(u => console.log(`  - ${u.email}`))
     }
 
-    // 2. Verificar en profiles
-    console.log('\n2️⃣  Verificando en profiles...')
+    // 2. Verificar en custom_users (tabla activa, profiles está deprecated)
+    console.log('\n2️⃣  Verificando en custom_users...')
     const { data: profiles, error: profileError } = await supabase
-      .from('profiles')
+      .from('custom_users')
       .select('*')
       .eq('email', 'admin@vittasami.com')
 
     if (profileError) {
-      console.error('❌ Error consultando profiles:', profileError.message)
+      console.error('❌ Error consultando custom_users:', profileError.message)
     } else if (profiles && profiles.length > 0) {
-      console.log('✅ Perfil encontrado:')
+      console.log('✅ Perfil encontrado en custom_users:')
       console.log(JSON.stringify(profiles[0], null, 2))
     } else {
-      console.log('❌ Perfil NO encontrado en tabla profiles')
+      console.log('❌ Perfil NO encontrado en tabla custom_users')
     }
 
     // 3. Intentar login para obtener error específico
