@@ -11,6 +11,7 @@ import VisualAvailabilityEditor from '@/components/agenda/VisualAvailabilityEdit
 import CreateAppointmentModal from '@/components/appointments/CreateAppointmentModal'
 import AppointmentDetailsModal from '@/components/appointments/AppointmentDetailsModal'
 import { Icons } from '@/components/ui/Icons'
+import { Skeleton, SkeletonCalendar, SkeletonStats } from '@/components/ui/Skeleton'
 
 interface DoctorAvailability {
   id?: string
@@ -223,10 +224,35 @@ export default function AgendaPage() {
 
   if (loading || loadingData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando agenda...</p>
+      <div className="flex min-h-screen bg-gray-50">
+        {/* Sidebar Skeleton */}
+        <div className="hidden md:block w-64 bg-white border-r" />
+        <div className="flex-1">
+          {/* Header Skeleton */}
+          <div className="h-16 bg-white border-b" />
+          <div className="pt-16 p-6">
+            <div className="max-w-[1600px] mx-auto space-y-6">
+              {/* Page Header Skeleton */}
+              <div className="flex justify-between items-start">
+                <div className="space-y-2">
+                  <Skeleton className="h-9 w-40" />
+                  <Skeleton className="h-5 w-56" />
+                </div>
+                <Skeleton className="h-10 w-32" />
+              </div>
+              {/* Tabs Skeleton */}
+              <div className="border-b border-gray-200 pb-4">
+                <div className="flex gap-8">
+                  <Skeleton className="h-5 w-24" />
+                  <Skeleton className="h-5 w-40" />
+                </div>
+              </div>
+              {/* Calendar Skeleton */}
+              <SkeletonCalendar />
+              {/* Stats Skeleton */}
+              <SkeletonStats />
+            </div>
+          </div>
         </div>
       </div>
     )

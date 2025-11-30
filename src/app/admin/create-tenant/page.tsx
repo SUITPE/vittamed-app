@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { BusinessType, BUSINESS_TYPE_CONFIGS } from '@/types/business'
 import BusinessTypeSelector from '@/components/admin/BusinessTypeSelector'
+import { Skeleton, SkeletonForm } from '@/components/ui/Skeleton'
 
 export default function CreateTenantPage() {
   const [formData, setFormData] = useState({
@@ -27,11 +28,12 @@ export default function CreateTenantPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="space-y-4 mb-8">
+            <Skeleton className="h-9 w-64 mx-auto" />
+            <Skeleton className="h-5 w-48 mx-auto" />
+          </div>
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Verificando permisos...</p>
-            </div>
+            <SkeletonForm />
           </div>
         </div>
       </div>

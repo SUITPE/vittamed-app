@@ -8,6 +8,7 @@ import AdminHeader from '@/components/AdminHeader'
 import { Icons } from '@/components/ui/Icons'
 import { useFeatures } from '@/hooks/useFeatures'
 import { FEATURE_CONFIG, PLAN_CONFIG } from '@/types/features'
+import { SkeletonCard, Skeleton } from '@/components/ui/Skeleton'
 import type { FeatureCategory } from '@/types/features'
 
 export default function SettingsPage() {
@@ -30,11 +31,37 @@ export default function SettingsPage() {
         <AdminSidebar tenantId={currentTenantId} />
         <AdminHeader />
         <div className="md:ml-64 pt-16 p-6">
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Cargando configuración...</p>
+          <div className="max-w-7xl mx-auto space-y-6">
+            {/* Header Skeleton */}
+            <div className="space-y-2">
+              <Skeleton className="h-9 w-48" />
+              <Skeleton className="h-5 w-72" />
             </div>
+            {/* Tabs Skeleton */}
+            <SkeletonCard className="p-0">
+              <div className="border-b border-gray-200 px-6 py-4">
+                <div className="flex gap-8">
+                  {[1, 2, 3, 4, 5, 6].map(i => (
+                    <Skeleton key={i} className="h-5 w-24" />
+                  ))}
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[1, 2, 3, 4].map(i => (
+                    <SkeletonCard key={i} className="p-4">
+                      <div className="flex items-start gap-3">
+                        <Skeleton className="w-10 h-10 rounded-lg" />
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-5 w-32" />
+                          <Skeleton className="h-4 w-full" />
+                        </div>
+                      </div>
+                    </SkeletonCard>
+                  ))}
+                </div>
+              </div>
+            </SkeletonCard>
           </div>
         </div>
       </div>
@@ -143,9 +170,19 @@ export default function SettingsPage() {
                   </div>
 
                   {featuresLoading ? (
-                    <div className="text-center py-12">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                      <p className="text-gray-600">Cargando funcionalidades...</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {[1, 2, 3, 4, 5, 6].map(i => (
+                        <SkeletonCard key={i} className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Skeleton className="w-10 h-10 rounded-lg" />
+                            <div className="flex-1 space-y-2">
+                              <Skeleton className="h-5 w-40" />
+                              <Skeleton className="h-4 w-full" />
+                              <Skeleton className="h-3 w-20" />
+                            </div>
+                          </div>
+                        </SkeletonCard>
+                      ))}
                     </div>
                   ) : (
                     <>
