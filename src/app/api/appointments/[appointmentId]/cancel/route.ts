@@ -40,8 +40,8 @@ export async function PUT(
       return NextResponse.json({ error: 'Appointment not found' }, { status: 404 })
     }
 
-    // Extract patient email from joined data
-    const patientEmail = appointment.patient?.email
+    // Extract patient email from joined data (Supabase returns array for FK joins)
+    const patientEmail = appointment.patient?.[0]?.email
 
     if (patientEmail !== userEmail) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -79,8 +79,8 @@ export async function PUT(
       return NextResponse.json({ error: 'Failed to cancel appointment' }, { status: 500 })
     }
 
-    // Extract service name from joined data
-    const serviceName = appointment.service?.name || 'servicio'
+    // Extract service name from joined data (Supabase returns array for FK joins)
+    const serviceName = appointment.service?.[0]?.name || 'servicio'
 
     const { error: notificationError } = await supabase
       .from('notifications')
