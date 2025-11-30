@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
-import { User } from '@supabase/supabase-js'
+import { User, AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { UserRole } from '@/types/user'
 
 export interface UserProfile {
@@ -12,6 +12,14 @@ export interface UserProfile {
   doctor_id: string | null
   created_at: string
   updated_at: string
+  // Additional fields used by custom auth and profile features
+  phone?: string | null
+  date_of_birth?: string | null
+  address?: string | null
+  email_verified?: boolean
+  must_change_password?: boolean
+  password_hash?: string
+  schedulable?: boolean
 }
 
 export interface AuthUser extends User {
@@ -358,7 +366,7 @@ class AuthService {
         .eq('doctor_id', profile.doctor_id)
         .eq('is_active', true)
 
-      return data?.map(dt => dt.tenant_id) || []
+      return data?.map((dt: { tenant_id: string }) => dt.tenant_id) || []
     }
 
     return []
@@ -369,7 +377,7 @@ class AuthService {
       return { data: { subscription: { unsubscribe: () => {} } } }
     }
 
-    return this.supabase.auth.onAuthStateChange(async (event, session) => {
+    return this.supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
       if (session?.user) {
         const authUser = await this.getCurrentUser()
         callback(authUser)
