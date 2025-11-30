@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import AdminHeader from '@/components/AdminHeader'
 import AdminSidebar from '@/components/AdminSidebar'
 import { Icons } from '@/components/ui/Icons'
+import { Skeleton, SkeletonCard, SkeletonForm } from '@/components/ui/Skeleton'
 
 interface UserProfile {
   id: string
@@ -123,10 +124,28 @@ export default function ProfilePage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando perfil...</p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="pt-16 p-6">
+          <div className="max-w-4xl mx-auto space-y-6">
+            {/* Header Skeleton */}
+            <div className="space-y-2">
+              <Skeleton className="h-9 w-32" />
+              <Skeleton className="h-5 w-56" />
+            </div>
+            {/* Profile Overview Skeleton */}
+            <SkeletonCard className="p-6">
+              <div className="flex items-center space-x-4">
+                <Skeleton className="h-20 w-20 rounded-full" />
+                <div className="flex-1 space-y-3">
+                  <Skeleton className="h-7 w-48" />
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                </div>
+              </div>
+            </SkeletonCard>
+            {/* Form Skeleton */}
+            <SkeletonForm />
+          </div>
         </div>
       </div>
     )
