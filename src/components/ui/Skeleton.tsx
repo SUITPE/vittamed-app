@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils"
 
 interface SkeletonProps {
   className?: string
+  children?: React.ReactNode
 }
 
 /**
@@ -23,18 +24,22 @@ function Skeleton({ className }: SkeletonProps) {
  * Pre-built skeleton variants for common UI patterns
  */
 
-function SkeletonCard({ className }: SkeletonProps) {
+function SkeletonCard({ className, children }: SkeletonProps) {
   return (
     <div className={cn("rounded-xl border border-gray-200 bg-white p-6 space-y-4", className)}>
-      <div className="flex items-center space-x-4">
-        <Skeleton className="h-12 w-12 rounded-full" />
-        <div className="space-y-2 flex-1">
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-3 w-1/2" />
-        </div>
-      </div>
-      <Skeleton className="h-4 w-full" />
-      <Skeleton className="h-4 w-5/6" />
+      {children || (
+        <>
+          <div className="flex items-center space-x-4">
+            <Skeleton className="h-12 w-12 rounded-full" />
+            <div className="space-y-2 flex-1">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
+            </div>
+          </div>
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+        </>
+      )}
     </div>
   )
 }
