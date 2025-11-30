@@ -105,7 +105,7 @@ export default function ChangePasswordPage() {
                 required
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#40C9C6] focus:border-[#40C9C6]"
                 placeholder="Tu contraseña temporal"
               />
             </div>
@@ -120,7 +120,7 @@ export default function ChangePasswordPage() {
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#40C9C6] focus:border-[#40C9C6]"
                 minLength={8}
                 placeholder="Mínimo 8 caracteres"
               />
@@ -139,7 +139,7 @@ export default function ChangePasswordPage() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#40C9C6] focus:border-[#40C9C6]"
                 minLength={8}
                 placeholder="Confirma tu nueva contraseña"
               />
@@ -149,7 +149,7 @@ export default function ChangePasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#40C9C6] hover:bg-[#33a19e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#40C9C6] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <div className="flex items-center">
