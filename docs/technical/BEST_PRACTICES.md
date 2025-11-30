@@ -582,6 +582,113 @@ CREATE INDEX IF NOT EXISTS idx_name ON table(column);
 
 ---
 
+### 8. Tablas de Usuarios: `custom_users` vs `profiles` (VT-265)
+
+#### Decisión de Arquitectura
+
+**`custom_users` es la ÚNICA fuente de verdad para usuarios.**
+
+| Tabla | Estado | Propósito Original | Uso Actual |
+|-------|--------|-------------------|------------|
+| `custom_users` | ✅ **ACTIVA** | Auth custom JWT + bcrypt | Autenticación principal |
+| `profiles` | ⚠️ **DEPRECATED** | Supabase Auth (auth.users) | NO USAR |
+
+#### Historia
+
+1. VittaSami inicialmente usaba **Supabase Auth** con la tabla `profiles` vinculada a `auth.users`
+2. Se tomó la decisión de migrar a **autenticación custom** con JWT + bcrypt por:
+   - Control total sobre lógica de auth
+   - Facilidad de migración de usuarios legacy
+   - Flexibilidad para features custom (2FA, SSO)
+   - Independencia de proveedores
+3. Se creó `custom_users` como tabla standalone con `password_hash`
+4. `profiles` quedó como legacy pero **no se usa en producción**
+
+#### Diferencias Clave
+
+```sql
+-- profiles (DEPRECATED - NO USAR)
+CREATE TABLE profiles (
+  id UUID REFERENCES auth.users(id),  -- ⚠️ Vinculada a Supabase Auth
+  role user_role,
+  tenant_id UUID
+);
+
+-- custom_users (ACTIVA - USAR ESTA)
+CREATE TABLE custom_users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),  -- ✅ Standalone
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT,  -- ✅ Bcrypt hash
+  role user_role,
+  tenant_id UUID,
+  schedulable BOOLEAN  -- ✅ Campo adicional
+);
+```
+
+#### Roles Disponibles
+
+```sql
+CREATE TYPE user_role AS ENUM (
+  'super_admin',     -- Admin global (sin tenant)
+  'admin_tenant',    -- Admin de un tenant
+  'staff',           -- Staff general
+  'receptionist',    -- Recepcionista
+  'doctor',          -- Doctor/profesional médico
+  'member',          -- Miembro (spas, wellness)
+  'patient'          -- Paciente/cliente
+);
+```
+
+#### Código Correcto
+
+```typescript
+// ✅ CORRECTO - Usar custom_users
+const { data: user } = await supabase
+  .from('custom_users')
+  .select('*')
+  .eq('email', email)
+  .single()
+
+// ❌ INCORRECTO - NO usar profiles
+const { data: user } = await supabase
+  .from('profiles')
+  .select('*')
+  .eq('email', email)
+  .single()
+```
+
+#### Librerías de Autenticación
+
+- **`src/lib/custom-auth.ts`**: Servicio principal de autenticación (JWT, bcrypt, cookies)
+- **`src/lib/auth.ts`**: Cliente browser para obtener usuario actual (usa `custom_users`)
+
+#### Scripts Legacy (NO USAR)
+
+Los siguientes scripts aún referencian `profiles` y **no deben usarse**:
+- `scripts/admin/create-admin-development.ts`
+- `scripts/admin/create-super-admin.ts`
+- `scripts/admin/check-admin-user.ts`
+- `scripts/debug/debug-login.ts`
+
+Usar en su lugar los métodos de `customAuth`:
+```typescript
+import { customAuth } from '@/lib/custom-auth'
+
+// Crear usuario
+await customAuth.createUser({ email, password, first_name, last_name, role })
+
+// Crear super admin
+await customAuth.createSuperAdmin({ email, password, first_name, last_name })
+```
+
+#### TODO Futuro
+
+- [ ] Eliminar tabla `profiles` una vez confirmado que no se usa
+- [ ] Actualizar scripts legacy para usar `custom_users`
+- [ ] Agregar migración para limpiar referencia a `auth.users`
+
+---
+
 ## 🚀 Quick Reference
 
 ### Cuándo Usar Cada Herramienta
@@ -620,5 +727,5 @@ CREATE INDEX IF NOT EXISTS idx_name ON table(column);
 
 ---
 
-*Última actualización: 2025-10-15*
-*Basado en implementación de Multi-tenant Service Categories (VT-XX)*
+*Última actualización: 2025-11-29*
+*Incluye decisión VT-265: profiles vs custom_users*
