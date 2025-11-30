@@ -110,7 +110,7 @@ export default function LoginPage() {
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           ¿No tienes cuenta?{' '}
-          <Link href="/auth/register-business" className="font-medium text-blue-600 hover:text-blue-500">
+          <Link href="/auth/register-business" className="font-medium text-[#40C9C6] hover:text-[#33a19e]">
             Regístrate aquí
           </Link>
         </p>
@@ -139,7 +139,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-[#40C9C6] focus:border-[#40C9C6]"
                   placeholder="tu@email.com"
                 />
               </div>
@@ -159,7 +159,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-[#40C9C6] focus:border-[#40C9C6]"
                 />
               </div>
             </div>
@@ -169,7 +169,7 @@ export default function LoginPage() {
                 type="submit"
                 data-testid="login-submit"
                 disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#40C9C6] hover:bg-[#33a19e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#40C9C6] disabled:opacity-50"
               >
                 {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
               </button>
