@@ -43,27 +43,27 @@ async function debugLogin() {
     console.log('   Email Confirmed:', adminUser.email_confirmed_at ? 'YES' : 'NO')
     console.log('   Banned:', adminUser.banned_until ? 'YES' : 'NO')
 
-    // 2. Verificar si existe tabla profiles
-    console.log('\n2️⃣  Verificando tabla profiles...')
+    // 2. Verificar si existe tabla custom_users (tabla activa, profiles está deprecated)
+    console.log('\n2️⃣  Verificando tabla custom_users...')
     const { data: profilesCheck, error: profilesError } = await adminClient
-      .from('profiles')
+      .from('custom_users')
       .select('*')
       .limit(1)
 
     if (profilesError) {
       if (profilesError.message.includes('does not exist')) {
-        console.log('❌ Tabla profiles NO EXISTE en development')
+        console.log('❌ Tabla custom_users NO EXISTE en development')
         console.log('   ⚠️  Esta es la causa del problema!')
         console.log('\n💡 SOLUCIÓN: Necesitamos crear el schema base en development')
       } else {
-        console.log('⚠️  Error consultando profiles:', profilesError.message)
+        console.log('⚠️  Error consultando custom_users:', profilesError.message)
       }
     } else {
-      console.log('✅ Tabla profiles existe')
+      console.log('✅ Tabla custom_users existe')
 
       // Verificar si el perfil del admin existe
       const { data: adminProfile, error: profileError } = await adminClient
-        .from('profiles')
+        .from('custom_users')
         .select('*')
         .eq('id', adminUser.id)
         .single()
@@ -95,18 +95,18 @@ async function debugLogin() {
     }
 
     // 4. Verificar RLS policies
-    console.log('\n4️⃣  Verificando RLS en profiles...')
+    console.log('\n4️⃣  Verificando RLS en custom_users...')
     const { data: rlsCheck, error: rlsError } = await adminClient.rpc('exec', {
       sql: `
         SELECT tablename, rowsecurity
         FROM pg_tables
         WHERE schemaname = 'public'
-        AND tablename = 'profiles'
+        AND tablename = 'custom_users'
       `
     })
 
     if (rlsError) {
-      console.log('⚠️  No se pudo verificar RLS (tabla profiles puede no existir)')
+      console.log('⚠️  No se pudo verificar RLS (tabla custom_users puede no existir)')
     }
 
   } catch (error: any) {

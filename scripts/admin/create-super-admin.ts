@@ -81,10 +81,10 @@ async function createSuperAdmin(userData: AdminUserData) {
 
     console.log(`✅ Usuario creado con ID: ${authData.user.id}`)
 
-    // 2. Crear perfil en public.profiles
-    console.log('2️⃣  Creando perfil de usuario...')
+    // 2. Crear perfil en public.custom_users (tabla activa, profiles está deprecated)
+    console.log('2️⃣  Creando perfil de usuario en custom_users...')
     const { error: profileError } = await supabase
-      .from('profiles')
+      .from('custom_users')
       .insert({
         id: authData.user.id,
         email: userData.email,
@@ -97,9 +97,9 @@ async function createSuperAdmin(userData: AdminUserData) {
 
     if (profileError) {
       console.warn(`⚠️  Warning al crear perfil: ${profileError.message}`)
-      console.log('   (Esto puede ser normal si la tabla profiles no existe aún)')
+      console.log('   (Esto puede ser normal si la tabla custom_users no existe aún)')
     } else {
-      console.log('✅ Perfil creado exitosamente')
+      console.log('✅ Perfil creado exitosamente en custom_users')
     }
 
     // 3. Información final
