@@ -248,20 +248,25 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to create appointment', details: createError.message }, { status: 500 })
     }
 
+    // Handle Supabase join typing (returns arrays but single() makes it single object)
+    const patientData = Array.isArray(appointment.patients) ? appointment.patients[0] : appointment.patients
+    const serviceData = Array.isArray(appointment.services) ? appointment.services[0] : appointment.services
+    const doctorData = Array.isArray(appointment.doctors) ? appointment.doctors[0] : appointment.doctors
+
     // Transform the response
     const transformedAppointment = {
       id: appointment.id,
       appointment_date: appointment.appointment_date,
-      patient_name: appointment.patients
-        ? `${appointment.patients.first_name} ${appointment.patients.last_name}`
+      patient_name: patientData
+        ? `${patientData.first_name} ${patientData.last_name}`
         : 'Paciente no especificado',
-      patient_email: appointment.patients?.email,
+      patient_email: patientData?.email,
       start_time: appointment.start_time,
       end_time: appointment.end_time,
       status: appointment.status,
-      service_name: appointment.services?.name || 'Servicio no especificado',
-      doctor_name: appointment.doctors
-        ? `${appointment.doctors.first_name} ${appointment.doctors.last_name}`
+      service_name: serviceData?.name || 'Servicio no especificado',
+      doctor_name: doctorData
+        ? `${doctorData.first_name} ${doctorData.last_name}`
         : 'Doctor no asignado'
     }
 
