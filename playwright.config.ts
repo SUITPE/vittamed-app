@@ -3,6 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
   testMatch: '**/*.spec.ts', // Only run Playwright spec files, not Jest .test.ts files
+  testIgnore: ['**/deprecated/**'], // Ignore deprecated tests
   fullyParallel: false, // Disable to prevent race conditions
   forbidOnly: !!process.env.CI,
   retries: 0, // No retries - fail fast to see actual errors
