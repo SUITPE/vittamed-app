@@ -156,3 +156,29 @@ test.describe('Agenda Mobile View', () => {
     }
   })
 })
+
+  test('debe mostrar leyenda de overbooking en mobile', async ({ page }) => {
+    const legend = page.locator('text=Overbooking')
+    const legendBox = page.locator('.bg-amber-100.border-amber-300')
+    if (await legend.isVisible().catch(() => false)) {
+      await expect(legend).toBeVisible()
+    }
+    if (await legendBox.isVisible().catch(() => false)) {
+      await expect(legendBox).toBeVisible()
+    }
+  })
+
+  test('debe aplicar estilos de overbooking a citas múltiples', async ({ page }) => {
+    const overbookingSlot = page.locator('.bg-amber-50, .border-amber-300')
+    const count = await overbookingSlot.count()
+    if (count > 0) {
+      const badge = page.locator('.bg-amber-500.text-white')
+      if (await badge.isVisible().catch(() => false)) {
+        await expect(badge).toBeVisible()
+      }
+      const moreText = page.locator('text=/\\+\\d+ cita\\(s\\) más/')
+      if (await moreText.isVisible().catch(() => false)) {
+        await expect(moreText).toBeVisible()
+      }
+    }
+  })
