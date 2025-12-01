@@ -10,6 +10,7 @@ export interface UserProfile {
   role: UserRole
   tenant_id: string | null
   doctor_id: string | null
+  schedulable?: boolean
   created_at: string
   updated_at: string
   // Additional fields used by custom auth and profile features

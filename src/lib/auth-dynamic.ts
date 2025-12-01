@@ -16,6 +16,7 @@ export interface UserProfile {
   role: 'admin_tenant' | 'doctor' | 'patient'
   tenant_id?: string
   doctor_id?: string
+  schedulable?: boolean
   is_active: boolean
   created_at: string
   updated_at: string
