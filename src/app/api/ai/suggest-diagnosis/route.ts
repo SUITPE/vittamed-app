@@ -149,7 +149,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<SuggestDi
         {
           success: false,
           error: 'Validation failed',
-          details: validationResult.error.errors,
+          details: validationResult.error.issues,
         } as SuggestDiagnosisResponse & { details: unknown },
         { status: 400 }
       );
