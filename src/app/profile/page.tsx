@@ -170,7 +170,7 @@ export default function ProfilePage() {
           <div className="bg-white rounded-lg shadow-sm mb-8 p-6">
             <div className="flex items-center space-x-4">
               <div className="h-20 w-20 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 flex items-center justify-center text-white text-2xl font-bold">
-                {getInitials(user.profile?.first_name, user.profile?.last_name)}
+                {getInitials(user.profile?.first_name ?? undefined, user.profile?.last_name ?? undefined)}
               </div>
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-gray-900">

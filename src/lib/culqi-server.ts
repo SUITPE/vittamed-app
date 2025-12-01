@@ -96,9 +96,9 @@ export async function createCharge({
       description,
     });
 
-    // Crear cargo
-    const charge = await culqi.charges.create({
-      amount,
+    // Crear cargo - SDK uses createCharge method
+    const charge = await culqi.charges.createCharge({
+      amount: String(amount),
       currency_code: 'PEN',
       email,
       source_id: tokenId,
@@ -123,7 +123,7 @@ export async function createCharge({
  */
 export async function getCharge(chargeId: string) {
   try {
-    const charge = await culqi.charges.retrieve(chargeId);
+    const charge = await culqi.charges.getCharge({ id: chargeId });
     return charge;
   } catch (error: any) {
     console.error('❌ Error al obtener cargo:', error);
@@ -140,7 +140,7 @@ export async function listCharges(options?: {
   limit?: number;
 }) {
   try {
-    const charges = await culqi.charges.list(options);
+    const charges = await culqi.charges.getCharges(options as Parameters<typeof culqi.charges.getCharges>[0]);
     return charges;
   } catch (error: any) {
     console.error('❌ Error al listar cargos:', error);

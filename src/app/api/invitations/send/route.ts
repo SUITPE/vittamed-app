@@ -80,9 +80,9 @@ export async function POST(request: NextRequest) {
       first_name,
       last_name,
       role,
-      tenant_id: userTenantId,
+      tenant_id: userTenantId || '',
       tenant_name: tenant.name,
-      inviter_name: `${userProfile.first_name} ${userProfile.last_name}`.trim() || 'Admin',
+      inviter_name: userProfile ? `${userProfile.first_name} ${userProfile.last_name}`.trim() || 'Admin' : 'Admin',
       temp_password: tempPassword
     }
 

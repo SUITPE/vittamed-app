@@ -111,12 +111,15 @@ export class FeatureGate {
         return { allowed: false, limit: 0, current: currentCount };
       }
 
-      const limit = planFeatures[limitKey];
+      const limitValue = planFeatures[limitKey];
 
       // null = ilimitado
-      if (limit === null) {
+      if (limitValue === null) {
         return { allowed: true, limit: null, current: currentCount };
       }
+
+      // Ensure we have a number (limitKey should always return number for these keys)
+      const limit = typeof limitValue === 'number' ? limitValue : 0;
 
       return {
         allowed: currentCount < limit,

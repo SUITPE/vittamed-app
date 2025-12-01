@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       // Generate temporary token for password change
       const tempToken = customAuth.generateToken({
         userId: userProfile.id,
-        email: userProfile.email,
+        email: userProfile.email || '',
         role: userProfile.role,
         tenantId: userProfile.tenant_id || undefined
       })
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     // Generate JWT token
     const token = customAuth.generateToken({
       userId: userProfile.id,
-      email: userProfile.email,
+      email: userProfile.email || email, // Use request email as fallback
       role: userProfile.role,
       tenantId: userProfile.tenant_id || undefined
     })

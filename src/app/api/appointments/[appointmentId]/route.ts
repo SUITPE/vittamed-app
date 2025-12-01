@@ -194,11 +194,15 @@ export async function GET(
       tenant_id: user.profile.tenant_id
     }
 
+    // Handle Supabase join typing (returns arrays but single() makes it single object)
+    const patient = Array.isArray(appointment.patients) ? appointment.patients[0] : appointment.patients
+    const service = Array.isArray(appointment.services) ? appointment.services[0] : appointment.services
+
     const canViewAppointment = userAccess.role === 'admin_tenant' ||
                               userAccess.role === 'receptionist' ||
                               userAccess.role === 'staff' ||
                               (userAccess.role === 'doctor' && appointment.doctor_id === user.id) ||
-                              (userAccess.role === 'patient' && appointment.patients?.email === user.email)
+                              (userAccess.role === 'patient' && patient?.email === user.email)
 
     if (!canViewAppointment) {
       return NextResponse.json({
@@ -214,14 +218,14 @@ export async function GET(
       end_time: appointment.end_time,
       status: appointment.status,
       notes: appointment.notes,
-      patient_name: appointment.patients
-        ? `${appointment.patients.first_name} ${appointment.patients.last_name}`
+      patient_name: patient
+        ? `${patient.first_name} ${patient.last_name}`
         : 'Paciente no especificado',
-      patient_email: appointment.patients?.email,
-      patient_phone: appointment.patients?.phone,
-      service_name: appointment.services?.name || 'Servicio no especificado',
-      service_duration: appointment.services?.duration_minutes,
-      service_price: appointment.services?.price,
+      patient_email: patient?.email,
+      patient_phone: patient?.phone,
+      service_name: service?.name || 'Servicio no especificado',
+      service_duration: service?.duration_minutes,
+      service_price: service?.price,
       doctor_name: doctorName
     }
 

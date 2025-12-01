@@ -33,6 +33,29 @@ export interface FlowContext {
     recipient: string
     sent: boolean
   }>
+  // Used by ServiceManagementFlow and CategoryManagementFlow
+  validationResult?: {
+    valid: boolean
+    errors?: string[]
+  }
+  service?: {
+    id?: string
+    name: string
+    description: string
+    duration_minutes: number
+    price: number
+    category_id: string | null
+    tenant_id: string
+    is_active: boolean
+  }
+  category?: {
+    id?: string
+    name: string
+    description: string | null
+    tenant_id: string
+    parent_id?: string | null
+    is_active: boolean
+  }
 }
 
 export interface FlowStep {
