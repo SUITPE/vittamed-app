@@ -114,7 +114,7 @@ export default function AvailabilityPage() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {isAdminOrStaff ? (
-        <AdminSidebar tenantId={user?.profile?.tenant_id} />
+        <AdminSidebar tenantId={user?.profile?.tenant_id ?? undefined} />
       ) : (
         <DoctorSidebar />
       )}

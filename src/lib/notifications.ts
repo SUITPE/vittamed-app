@@ -34,8 +34,9 @@ function getTwilioClient() {
   return twilioClientInstance
 }
 
-// Export for backward compatibility
-export const twilioClient = null // Will be lazily initialized
+// Export for backward compatibility - use getTwilioClient() for actual client
+export const twilioClient: ReturnType<typeof getTwilioClient> = null
+export { getTwilioClient }
 
 export interface NotificationData {
   recipientEmail?: string
@@ -232,13 +233,14 @@ export async function sendReminderEmail(
     const templateData = data.templateData as EmailReminderTemplateData
     const htmlContent = await generateReminderEmailTemplate(templateData, branding)
 
-    const fromName = branding?.email_from_name || templateData.tenant.name
+    const tenantName = templateData.tenant?.name ?? templateData.tenant_name ?? 'Clínica'
+    const fromName = branding?.email_from_name || tenantName
     const fromEmail = `"${fromName}" <${process.env.EMAIL_USER}>`
 
     const mailOptions = {
       from: fromEmail,
       to: data.recipientEmail,
-      subject: `🔔 Recordatorio de cita - ${templateData.tenant.name}`,
+      subject: `🔔 Recordatorio de cita - ${tenantName}`,
       html: htmlContent,
     }
 

@@ -5,11 +5,13 @@ import { Icons } from '@/components/ui/Icons'
 
 interface Appointment {
   id: string
+  appointment_date: string
   patient_name: string
   service_name: string
   start_time: string
   end_time: string
   status: string
+  doctor_id: string
   doctor_name?: string
 }
 

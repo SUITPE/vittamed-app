@@ -673,12 +673,13 @@ export async function sendBookingConfirmation(
 
     // Send SMS confirmation
     if ((channel === 'sms' || channel === 'both') && appointment.patient.phone) {
-      const { twilioClient } = await import('./notifications')
+      const { getTwilioClient } = await import('./notifications')
       const smsContent = generateBookingConfirmationSMSTemplate(templateData, branding)
+      const twilioClientInstance = getTwilioClient()
 
-      if (twilioClient && process.env.TWILIO_PHONE_NUMBER) {
+      if (twilioClientInstance && process.env.TWILIO_PHONE_NUMBER) {
         try {
-          await twilioClient.messages.create({
+          await twilioClientInstance.messages.create({
             body: smsContent,
             from: process.env.TWILIO_PHONE_NUMBER,
             to: appointment.patient.phone

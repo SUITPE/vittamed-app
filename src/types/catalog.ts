@@ -757,7 +757,8 @@ export interface ReminderData {
 
 // Reminder template data
 export interface EmailReminderTemplateData {
-  tenant: {
+  // Nested structure (for reminder-templates.ts)
+  tenant?: {
     name: string
     logo_url?: string
     primary_color: string
@@ -766,7 +767,7 @@ export interface EmailReminderTemplateData {
     email_signature?: string
     custom_footer?: string
   }
-  appointment: {
+  appointment?: {
     id: string
     date: string
     time: string
@@ -777,36 +778,62 @@ export interface EmailReminderTemplateData {
     location?: string
     notes?: string
   }
-  patient: {
+  patient?: {
     first_name: string
     last_name: string
     full_name: string
   }
-  reminder: {
+  reminder?: {
     hours_before: number
     channel: string
   }
+  // Flat structure (used by process-reminders)
+  tenant_name?: string
+  patient_first_name?: string
+  patient_last_name?: string
+  appointment_date?: string
+  appointment_time?: string
+  service_name?: string
+  service_duration?: number
+  service_price?: number
+  provider_name?: string
+  provider_type?: 'doctor' | 'member'
+  clinic_address?: string
+  clinic_phone?: string
+  hours_until_appointment?: number
+  confirmation_link?: string
+  cancellation_link?: string
 }
 
 export interface SMSReminderTemplateData {
-  tenant: {
+  // Nested structure (original)
+  tenant?: {
     name: string
     sms_sender_name?: string
     phone?: string
   }
-  appointment: {
+  appointment?: {
     date: string
     time: string
     service_name: string
     provider_name: string
     provider_type: 'doctor' | 'member'
   }
-  patient: {
+  patient?: {
     first_name: string
   }
-  reminder: {
+  reminder?: {
     hours_before: number
   }
+  // Flat structure (used by process-reminders)
+  tenant_name?: string
+  patient_first_name?: string
+  appointment_date?: string
+  appointment_time?: string
+  service_name?: string
+  provider_name?: string
+  clinic_phone?: string
+  hours_until_appointment?: number
 }
 
 // Reminder processing result

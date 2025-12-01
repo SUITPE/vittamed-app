@@ -26,6 +26,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar contraseña actual
+    if (!user.profile?.password_hash) {
+      return NextResponse.json({
+        error: 'No se puede cambiar la contraseña para este usuario'
+      }, { status: 400 })
+    }
     const passwordMatch = await bcrypt.compare(currentPassword, user.profile.password_hash)
 
     if (!passwordMatch) {

@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Create admin client to bypass RLS
-    const supabase = createAdminClient()
+    const supabase = await createAdminClient()
 
     // Query to get all users with their profiles
     const { data: users, error } = await supabase
