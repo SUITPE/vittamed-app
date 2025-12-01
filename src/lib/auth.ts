@@ -20,7 +20,6 @@ export interface UserProfile {
   email_verified?: boolean
   must_change_password?: boolean
   password_hash?: string
-  schedulable?: boolean
 }
 
 export interface AuthUser extends User {
