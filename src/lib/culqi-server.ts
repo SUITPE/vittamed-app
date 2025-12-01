@@ -10,14 +10,24 @@ import Culqi from 'culqi-node';
 // Validar variables de entorno
 const CULQI_SECRET_KEY = process.env.CULQI_SECRET_KEY;
 
-if (!CULQI_SECRET_KEY) {
-  console.error('⚠ CULQI_SECRET_KEY no configurada en variables de entorno');
-}
+// Cliente Culqi con inicialización lazy para evitar errores en build
+let _culqiInstance: InstanceType<typeof Culqi> | null = null;
 
-// Configuración del cliente Culqi
-const culqi = new Culqi({
-  privateKey: CULQI_SECRET_KEY || '',
-});
+/**
+ * Obtener cliente Culqi con inicialización lazy
+ * Solo se instancia cuando realmente se necesita, evitando errores durante build
+ */
+function getCulqiClient(): InstanceType<typeof Culqi> {
+  if (!_culqiInstance) {
+    if (!CULQI_SECRET_KEY) {
+      throw new Error('CULQI_SECRET_KEY no configurada. Los pagos no están disponibles.');
+    }
+    _culqiInstance = new Culqi({
+      privateKey: CULQI_SECRET_KEY,
+    });
+  }
+  return _culqiInstance;
+}
 
 /**
  * Precios de los planes en céntimos (PEN)
@@ -97,7 +107,7 @@ export async function createCharge({
     });
 
     // Crear cargo - SDK uses createCharge method
-    const charge = await culqi.charges.createCharge({
+    const charge = await getCulqiClient().charges.createCharge({
       amount: String(amount),
       currency_code: 'PEN',
       email,
@@ -123,7 +133,7 @@ export async function createCharge({
  */
 export async function getCharge(chargeId: string) {
   try {
-    const charge = await culqi.charges.getCharge({ id: chargeId });
+    const charge = await getCulqiClient().charges.getCharge({ id: chargeId });
     return charge;
   } catch (error: any) {
     console.error('❌ Error al obtener cargo:', error);
@@ -140,7 +150,8 @@ export async function listCharges(options?: {
   limit?: number;
 }) {
   try {
-    const charges = await culqi.charges.getCharges(options as Parameters<typeof culqi.charges.getCharges>[0]);
+    const client = getCulqiClient();
+    const charges = await client.charges.getCharges(options as Parameters<typeof client.charges.getCharges>[0]);
     return charges;
   } catch (error: any) {
     console.error('❌ Error al listar cargos:', error);
@@ -204,8 +215,9 @@ export function formatAmountToSoles(cents: number): string {
 
 /**
  * Cliente Culqi para uso directo (exportado para casos avanzados)
+ * Usa lazy initialization para evitar errores durante build
  */
-export { culqi };
+export { getCulqiClient as culqi };
 
 export default {
   createCharge,
