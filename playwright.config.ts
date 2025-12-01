@@ -5,7 +5,7 @@ export default defineConfig({
   testMatch: '**/*.spec.ts', // Only run Playwright spec files, not Jest .test.ts files
   fullyParallel: false, // Disable to prevent race conditions
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 1, // Reduce retries with better stability
+  retries: 0, // No retries - fail fast to see actual errors
   workers: 1, // Use single worker for maximum stability
   reporter: 'html',
   timeout: 60 * 1000, // 1 minute total test timeout (reduced from 2min)
