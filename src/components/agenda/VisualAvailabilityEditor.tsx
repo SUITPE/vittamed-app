@@ -23,7 +23,7 @@ interface VisualAvailabilityEditorProps {
 const generateTimeSlots = () => {
   const slots: string[] = []
   for (let hour = 6; hour <= 21; hour++) {
-    for (let minute of [0, 30]) {
+    for (const minute of [0, 30]) {
       if (hour === 21 && minute === 30) break // Stop at 10 PM
       const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
       slots.push(time)

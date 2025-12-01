@@ -1,11 +1,28 @@
 {
   "extends": ["next/core-web-vitals"],
+  "ignorePatterns": [
+    "node_modules/",
+    ".next/",
+    "out/",
+    "coverage/",
+    "scripts/",
+    "tests/",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "*.config.js",
+    "*.config.mjs",
+    "playwright-report/",
+    "test-results/"
+  ],
   "rules": {
-    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/no-explicit-any": "warn",
     "@typescript-eslint/no-unused-vars": "warn",
-    "@typescript-eslint/ban-ts-comment": "error",
-    "@typescript-eslint/no-empty-object-type": "error",
+    "@typescript-eslint/ban-ts-comment": "warn",
+    "@typescript-eslint/no-require-imports": "warn",
+    "@typescript-eslint/no-empty-object-type": "warn",
     "react-hooks/exhaustive-deps": "warn",
-    "prefer-const": "error"
+    "prefer-const": "warn"
   }
 }

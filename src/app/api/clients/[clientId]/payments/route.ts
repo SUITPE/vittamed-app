@@ -79,7 +79,7 @@ export async function GET(
     // Apply time range filter if provided
     if (timeRange) {
       const now = new Date()
-      let fromDate = new Date()
+      const fromDate = new Date()
 
       switch (timeRange) {
         case 'last7days':
