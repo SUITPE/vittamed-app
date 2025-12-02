@@ -10,7 +10,8 @@ test.describe('Agenda Mobile View', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to agenda - already authenticated via storage state
     await page.goto('/agenda')
-    await expect(page.locator('h1, h2')).toBeVisible()
+    // Wait for page to load - use first h1 or h2 to avoid strict mode violation
+    await expect(page.locator('h1, h2').first()).toBeVisible()
   })
 
   test('debe mostrar agenda correctamente en mobile', async ({ page }) => {
@@ -40,12 +41,12 @@ test.describe('Agenda Mobile View', () => {
     if (await prevButton.isVisible()) {
       await prevButton.click()
       // Wait for page content to update
-      await expect(page.locator('h1, h2')).toBeVisible()
+      await expect(page.locator('h1, h2').first()).toBeVisible()
     }
 
     if (await nextButton.isVisible()) {
       await nextButton.click()
-      await expect(page.locator('h1, h2')).toBeVisible()
+      await expect(page.locator('h1, h2').first()).toBeVisible()
     }
   })
 

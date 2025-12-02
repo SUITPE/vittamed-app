@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test'
 
-const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000'
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3003'
 
 /**
  * @deprecated Use storage state instead: test.use({ storageState: 'tests/.auth/doctor.json' })
@@ -22,7 +22,7 @@ export async function loginAsDoctor(page: Page) {
   await page.waitForURL(/\/(agenda|dashboard)/, { timeout: 30000 })
 
   // Wait for page to be fully loaded by checking for main heading
-  await page.locator('h1, h2').waitFor({ state: 'visible' })
+  await page.locator('h1, h2').first().waitFor({ state: 'visible' })
 }
 
 /**
@@ -42,7 +42,7 @@ export async function loginAsAdmin(page: Page) {
   await page.waitForURL('/dashboard/**', { timeout: 30000 })
 
   // Wait for page to be fully loaded
-  await page.locator('h1, h2').waitFor({ state: 'visible' })
+  await page.locator('h1, h2').first().waitFor({ state: 'visible' })
 }
 
 /**
@@ -63,7 +63,7 @@ export async function loginAsReceptionist(page: Page) {
   await page.waitForURL(/\/dashboard/, { timeout: 30000 })
 
   // Wait for page to be fully loaded
-  await page.locator('h1, h2').waitFor({ state: 'visible' })
+  await page.locator('h1, h2').first().waitFor({ state: 'visible' })
 }
 
 /**
@@ -76,5 +76,5 @@ export async function navigateToAgenda(page: Page) {
   }
 
   // Wait for agenda to fully load
-  await page.locator('h1, h2').waitFor({ state: 'visible' })
+  await page.locator('h1, h2').first().waitFor({ state: 'visible' })
 }

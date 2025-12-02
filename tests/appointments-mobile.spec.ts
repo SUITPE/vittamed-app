@@ -10,7 +10,7 @@ test.describe('Appointments Mobile View', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to appointments - already authenticated via storage state
     await page.goto('/appointments')
-    await expect(page.locator('h1, h2')).toBeVisible()
+    await expect(page.locator('h1, h2').first()).toBeVisible()
   })
 
   test('debe mostrar appointments correctamente en mobile', async ({ page }) => {
@@ -152,7 +152,7 @@ test.describe('Appointments Mobile View', () => {
     const startTime = Date.now()
 
     await page.goto('/appointments')
-    await expect(page.locator('h1, h2')).toBeVisible()
+    await expect(page.locator('h1, h2').first()).toBeVisible()
 
     const loadTime = Date.now() - startTime
 

@@ -8,7 +8,8 @@ test.describe('Botón Atender en Appointments', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to appointments - already authenticated via storage state
     await page.goto('/appointments')
-    await expect(page.locator('h1, h2')).toBeVisible()
+    // Wait for page to load - use first h1 or h2 to avoid strict mode violation
+    await expect(page.locator('h1, h2').first()).toBeVisible()
   })
 
   test('debe mostrar botón Atender para citas con patient_id', async ({ page }) => {

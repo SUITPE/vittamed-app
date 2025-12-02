@@ -15,7 +15,7 @@ export default defineConfig({
   },
   globalSetup: require.resolve('./tests/global-setup'),
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3003',
     trace: 'on-first-retry',
     actionTimeout: 30 * 1000, // 30 seconds for actions
     navigationTimeout: 60 * 1000, // 60 seconds for navigation
@@ -40,8 +40,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
+    command: 'npm run dev -- --port 3003',
+    url: 'http://localhost:3003',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
     stdout: 'pipe',

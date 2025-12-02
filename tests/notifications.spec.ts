@@ -209,7 +209,7 @@ test.describe('Notificaciones en Tiempo Real', () => {
 
   test('debe actualizar notificaciones sin recargar página', async ({ page }) => {
     await page.goto('/agenda')
-    await expect(page.locator('h1, h2')).toBeVisible()
+    await expect(page.locator('h1, h2').first()).toBeVisible()
 
     // Verificar si hay WebSocket o polling para notificaciones en tiempo real
     // (esto es avanzado y puede no estar implementado)
