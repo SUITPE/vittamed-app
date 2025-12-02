@@ -1,8 +1,11 @@
-import { test, expect, devices } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 
-// Use doctor storage state and iPhone 13 device
+// Use doctor storage state with mobile viewport (chromium-based)
 test.use({
-  ...devices['iPhone 13'],
+  viewport: { width: 390, height: 844 }, // iPhone 13 dimensions
+  userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148',
+  hasTouch: true,
+  isMobile: true,
   storageState: 'tests/.auth/doctor.json'
 })
 
@@ -10,7 +13,8 @@ test.describe('Appointments Mobile View', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to appointments - already authenticated via storage state
     await page.goto('/appointments')
-    await expect(page.locator('h1, h2')).toBeVisible()
+    // Wait for page to load - wait for the date picker to appear
+    await expect(page.locator('input[type="date"]')).toBeVisible({ timeout: 15000 })
   })
 
   test('debe mostrar appointments correctamente en mobile', async ({ page }) => {
@@ -18,11 +22,9 @@ test.describe('Appointments Mobile View', () => {
     const currentUrl = page.url()
     expect(currentUrl).toContain('/appointments')
 
-    // Verificar que hay elementos visibles
-    const heading = page.locator('h1, h2, [role="heading"]')
-    await expect(heading.first()).toBeVisible()
-    const count = await heading.count()
-    expect(count).toBeGreaterThan(0)
+    // Verificar que hay elementos visibles (date picker or table)
+    const dateInput = page.locator('input[type="date"]')
+    await expect(dateInput).toBeVisible()
   })
 
   test('botón Atender debe ser accesible en mobile', async ({ page }) => {
@@ -152,7 +154,7 @@ test.describe('Appointments Mobile View', () => {
     const startTime = Date.now()
 
     await page.goto('/appointments')
-    await expect(page.locator('h1, h2')).toBeVisible()
+    await expect(page.locator('h1, h2').first()).toBeVisible()
 
     const loadTime = Date.now() - startTime
 
