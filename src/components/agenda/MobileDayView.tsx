@@ -94,7 +94,7 @@ export default function MobileDayView({
   const formatDate = (date: Date) => {
     const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
     const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-    return \`\${days[date.getDay()]}, \${date.getDate()} de \${months[date.getMonth()]}\`
+    return `${days[date.getDay()]}, ${date.getDate()} de ${months[date.getMonth()]}`
   }
 
   const isToday = () => {
@@ -111,7 +111,7 @@ export default function MobileDayView({
     }
     const badge = badges[status] || { label: status, className: 'bg-gray-100 text-gray-700 border-gray-200' }
     return (
-      <span className={\`text-xs font-medium px-2 py-1 rounded-full border \${badge.className}\`}>
+      <span className={`text-xs font-medium px-2 py-1 rounded-full border ${badge.className}`}>
         {badge.label}
       </span>
     )
@@ -159,13 +159,13 @@ export default function MobileDayView({
 
               return (
                 <div key={slot.hour} ref={isCurrentHour ? currentHourRef : null} className="relative">
-                  {isCurrentHour && <div className={\`absolute -left-2 top-0 bottom-0 w-1 \${isOverbooking ? 'bg-amber-600' : 'bg-blue-600'} rounded-full\`}></div>}
-                  <button onClick={() => onSlotClick(date, slot.hour, slot.appointmentDetails?.id)} className={\`w-full text-left p-4 rounded-lg border-2 \${borderColor} \${bgColor} transition-colors \${ringColor}\`}>
+                  {isCurrentHour && <div className={`absolute -left-2 top-0 bottom-0 w-1 ${isOverbooking ? 'bg-amber-600' : 'bg-blue-600'} rounded-full`}></div>}
+                  <button onClick={() => onSlotClick(date, slot.hour, slot.appointmentDetails?.id)} className={`w-full text-left p-4 rounded-lg border-2 ${borderColor} ${bgColor} transition-colors ${ringColor}`}>
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <Icons.clock className={\`w-4 h-4 \${iconColor}\`} />
+                        <Icons.clock className={`w-4 h-4 ${iconColor}`} />
                         <span className="text-sm font-semibold text-gray-900">{startTime} - {endTime}</span>
-                        {isCurrentHour && <span className={\`text-xs font-bold \${iconColor} animate-pulse\`}>AHORA</span>}
+                        {isCurrentHour && <span className={`text-xs font-bold ${iconColor} animate-pulse`}>AHORA</span>}
                         {isOverbooking && <span className="bg-amber-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">{slot.appointmentCount}</span>}
                       </div>
                       {getStatusBadge(slot.appointmentDetails.status)}
@@ -182,7 +182,7 @@ export default function MobileDayView({
               return (
                 <div key={slot.hour} ref={isCurrentHour ? currentHourRef : null} className="relative">
                   {isCurrentHour && <div className="absolute -left-2 top-0 bottom-0 w-1 bg-green-600 rounded-full"></div>}
-                  <button onClick={() => onSlotClick(date, slot.hour)} className={\`w-full text-left p-4 rounded-lg border-2 border-green-200 bg-green-50 hover:bg-green-100 transition-colors \${isCurrentHour ? 'ring-2 ring-green-400' : ''}\`}>
+                  <button onClick={() => onSlotClick(date, slot.hour)} className={`w-full text-left p-4 rounded-lg border-2 border-green-200 bg-green-50 hover:bg-green-100 transition-colors ${isCurrentHour ? 'ring-2 ring-green-400' : ''}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Icons.clock className="w-4 h-4 text-green-600" />
@@ -200,7 +200,7 @@ export default function MobileDayView({
               return (
                 <div key={slot.hour} ref={isCurrentHour ? currentHourRef : null} className="relative">
                   {isCurrentHour && <div className="absolute -left-2 top-0 bottom-0 w-1 bg-gray-600 rounded-full"></div>}
-                  <div className={\`w-full p-4 rounded-lg border border-gray-200 bg-gray-50 opacity-60 \${isCurrentHour ? 'ring-2 ring-gray-400' : ''}\`}>
+                  <div className={`w-full p-4 rounded-lg border border-gray-200 bg-gray-50 opacity-60 ${isCurrentHour ? 'ring-2 ring-gray-400' : ''}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Icons.clock className="w-4 h-4 text-gray-400" />
