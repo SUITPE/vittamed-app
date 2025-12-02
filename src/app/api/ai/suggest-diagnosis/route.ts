@@ -45,10 +45,10 @@ export async function POST(request: NextRequest) {
     if (clinicalText) prompt += `\nTexto: ${clinicalText}`;
     if (patientContext?.age) prompt += `\nEdad: ${patientContext.age}`;
 
-    const res = await ai.complete(prompt, PROMPT);
+    const resContent = await ai.complete(prompt, PROMPT);
     let parsed;
     try {
-      let json = res.content;
+      let json = resContent;
       const m = json.match(/```(?:json)?\s*([\s\S]*?)```/);
       if (m) json = m[1];
       parsed = JSON.parse(json.trim());
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       return { ...s, icd10Description: desc, confidenceScore: s.confidence === 'high' ? 0.85 : s.confidence === 'medium' ? 0.65 : 0.4 };
     }));
 
-    return NextResponse.json({ success: true, data: { suggestions, disclaimer: DISCLAIMER, provider: p, model: res.model, processingTime: Date.now() - startTime } });
+    return NextResponse.json({ success: true, data: { suggestions, disclaimer: DISCLAIMER, provider: p, processingTime: Date.now() - startTime } });
   } catch (e) {
     return NextResponse.json({ success: false, error: e instanceof Error ? e.message : 'Error' }, { status: 500 });
   }
