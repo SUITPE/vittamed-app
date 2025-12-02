@@ -1,6 +1,11 @@
-# Bugs a Crear en Jira
+# Bugs Creados en Jira
 
 Estos bugs fueron identificados durante la estabilización de tests E2E (VT-277).
+
+**Tickets creados:**
+- VT-284: PUT /api/patients/:id not implemented
+- VT-285: POST /api/patients error
+- VT-286: Mobile E2E tests flaky locators
 
 ---
 
