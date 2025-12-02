@@ -50,7 +50,7 @@ export default function AuthCallbackPage() {
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#40C9C6] mx-auto"></div>
               <h2 className="mt-4 text-lg font-medium text-gray-900">
                 Completando autenticación...
               </h2>
