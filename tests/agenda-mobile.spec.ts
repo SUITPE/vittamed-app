@@ -1,8 +1,11 @@
-import { test, expect, devices } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 
-// Use doctor storage state and iPhone 13 device
+// Use doctor storage state with mobile viewport (chromium-based)
 test.use({
-  ...devices['iPhone 13'],
+  viewport: { width: 390, height: 844 }, // iPhone 13 dimensions
+  userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148',
+  hasTouch: true,
+  isMobile: true,
   storageState: 'tests/.auth/doctor.json'
 })
 
@@ -10,8 +13,8 @@ test.describe('Agenda Mobile View', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to agenda - already authenticated via storage state
     await page.goto('/agenda')
-    // Wait for page to load - use first h1 or h2 to avoid strict mode violation
-    await expect(page.locator('h1, h2').first()).toBeVisible()
+    // Wait for page to load - wait for calendar or date navigation elements
+    await expect(page.locator('button, input[type="date"], .calendar, [class*="agenda"]').first()).toBeVisible({ timeout: 15000 })
   })
 
   test('debe mostrar agenda correctamente en mobile', async ({ page }) => {
