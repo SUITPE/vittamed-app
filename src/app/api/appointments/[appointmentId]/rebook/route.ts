@@ -172,7 +172,7 @@ export async function POST(
     }
 
     // 9. Use admin client for database operations
-    const adminClient = createAdminClient();
+    const adminClient = await createAdminClient();
 
     // 10. Create new appointment (rebook)
     const newAppointmentData = {

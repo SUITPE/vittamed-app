@@ -158,7 +158,7 @@ export async function POST(
     }
 
     // 8. Use admin client for database operations (bypasses RLS)
-    const adminClient = createAdminClient();
+    const adminClient = await createAdminClient();
 
     // 9. Create new appointment
     const originalId = originalAppointment.original_appointment_id || originalAppointment.id;

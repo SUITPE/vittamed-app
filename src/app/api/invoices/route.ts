@@ -351,7 +351,7 @@ export async function GET(request: NextRequest) {
     }
 
     const response: ListInvoicesResponse = {
-      invoices: invoices as InvoiceWithRelations[],
+      invoices: (invoices || []) as unknown as InvoiceWithRelations[],
       total: count || 0,
       page,
       limit,
