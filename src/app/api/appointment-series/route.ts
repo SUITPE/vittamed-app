@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Datos inválidos', details: validationResult.error.errors },
+        { error: 'Datos inválidos', details: validationResult.error.issues },
         { status: 400 }
       );
     }
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createAdminClient();
 
     // 3. Verify user has permission (tenant access)
-    const tenantId = user.tenant_id;
+    const tenantId = user.profile?.tenant_id;
     if (!tenantId) {
       return NextResponse.json({ error: 'Usuario sin tenant asignado' }, { status: 403 });
     }
@@ -306,7 +306,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const tenantId = user.tenant_id;
+    const tenantId = user.profile?.tenant_id;
     if (!tenantId) {
       return NextResponse.json({ error: 'Usuario sin tenant asignado' }, { status: 403 });
     }

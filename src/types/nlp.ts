@@ -65,6 +65,11 @@ export interface AICompletionResponse {
 }
 
 /**
+ * Alias for AICompletionResponse (used by AI clients)
+ */
+export type AIResponse = AICompletionResponse;
+
+/**
  * AI client interface
  */
 export interface AIClient {
