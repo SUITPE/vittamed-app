@@ -32,8 +32,8 @@ async function globalSetup(config: FullConfig) {
   console.log('  → Authenticating as doctor...')
   const doctorPage = await browser.newPage()
   await doctorPage.goto(`${baseURL}/auth/login`)
-  await doctorPage.fill('[data-testid="email-input"]', 'alvaro@abp.pe')
-  await doctorPage.fill('[data-testid="password-input"]', 'VittaMed2024!')
+  await doctorPage.fill('[data-testid="email-input"]', 'doctor-1759245234123@clinicasanrafael.com')
+  await doctorPage.fill('[data-testid="password-input"]', 'VittaSami2024!')
   await doctorPage.click('[data-testid="login-submit"]')
 
   // Wait for successful navigation
