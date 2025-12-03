@@ -119,12 +119,12 @@ test.describe('Agenda Mobile View', () => {
     const invalidDate = page.locator('text=Invalid Date')
     await expect(invalidDate).not.toBeVisible()
 
-    // Verificar que hay elementos de tiempo visibles
-    const count = await page.locator('time, [datetime], text=/\\d{2}:\\d{2}/').count()
+    // Verificar que hay elementos de tiempo visibles (using CSS selectors only)
+    const timeElements = page.locator('time, [datetime]')
+    const count = await timeElements.count()
 
     if (count > 0) {
-      const timeElements = page.locator('time, [datetime], text=/\\d{2}:\\d{2}/').first()
-      await expect(timeElements).toBeVisible()
+      await expect(timeElements.first()).toBeVisible()
     }
   })
 
@@ -159,7 +159,6 @@ test.describe('Agenda Mobile View', () => {
       }
     }
   })
-})
 
   test('debe mostrar leyenda de overbooking en mobile', async ({ page }) => {
     const legend = page.locator('text=Overbooking')
@@ -180,9 +179,11 @@ test.describe('Agenda Mobile View', () => {
       if (await badge.isVisible().catch(() => false)) {
         await expect(badge).toBeVisible()
       }
-      const moreText = page.locator('text=/\\+\\d+ cita\\(s\\) más/')
+      // Using CSS selector instead of text regex
+      const moreText = page.locator('[class*="cita"]')
       if (await moreText.isVisible().catch(() => false)) {
         await expect(moreText).toBeVisible()
       }
     }
   })
+})
