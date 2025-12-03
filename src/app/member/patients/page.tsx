@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import MemberNavigation from '@/components/MemberNavigation'
+import { Skeleton, SkeletonCard, SkeletonList } from '@/components/ui/Skeleton'
 
 interface Patient {
   id: string
@@ -149,10 +150,35 @@ export default function MemberPatientsPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <MemberNavigation currentPath="/member/patients" tenantId={currentTenantId} />
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Cargando mis pacientes...</p>
+        <div className="p-6">
+          <div className="max-w-7xl mx-auto space-y-6">
+            {/* Header Skeleton */}
+            <div className="space-y-2">
+              <Skeleton className="h-9 w-64" />
+              <Skeleton className="h-5 w-80" />
+            </div>
+            {/* Content Grid Skeleton */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-1">
+                <SkeletonCard className="p-6">
+                  <div className="flex justify-between mb-4">
+                    <Skeleton className="h-6 w-40" />
+                    <Skeleton className="h-5 w-20" />
+                  </div>
+                  <Skeleton className="h-10 w-full mb-4" />
+                  <SkeletonList items={5} />
+                </SkeletonCard>
+              </div>
+              <div className="lg:col-span-2">
+                <SkeletonCard className="p-12">
+                  <div className="flex flex-col items-center">
+                    <Skeleton className="h-16 w-16 rounded-full mb-4" />
+                    <Skeleton className="h-6 w-48 mb-2" />
+                    <Skeleton className="h-4 w-64" />
+                  </div>
+                </SkeletonCard>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -353,9 +379,16 @@ export default function MemberPatientsPage() {
                     </div>
                     <div className="p-6">
                       {loadingAppointments ? (
-                        <div className="text-center py-4">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-2"></div>
-                          <p className="text-sm text-gray-600">Cargando citas...</p>
+                        <div className="space-y-4">
+                          {[1, 2, 3].map(i => (
+                            <div key={i} className="border rounded-lg p-4">
+                              <div className="flex justify-between mb-2">
+                                <Skeleton className="h-5 w-32" />
+                                <Skeleton className="h-5 w-20 rounded-full" />
+                              </div>
+                              <Skeleton className="h-4 w-full" />
+                            </div>
+                          ))}
                         </div>
                       ) : patientAppointments.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">

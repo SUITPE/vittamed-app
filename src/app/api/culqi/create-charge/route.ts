@@ -30,8 +30,8 @@ import { z } from 'zod';
 // Schema de validación con Zod
 const CreateChargeSchema = z.object({
   token_id: z.string().min(1, 'Token de Culqi requerido'),
-  plan_key: z.enum(['free', 'care', 'pro', 'enterprise'], {
-    errorMap: () => ({ message: 'Plan inválido' }),
+  plan_key: z.enum(['free', 'care', 'pro', 'enterprise'] as const, {
+    message: 'Plan inválido',
   }),
   tenant_id: z.string().uuid().optional(),
   email: z.string().email('Email inválido'),

@@ -1,14 +1,14 @@
 /**
- * NLP Types
+ * NLP and AI Types
  *
  * Tipos para procesamiento de lenguaje natural en historias clínicas
  *
- * TASK: VT-231
+ * TASK: VT-231, VT-232
  * Epic: Historias Clínicas Inteligentes
  */
 
 /**
- * Proveedores de AI soportados
+ * Supported AI providers
  */
 export type AIProvider = 'openai' | 'anthropic' | 'deepseek';
 
@@ -42,9 +42,17 @@ export interface ChatMessage {
 }
 
 /**
- * Respuesta del modelo AI
+ * Options for AI completion
  */
-export interface AIResponse {
+export interface AICompletionOptions {
+  maxTokens?: number;
+  temperature?: number;
+}
+
+/**
+ * AI completion response
+ */
+export interface AICompletionResponse {
   content: string;
   model: string;
   provider: AIProvider;
@@ -54,6 +62,13 @@ export interface AIResponse {
     totalTokens: number;
   };
   finishReason?: string;
+}
+
+/**
+ * AI client interface
+ */
+export interface AIClient {
+  complete(prompt: string, systemPrompt?: string, options?: AICompletionOptions): Promise<AICompletionResponse>;
 }
 
 /**
@@ -67,6 +82,17 @@ export interface MedicalEntity {
   startIndex?: number;
   endIndex?: number;
   icd10Code?: string;
+}
+
+/**
+ * NLP extraction result
+ */
+export interface NLPExtractionResult {
+  symptoms: string[];
+  conditions: string[];
+  medications: string[];
+  allergies: string[];
+  confidence: number;
 }
 
 /**

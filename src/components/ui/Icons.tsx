@@ -68,6 +68,8 @@ import {
   Target,
   Linkedin,
   PieChart,
+  Inbox,
+  RefreshCw,
 } from "lucide-react"
 
 export const Icons = {
@@ -169,6 +171,10 @@ export const Icons = {
   target: Target,
   linkedin: Linkedin,
   pieChart: PieChart,
+
+  // Empty states
+  inbox: Inbox,
+  refreshCw: RefreshCw,
 }
 
 export type IconName = keyof typeof Icons

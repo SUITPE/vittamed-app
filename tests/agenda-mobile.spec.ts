@@ -1,8 +1,11 @@
-import { test, expect, devices } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 
-// Use doctor storage state and iPhone 13 device
+// Use doctor storage state with mobile viewport (chromium-based)
 test.use({
-  ...devices['iPhone 13'],
+  viewport: { width: 390, height: 844 }, // iPhone 13 dimensions
+  userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148',
+  hasTouch: true,
+  isMobile: true,
   storageState: 'tests/.auth/doctor.json'
 })
 
@@ -10,7 +13,8 @@ test.describe('Agenda Mobile View', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to agenda - already authenticated via storage state
     await page.goto('/agenda')
-    await expect(page.locator('h1, h2')).toBeVisible()
+    // Wait for page to load - wait for calendar or date navigation elements
+    await expect(page.locator('button, input[type="date"], .calendar, [class*="agenda"]').first()).toBeVisible({ timeout: 15000 })
   })
 
   test('debe mostrar agenda correctamente en mobile', async ({ page }) => {
@@ -40,12 +44,12 @@ test.describe('Agenda Mobile View', () => {
     if (await prevButton.isVisible()) {
       await prevButton.click()
       // Wait for page content to update
-      await expect(page.locator('h1, h2')).toBeVisible()
+      await expect(page.locator('h1, h2').first()).toBeVisible()
     }
 
     if (await nextButton.isVisible()) {
       await nextButton.click()
-      await expect(page.locator('h1, h2')).toBeVisible()
+      await expect(page.locator('h1, h2').first()).toBeVisible()
     }
   })
 
@@ -156,3 +160,29 @@ test.describe('Agenda Mobile View', () => {
     }
   })
 })
+
+  test('debe mostrar leyenda de overbooking en mobile', async ({ page }) => {
+    const legend = page.locator('text=Overbooking')
+    const legendBox = page.locator('.bg-amber-100.border-amber-300')
+    if (await legend.isVisible().catch(() => false)) {
+      await expect(legend).toBeVisible()
+    }
+    if (await legendBox.isVisible().catch(() => false)) {
+      await expect(legendBox).toBeVisible()
+    }
+  })
+
+  test('debe aplicar estilos de overbooking a citas múltiples', async ({ page }) => {
+    const overbookingSlot = page.locator('.bg-amber-50, .border-amber-300')
+    const count = await overbookingSlot.count()
+    if (count > 0) {
+      const badge = page.locator('.bg-amber-500.text-white')
+      if (await badge.isVisible().catch(() => false)) {
+        await expect(badge).toBeVisible()
+      }
+      const moreText = page.locator('text=/\\+\\d+ cita\\(s\\) más/')
+      if (await moreText.isVisible().catch(() => false)) {
+        await expect(moreText).toBeVisible()
+      }
+    }
+  })

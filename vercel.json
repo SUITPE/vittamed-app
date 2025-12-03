@@ -23,12 +23,7 @@
       "maxDuration": 60
     }
   },
-  "crons": [
-    {
-      "path": "/api/process-reminders",
-      "schedule": "0 9 * * *"
-    }
-  ],
+  "crons": [],
   "headers": [
     {
       "source": "/(.*)",

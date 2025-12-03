@@ -13,7 +13,13 @@ export function debugSupabaseAuth() {
 
   // Try to intercept XMLHttpRequest as well (in case Supabase uses it)
   const originalOpen = XMLHttpRequest.prototype.open
-  XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+  XMLHttpRequest.prototype.open = function(
+    method: string,
+    url: string | URL,
+    async: boolean = true,
+    username?: string | null,
+    password?: string | null
+  ) {
     console.log('📡 XMLHttpRequest detected:', { method, url })
 
     if (typeof url === 'string') {
@@ -23,7 +29,7 @@ export function debugSupabaseAuth() {
       }
     }
 
-    return originalOpen.call(this, method, url, ...rest)
+    return originalOpen.call(this, method, url, async, username, password)
   }
 
   // Monitor URL construction

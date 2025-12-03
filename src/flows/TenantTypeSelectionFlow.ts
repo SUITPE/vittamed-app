@@ -79,7 +79,7 @@ export class TenantTypeSelectionFlow {
     const query = this.state.searchQuery.toLowerCase()
 
     // Get base types (all or filtered by category)
-    let baseTypes = this.state.selectedCategory
+    const baseTypes = this.state.selectedCategory
       ? (Object.entries(BUSINESS_TYPE_CONFIGS)
           .filter(([_, config]) => config.category === this.state.selectedCategory)
           .map(([type]) => type as BusinessType))

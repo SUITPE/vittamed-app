@@ -189,17 +189,20 @@ export class CustomAuthService {
       // Remove password_hash before returning
       const { password_hash: _, ...safeProfile } = profile
 
-      // Return AuthUser format
+      // Return AuthUser format - use unknown intermediate cast for compatibility
       return {
         id: safeProfile.id,
         email: safeProfile.email,
         email_confirmed_at: new Date().toISOString(), // Assume confirmed for custom auth
+        app_metadata: {},
+        aud: 'authenticated',
+        created_at: safeProfile.created_at || new Date().toISOString(),
         user_metadata: {
           first_name: safeProfile.first_name,
           last_name: safeProfile.last_name
         },
         profile: safeProfile
-      } as AuthUser
+      } as unknown as AuthUser
     } catch (error) {
       console.error('Error getting current user:', error)
       return null

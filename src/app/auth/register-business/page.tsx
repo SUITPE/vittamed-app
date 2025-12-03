@@ -91,7 +91,7 @@ export default function RegisterBusinessPage() {
   return (
     <>
       <PublicHeader />
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-[#40C9C6]/5 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
           Registra tu Negocio
@@ -101,7 +101,7 @@ export default function RegisterBusinessPage() {
         </p>
         <p className="mt-1 text-center text-xs text-gray-500">
           ¿Ya tienes cuenta?{' '}
-          <Link href="/auth/login" className="font-medium text-blue-600 hover:text-blue-500">
+          <Link href="/auth/login" className="font-medium text-[#40C9C6] hover:text-[#33a19e]">
             Inicia sesión aquí
           </Link>
         </p>
@@ -127,7 +127,7 @@ export default function RegisterBusinessPage() {
                   required
                   value={formData.first_name}
                   onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
-                  className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-[#40C9C6] focus:border-[#40C9C6]"
                   placeholder="Juan"
                 />
               </div>
@@ -142,7 +142,7 @@ export default function RegisterBusinessPage() {
                   required
                   value={formData.last_name}
                   onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
-                  className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-[#40C9C6] focus:border-[#40C9C6]"
                   placeholder="Pérez"
                 />
               </div>
@@ -159,7 +159,7 @@ export default function RegisterBusinessPage() {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-[#40C9C6] focus:border-[#40C9C6]"
                 placeholder="tu@negocio.com"
               />
             </div>
@@ -175,7 +175,7 @@ export default function RegisterBusinessPage() {
                 required
                 value={formData.password}
                 onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-[#40C9C6] focus:border-[#40C9C6]"
                 placeholder="Mínimo 6 caracteres"
               />
             </div>
@@ -191,17 +191,17 @@ export default function RegisterBusinessPage() {
                 required
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-[#40C9C6] focus:border-[#40C9C6]"
                 placeholder="Repite tu contraseña"
               />
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+            <div className="bg-[#40C9C6]/10 border border-[#40C9C6]/20 rounded-md p-4">
               <div className="flex">
-                <Icons.shield className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-blue-700">
+                <Icons.shield className="h-5 w-5 text-[#40C9C6] mr-2 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-[#003A47]">
                   <p className="font-medium mb-1">Cuenta de Administrador</p>
-                  <p className="text-xs text-blue-600">
+                  <p className="text-xs text-[#40C9C6]">
                     Tu cuenta tendrá acceso completo para gestionar tu clínica, servicios, personal y citas.
                   </p>
                 </div>
@@ -241,15 +241,15 @@ export default function RegisterBusinessPage() {
 
             <div className="mt-4 space-y-2 text-xs text-gray-600">
               <div className="flex items-start">
-                <span className="font-bold text-blue-600 mr-2">1.</span>
+                <span className="font-bold text-[#40C9C6] mr-2">1.</span>
                 <span>Crea tu cuenta de administrador</span>
               </div>
               <div className="flex items-start">
-                <span className="font-bold text-blue-600 mr-2">2.</span>
+                <span className="font-bold text-[#40C9C6] mr-2">2.</span>
                 <span>Configura la información de tu clínica</span>
               </div>
               <div className="flex items-start">
-                <span className="font-bold text-blue-600 mr-2">3.</span>
+                <span className="font-bold text-[#40C9C6] mr-2">3.</span>
                 <span>Comienza a gestionar tus servicios y citas</span>
               </div>
             </div>

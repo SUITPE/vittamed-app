@@ -2,10 +2,12 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
+  testMatch: '**/*.spec.ts', // Only run Playwright spec files, not Jest .test.ts files
+  testIgnore: ['**/deprecated/**'], // Ignore deprecated tests
   fullyParallel: false, // Disable to prevent race conditions
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 1, // Reduce retries with better stability
-  workers: 1, // Use single worker for maximum stability
+  retries: 0, // No retries - fail fast to see actual errors
+  workers: process.env.CI ? 4 : 1, // 4 workers in CI for speed, 1 locally for stability
   reporter: 'html',
   timeout: 60 * 1000, // 1 minute total test timeout (reduced from 2min)
   expect: {
@@ -13,7 +15,7 @@ export default defineConfig({
   },
   globalSetup: require.resolve('./tests/global-setup'),
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3003',
     trace: 'on-first-retry',
     actionTimeout: 30 * 1000, // 30 seconds for actions
     navigationTimeout: 60 * 1000, // 60 seconds for navigation
@@ -38,8 +40,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
+    command: 'npm run dev -- --port 3003',
+    url: 'http://localhost:3003',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
     stdout: 'pipe',

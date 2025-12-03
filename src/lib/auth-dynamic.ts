@@ -16,6 +16,7 @@ export interface UserProfile {
   role: 'admin_tenant' | 'doctor' | 'patient'
   tenant_id?: string
   doctor_id?: string
+  schedulable?: boolean
   is_active: boolean
   created_at: string
   updated_at: string
@@ -179,7 +180,7 @@ class DynamicAuthService {
               first_name: 'Admin',
               last_name: 'User',
               role: 'admin_tenant',
-              tenant_id: tenantId,
+              tenant_id: tenantId ?? undefined,
               is_active: true,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
@@ -219,11 +220,11 @@ class DynamicAuthService {
         email: user.email!,
         first_name: user.user_metadata?.first_name || profileData.first_name,
         last_name: user.user_metadata?.last_name || profileData.last_name,
-        phone: user.phone || null,
-        avatar_url: user.user_metadata?.avatar_url || null,
+        phone: user.phone ?? undefined,
+        avatar_url: user.user_metadata?.avatar_url ?? undefined,
         role: profileData.role,
-        tenant_id: profileData.tenant_id,
-        doctor_id: profileData.doctor_id,
+        tenant_id: profileData.tenant_id ?? undefined,
+        doctor_id: profileData.doctor_id ?? undefined,
         is_active: true,
         created_at: user.created_at,
         updated_at: new Date().toISOString()
