@@ -17,6 +17,7 @@ export interface UserProfile {
   phone?: string | null
   date_of_birth?: string | null
   address?: string | null
+  avatar_url?: string | null
   email_verified?: boolean
   must_change_password?: boolean
   password_hash?: string

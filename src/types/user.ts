@@ -9,6 +9,7 @@ export interface UserProfile {
   last_name?: string;
   current_tenant_id?: string;
   schedulable?: boolean;
+  avatar_url?: string;
   created_at: string;
   updated_at: string;
 }
