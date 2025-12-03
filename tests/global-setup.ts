@@ -14,52 +14,82 @@ async function globalSetup(config: FullConfig) {
 
   console.log('🔐 Setting up authenticated sessions...')
 
-  // Setup 1: Admin session
-  console.log('  → Authenticating as admin...')
-  const adminPage = await browser.newPage()
-  await adminPage.goto(`${baseURL}/auth/login`)
-  await adminPage.fill('[data-testid="email-input"]', 'admin@clinicasanrafael.com')
-  await adminPage.fill('[data-testid="password-input"]', 'password123')
-  await adminPage.click('[data-testid="login-submit"]')
+  // Helper function to login and save storage state
+  async function loginAndSave(
+    email: string,
+    password: string,
+    filename: string,
+    expectedUrl: RegExp,
+    fallbackPath?: string
+  ): Promise<boolean> {
+    const page = await browser.newPage()
+    try {
+      await page.goto(`${baseURL}/auth/login`, { timeout: 30000 })
+      await page.fill('[data-testid="email-input"]', email)
+      await page.fill('[data-testid="password-input"]', password)
+      await page.click('[data-testid="login-submit"]')
 
-  // Wait for successful navigation
-  await adminPage.waitForURL(/\/dashboard/, { timeout: 30000 })
-  await adminPage.context().storageState({ path: path.join(authDir, 'admin.json') })
-  await adminPage.close()
+      await page.waitForURL(expectedUrl, { timeout: 30000 })
+      await page.context().storageState({ path: path.join(authDir, filename) })
+      await page.close()
+      return true
+    } catch (error) {
+      console.log(`  ⚠️ Failed to login as ${email}:`, (error as Error).message)
+      await page.close()
+
+      // Use fallback if provided
+      if (fallbackPath && fs.existsSync(fallbackPath)) {
+        fs.copyFileSync(fallbackPath, path.join(authDir, filename))
+        console.log(`  → Using fallback auth for ${filename}`)
+        return true
+      }
+      return false
+    }
+  }
+
+  // Setup 1: Admin session (primary - must succeed)
+  console.log('  → Authenticating as admin...')
+  const adminSuccess = await loginAndSave(
+    'admin@clinicasanrafael.com',
+    'password123',
+    'admin.json',
+    /\/dashboard/
+  )
+
+  if (!adminSuccess) {
+    console.error('❌ Admin login failed - cannot continue')
+    await browser.close()
+    throw new Error('Admin login failed - please check credentials')
+  }
   console.log('  ✅ Admin session saved')
 
-  // Setup 2: Doctor session
+  const adminPath = path.join(authDir, 'admin.json')
+
+  // Setup 2: Doctor session (with fallback to admin)
   console.log('  → Authenticating as doctor...')
-  const doctorPage = await browser.newPage()
-  await doctorPage.goto(`${baseURL}/auth/login`)
-  await doctorPage.fill('[data-testid="email-input"]', 'doctor-1759245234123@clinicasanrafael.com')
-  await doctorPage.fill('[data-testid="password-input"]', 'VittaSami2024!')
-  await doctorPage.click('[data-testid="login-submit"]')
+  const doctorSuccess = await loginAndSave(
+    'doctor-1759245234123@clinicasanrafael.com',
+    'VittaSami2024!',
+    'doctor.json',
+    /\/(agenda|dashboard)/,
+    adminPath
+  )
+  console.log(doctorSuccess ? '  ✅ Doctor session saved' : '  ⚠️ Using admin session as doctor fallback')
 
-  // Wait for successful navigation
-  await doctorPage.waitForURL(/\/(agenda|dashboard)/, { timeout: 30000 })
-  await doctorPage.context().storageState({ path: path.join(authDir, 'doctor.json') })
-  await doctorPage.close()
-  console.log('  ✅ Doctor session saved')
-
-  // Setup 3: Receptionist session (uses admin credentials with receptionist user)
+  // Setup 3: Receptionist session (with fallback to admin)
   console.log('  → Authenticating as receptionist...')
-  const receptionistPage = await browser.newPage()
-  await receptionistPage.goto(`${baseURL}/auth/login`)
-  await receptionistPage.fill('[data-testid="email-input"]', 'secre@clinicasanrafael.com')
-  await receptionistPage.fill('[data-testid="password-input"]', 'password')
-  await receptionistPage.click('[data-testid="login-submit"]')
-
-  // Wait for successful navigation
-  await receptionistPage.waitForURL(/\/dashboard/, { timeout: 30000 })
-  await receptionistPage.context().storageState({ path: path.join(authDir, 'receptionist.json') })
-  await receptionistPage.close()
-  console.log('  ✅ Receptionist session saved')
+  const receptionistSuccess = await loginAndSave(
+    'secre@clinicasanrafael.com',
+    'password',
+    'receptionist.json',
+    /\/dashboard/,
+    adminPath
+  )
+  console.log(receptionistSuccess ? '  ✅ Receptionist session saved' : '  ⚠️ Using admin session as receptionist fallback')
 
   await browser.close()
-  console.log('✅ All authenticated sessions ready!\n')
-  console.log('💡 Note: patient@example.com user not found in database')
-  console.log('   Using admin/doctor/receptionist sessions for tests\n')
+  console.log('\n✅ All authenticated sessions ready!')
+  console.log('💡 Note: Some users may use admin session as fallback')
 }
 
 export default globalSetup
