@@ -79,6 +79,20 @@ export interface Appointment {
   paid_amount?: number;
   payment_status?: string;
   stripe_payment_intent_id?: string;
+  // VT-182: Reschedule/Rebook fields
+  original_appointment_id?: string;
+  rescheduled_from_id?: string;
+  rescheduled_at?: string;
+  rescheduled_by?: string;
+  reschedule_reason?: string;
+  reschedule_count?: number;
+  is_rebook?: boolean;
+  // VT-91: Series fields
+  series_id?: string;
+  series_occurrence?: number;
+  // VT-260: Member fields
+  member_id?: string;
+  assigned_member_id?: string;
   created_at: string;
   updated_at: string;
   tenant?: Tenant;
