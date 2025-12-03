@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import MemberNavigation from '@/components/MemberNavigation'
+import { Skeleton, SkeletonCard, SkeletonStats } from '@/components/ui/Skeleton'
 
 interface MemberAvailability {
   id: string
@@ -167,10 +168,46 @@ export default function MemberAgendaPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <MemberNavigation currentPath="/member/agenda" tenantId={currentTenantId} />
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Cargando mi agenda...</p>
+        <div className="p-6">
+          <div className="max-w-7xl mx-auto space-y-6">
+            {/* Header Skeleton */}
+            <div className="space-y-2">
+              <Skeleton className="h-9 w-64" />
+              <Skeleton className="h-5 w-96" />
+            </div>
+            {/* Content Grid Skeleton */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <SkeletonCard className="p-6">
+                <Skeleton className="h-6 w-48 mb-4" />
+                <div className="space-y-4">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <div key={i} className="border rounded-lg p-4">
+                      <div className="flex justify-between mb-3">
+                        <Skeleton className="h-5 w-24" />
+                        <Skeleton className="h-5 w-20" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </SkeletonCard>
+              <SkeletonCard className="p-6">
+                <Skeleton className="h-6 w-40 mb-4" />
+                <div className="space-y-4">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="border rounded-lg p-4">
+                      <Skeleton className="h-5 w-32 mb-2" />
+                      <Skeleton className="h-4 w-full mb-2" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  ))}
+                </div>
+              </SkeletonCard>
+            </div>
+            <SkeletonStats />
           </div>
         </div>
       </div>

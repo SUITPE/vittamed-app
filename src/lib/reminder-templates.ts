@@ -17,19 +17,19 @@ export async function generateReminderEmailTemplate(
     reminder
   } = templateData
 
-  // Extract nested values for easier access
-  const tenant_name = tenant.name
-  const patient_first_name = patient.first_name
-  const patient_last_name = patient.last_name
-  const appointment_date = appointment.date
-  const appointment_time = appointment.time
-  const service_name = appointment.service_name
-  const service_duration = appointment.duration
-  const provider_name = appointment.provider_name
-  const provider_type = appointment.provider_type
-  const clinic_address = appointment.location || tenant.name
-  const clinic_phone = tenant.name // This should come from tenant data
-  const hours_until_appointment = reminder.hours_before
+  // Extract nested values for easier access (with fallbacks for optional properties)
+  const tenant_name = tenant?.name ?? 'Clínica'
+  const patient_first_name = patient?.first_name ?? 'Paciente'
+  const patient_last_name = patient?.last_name ?? ''
+  const appointment_date = appointment?.date ?? new Date().toISOString().split('T')[0]
+  const appointment_time = appointment?.time ?? '00:00'
+  const service_name = appointment?.service_name ?? 'Servicio'
+  const service_duration = appointment?.duration ?? 30
+  const provider_name = appointment?.provider_name ?? 'Profesional'
+  const provider_type = appointment?.provider_type ?? 'doctor'
+  const clinic_address = appointment?.location ?? tenant?.name ?? 'Dirección'
+  const clinic_phone = tenant?.name ?? '' // This should come from tenant data
+  const hours_until_appointment = reminder?.hours_before ?? 24
 
   // These would be passed separately or built dynamically
   const confirmation_link = undefined
@@ -523,15 +523,15 @@ export function generateReminderSMSTemplate(
     reminder
   } = templateData
 
-  // Extract nested values for easier access
-  const tenant_name = tenant.name
-  const patient_first_name = patient.first_name
-  const appointment_date = appointment.date
-  const appointment_time = appointment.time
-  const service_name = appointment.service_name
-  const provider_name = appointment.provider_name
-  const clinic_phone = tenant.phone || tenant.name
-  const hours_until_appointment = reminder.hours_before
+  // Extract nested values for easier access (with fallbacks for optional properties)
+  const tenant_name = tenant?.name ?? 'Clínica'
+  const patient_first_name = patient?.first_name ?? 'Paciente'
+  const appointment_date = appointment?.date ?? new Date().toISOString().split('T')[0]
+  const appointment_time = appointment?.time ?? '00:00'
+  const service_name = appointment?.service_name ?? 'Servicio'
+  const provider_name = appointment?.provider_name ?? 'Profesional'
+  const clinic_phone = tenant?.phone ?? tenant?.name ?? ''
+  const hours_until_appointment = reminder?.hours_before ?? 24
 
   const senderName = branding?.sms_sender_name || tenant_name
   const appointmentDate = new Date(appointment_date + 'T' + appointment_time)

@@ -101,7 +101,7 @@ export async function PUT(
     }
 
     // Check if user has required role
-    if (!transitionRules.required_roles.includes(userRole)) {
+    if (!transitionRules.required_roles.includes(userRole as typeof transitionRules.required_roles[number])) {
       return NextResponse.json(
         {
           error: `Role '${userRole}' is not authorized to change appointment status`,

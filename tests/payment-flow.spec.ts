@@ -7,7 +7,7 @@ test.describe('Payment Flow - Stripe Integration', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate directly to appointments
     await page.goto('/my-appointments')
-    await expect(page.locator('h1, h2')).toBeVisible()
+    await expect(page.locator('h1, h2').first()).toBeVisible()
   })
 
   test('debe mostrar botón de pago para citas pendientes', async ({ page }) => {
@@ -191,7 +191,7 @@ test.describe('Payment - Doctor View', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate directly to agenda
     await page.goto('/agenda')
-    await expect(page.locator('h1, h2')).toBeVisible()
+    await expect(page.locator('h1, h2').first()).toBeVisible()
   })
 
   test('doctor no debe ver botones de pago en agenda', async ({ page }) => {

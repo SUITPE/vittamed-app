@@ -227,7 +227,7 @@ test.describe('API Appointments - Create (POST /api/appointments)', () => {
       const appointmentData = createAppointmentData({
         tenant_id: testContext!.tenantId,
         doctor_id: testContext!.doctorId,
-        service_id: '00000000-0000-0000-0000-000000000000',
+        service_id: '00000000-0000-0000-0000-000000000000', // Non-existent UUID
         patient_email: getRandomPatientEmail()
       })
 
@@ -354,6 +354,7 @@ test.describe('API Appointments - Create (POST /api/appointments)', () => {
       const uniqueEmail1 = getRandomPatientEmail()
       const uniqueEmail2 = getRandomPatientEmail()
 
+      // Create first appointment
       const firstAppointment = createAppointmentData({
         tenant_id: testContext!.tenantId,
         doctor_id: testContext!.doctorId,
@@ -369,6 +370,7 @@ test.describe('API Appointments - Create (POST /api/appointments)', () => {
 
       expect(firstResponse.status()).toBe(201)
 
+      // Try to create second appointment at same time
       const secondAppointment = createAppointmentData({
         tenant_id: testContext!.tenantId,
         doctor_id: testContext!.doctorId,
@@ -396,6 +398,7 @@ test.describe('API Appointments - Create (POST /api/appointments)', () => {
  */
 async function fetchTestContext(request: APIRequestContext): Promise<TestContext | null> {
   try {
+    // Get user profile to get tenant_id
     const meResponse = await request.get('/api/auth/me')
 
     if (!meResponse.ok()) {
@@ -411,6 +414,7 @@ async function fetchTestContext(request: APIRequestContext): Promise<TestContext
       return null
     }
 
+    // Fetch services for the tenant
     const servicesResponse = await request.get(`/api/tenants/${tenantId}/services`)
 
     if (!servicesResponse.ok()) {
@@ -427,6 +431,7 @@ async function fetchTestContext(request: APIRequestContext): Promise<TestContext
 
     const serviceId = servicesData.services[0].id
 
+    // Fetch doctors for the tenant
     const doctorsResponse = await request.get(`/api/tenants/${tenantId}/doctors`)
 
     if (!doctorsResponse.ok()) {

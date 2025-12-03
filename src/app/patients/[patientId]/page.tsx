@@ -6,9 +6,11 @@ import { useRouter } from 'next/navigation'
 import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
 import { Icons } from '@/components/ui/Icons'
-import { RECORD_TYPE_CONFIG, SEVERITY_CONFIG } from '@/types/medical-history'
-import type { MedicalRecordWithRelations } from '@/types/medical-history'
+import { RECORD_TYPE_CONFIG, SEVERITY_CONFIG, ALLERGY_TYPE_CONFIG } from '@/types/medical-history'
+import type { MedicalRecordWithRelations, PatientAllergy } from '@/types/medical-history'
 import MedicalRecordForm from '@/components/medical/MedicalRecordForm'
+import AllergyForm from '@/components/medical/AllergyForm'
+import { Skeleton, SkeletonCard, SkeletonList } from '@/components/ui/Skeleton'
 
 interface Patient {
   id: string
@@ -94,11 +96,23 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
         <AdminSidebar tenantId={currentTenantId ?? undefined} />
         <AdminHeader />
         <div className="md:ml-64 pt-16 p-6">
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Cargando información del paciente...</p>
-            </div>
+          <div className="max-w-7xl mx-auto space-y-6">
+            {/* Patient Header Skeleton */}
+            <SkeletonCard className="p-6">
+              <div className="flex items-start gap-4">
+                <Skeleton className="w-20 h-20 rounded-full" />
+                <div className="flex-1 space-y-3">
+                  <Skeleton className="h-8 w-64" />
+                  <div className="flex gap-4">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-28" />
+                  </div>
+                </div>
+              </div>
+            </SkeletonCard>
+            {/* Medical Records Skeleton */}
+            <SkeletonList items={3} />
           </div>
         </div>
       </div>

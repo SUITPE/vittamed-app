@@ -13,6 +13,7 @@ import ClientSelectorPanel from '@/components/calendar/ClientSelectorPanel'
 import AppointmentSummaryPanel from '@/components/calendar/AppointmentSummaryPanel'
 import AppointmentEditModal from '@/components/calendar/AppointmentEditModal'
 import { Icons } from '@/components/ui/Icons'
+import { SkeletonCalendar, SkeletonList } from '@/components/ui/Skeleton'
 
 interface Doctor {
   id: string
@@ -408,10 +409,12 @@ export default function ReceptionistAgendaPage() {
         <AdminSidebar tenantId={currentTenantId} />
         <AdminHeader />
         <div className="md:ml-64 pt-16 p-6">
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Cargando agendas...</p>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-1">
+              <SkeletonList items={5} />
+            </div>
+            <div className="lg:col-span-3">
+              <SkeletonCalendar />
             </div>
           </div>
         </div>

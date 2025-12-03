@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import PaymentForm from '@/components/PaymentForm'
+import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton'
 
 interface Appointment {
   id: string
@@ -66,10 +67,34 @@ export default function PaymentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando información de pago...</p>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-2xl mx-auto px-4">
+          <SkeletonCard className="overflow-hidden">
+            <div className="px-6 py-4 border-b">
+              <Skeleton className="h-8 w-48" />
+            </div>
+            <div className="px-6 py-4 space-y-6">
+              <div>
+                <Skeleton className="h-6 w-40 mb-4" />
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="flex justify-between">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="border-t pt-6">
+                <Skeleton className="h-6 w-48 mb-4" />
+                <div className="space-y-4">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              </div>
+            </div>
+          </SkeletonCard>
         </div>
       </div>
     )

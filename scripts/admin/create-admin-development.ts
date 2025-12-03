@@ -53,10 +53,10 @@ async function createAdminInDevelopment() {
 
     console.log(`✅ Usuario creado con ID: ${authData.user.id}\n`)
 
-    // Crear perfil
-    console.log('2️⃣  Creando perfil...')
+    // Crear perfil en custom_users (tabla activa, profiles está deprecated)
+    console.log('2️⃣  Creando perfil en custom_users...')
     const { error: profileError } = await supabase
-      .from('profiles')
+      .from('custom_users')
       .insert({
         id: authData.user.id,
         email: 'admin@vittasami.com',

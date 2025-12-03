@@ -28,7 +28,7 @@ export interface VitalSigns {
   weight?: number // kg
   height?: number // cm
   bmi?: number
-  [key: string]: any // Allow custom vital signs
+  [key: string]: number | string | boolean | undefined // Allow custom vital signs
 }
 
 export interface Attachment {
@@ -64,7 +64,7 @@ export interface MedicalRecord {
   vital_signs: VitalSigns
 
   // Tenant-specific data
-  tenant_specific_data: Record<string, any>
+  tenant_specific_data: Record<string, unknown>
 
   // Attachments
   attachments: Attachment[]
@@ -246,7 +246,7 @@ export interface MedicalRecordFormData {
   assessment?: string
   plan?: string
   vital_signs?: Partial<VitalSigns>
-  tenant_specific_data?: Record<string, any>
+  tenant_specific_data?: Record<string, unknown>
   attachments?: Attachment[]
 }
 
