@@ -127,7 +127,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeSy
         {
           success: false,
           error: 'Validation failed',
-          details: validationResult.error.errors,
+          details: validationResult.error.issues,
         } as AnalyzeSymptomsResponse & { details: unknown },
         { status: 400 }
       );

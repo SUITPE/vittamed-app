@@ -45,7 +45,7 @@ export async function GET(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const tenantId = user.tenant_id;
+    const tenantId = user.profile?.tenant_id;
     if (!tenantId) {
       return NextResponse.json({ error: 'Usuario sin tenant asignado' }, { status: 403 });
     }
@@ -121,7 +121,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const tenantId = user.tenant_id;
+    const tenantId = user.profile?.tenant_id;
     if (!tenantId) {
       return NextResponse.json({ error: 'Usuario sin tenant asignado' }, { status: 403 });
     }
@@ -132,7 +132,7 @@ export async function PATCH(
 
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Datos inválidos', details: validationResult.error.errors },
+        { error: 'Datos inválidos', details: validationResult.error.issues },
         { status: 400 }
       );
     }
@@ -216,7 +216,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const tenantId = user.tenant_id;
+    const tenantId = user.profile?.tenant_id;
     if (!tenantId) {
       return NextResponse.json({ error: 'Usuario sin tenant asignado' }, { status: 403 });
     }

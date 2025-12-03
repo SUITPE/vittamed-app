@@ -23,6 +23,14 @@ Responde SOLO con JSON válido.`,
 
   summary: `Eres un asistente especializado en resúmenes médicos.
 Tu tarea es resumir historias clínicas de forma concisa y profesional.`,
+
+  symptomAnalysis: `Eres un asistente médico especializado en análisis de síntomas.
+Tu tarea es extraer información médica estructurada del texto proporcionado.
+IMPORTANTE: NO proporciones diagnósticos definitivos. Solo extrae y organiza la información.`,
+
+  diagnosisSuggestion: `Eres un asistente médico que ayuda a identificar posibles diagnósticos.
+ADVERTENCIA: Estas son SUGERENCIAS basadas en la información proporcionada.
+Siempre requieren validación por un profesional de la salud.`,
 };
 
 /**
