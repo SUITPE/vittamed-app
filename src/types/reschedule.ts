@@ -262,7 +262,7 @@ export function checkRescheduleEligibility(
   // Check status
   const statusAllowed = policy.allowed_source_statuses.includes(appointment.status);
   if (!statusAllowed) {
-    reasons.push(`El estado "${appointment.status}" no permite reprogramación`);
+    reasons.push(`El estado "${appointment.status}" no permite reprogramacion`);
   }
 
   // Check reschedule limit
@@ -273,7 +273,7 @@ export function checkRescheduleEligibility(
   );
   if (maxReached) {
     reasons.push(
-      `Se alcanzó el límite de ${policy.max_reschedules_per_appointment} reprogramaciones`
+      `Se alcanzo el limite de ${policy.max_reschedules_per_appointment} reprogramaciones`
     );
   }
 
@@ -285,7 +285,7 @@ export function checkRescheduleEligibility(
   const cutoffPassed = hoursUntil < policy.min_hours_before_appointment;
   if (cutoffPassed) {
     reasons.push(
-      `Se requieren al menos ${policy.min_hours_before_appointment} horas de anticipación`
+      `Se requieren al menos ${policy.min_hours_before_appointment} horas de anticipacion`
     );
   }
 
