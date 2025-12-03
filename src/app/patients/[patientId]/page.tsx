@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation'
 import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
 import { Icons } from '@/components/ui/Icons'
-import { RECORD_TYPE_CONFIG, SEVERITY_CONFIG } from '@/types/medical-history'
-import type { MedicalRecordWithRelations } from '@/types/medical-history'
+import { RECORD_TYPE_CONFIG, SEVERITY_CONFIG, ALLERGY_TYPE_CONFIG } from '@/types/medical-history'
+import type { MedicalRecordWithRelations, PatientAllergy } from '@/types/medical-history'
 import MedicalRecordForm from '@/components/medical/MedicalRecordForm'
+import AllergyForm from '@/components/medical/AllergyForm'
 import { Skeleton, SkeletonCard, SkeletonList } from '@/components/ui/Skeleton'
 
 interface Patient {
