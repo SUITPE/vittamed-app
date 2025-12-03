@@ -3,6 +3,7 @@
 import { useState, useEffect, useContext } from 'react'
 import { AuthContext } from '@/contexts/AuthContext'
 import { Icons } from '@/components/ui/Icons'
+import { Avatar } from '@/components/ui/Avatar'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
@@ -150,9 +151,12 @@ export default function AdminHeader() {
                     {getRoleLabel(user?.profile?.role)}
                   </div>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 flex items-center justify-center text-white font-medium">
-                  {getInitials(user?.profile?.first_name ?? undefined, user?.profile?.last_name ?? undefined)}
-                </div>
+                <Avatar
+                  src={user?.profile?.avatar_url}
+                  firstName={user?.profile?.first_name ?? undefined}
+                  lastName={user?.profile?.last_name ?? undefined}
+                  size="default"
+                />
               </div>
               <Icons.chevronDown className={cn(
                 'w-4 h-4 text-gray-400 transition-transform',

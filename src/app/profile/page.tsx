@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import AdminHeader from '@/components/AdminHeader'
 import AdminSidebar from '@/components/AdminSidebar'
 import { Icons } from '@/components/ui/Icons'
 import { Skeleton, SkeletonCard, SkeletonForm } from '@/components/ui/Skeleton'
+import { Avatar } from '@/components/ui/Avatar'
 
 interface UserProfile {
   id: string
@@ -18,6 +19,7 @@ interface UserProfile {
   phone?: string
   date_of_birth?: string
   address?: string
+  avatar_url?: string
   created_at: string
   updated_at: string
 }
@@ -25,6 +27,7 @@ interface UserProfile {
 export default function ProfilePage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -32,6 +35,8 @@ export default function ProfilePage() {
     date_of_birth: '',
     address: ''
   })
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -51,8 +56,74 @@ export default function ProfilePage() {
         date_of_birth: user.profile.date_of_birth ?? '',
         address: user.profile.address ?? ''
       })
+      setAvatarUrl(user.profile.avatar_url ?? null)
     }
   }, [user, authLoading, router])
+
+  // Handle avatar upload
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setError('')
+    setUploadingAvatar(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('avatar', file)
+
+      const response = await fetch('/api/user/avatar', {
+        method: 'POST',
+        body: formData
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Error al subir la imagen')
+      } else {
+        setAvatarUrl(data.avatar_url)
+        setSuccess(true)
+        setTimeout(() => setSuccess(false), 3000)
+      }
+    } catch (err) {
+      setError('Error inesperado al subir la imagen')
+    } finally {
+      setUploadingAvatar(false)
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  // Handle avatar delete
+  const handleAvatarDelete = async () => {
+    if (!avatarUrl) return
+
+    setError('')
+    setUploadingAvatar(true)
+
+    try {
+      const response = await fetch('/api/user/avatar', {
+        method: 'DELETE'
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Error al eliminar la imagen')
+      } else {
+        setAvatarUrl(null)
+        setSuccess(true)
+        setTimeout(() => setSuccess(false), 3000)
+      }
+    } catch (err) {
+      setError('Error inesperado al eliminar la imagen')
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
 
   const getRoleLabel = (role?: string) => {
     switch (role) {
@@ -187,17 +258,64 @@ export default function ProfilePage() {
 
           {/* Profile Overview Card */}
           <div className="bg-white rounded-lg shadow-sm mb-8 p-6">
-            <div className="flex items-center space-x-4">
-              <div className="h-20 w-20 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 flex items-center justify-center text-white text-2xl font-bold">
-                {getInitials(user.profile?.first_name ?? undefined, user.profile?.last_name ?? undefined)}
+            <div className="flex items-start space-x-6">
+              {/* Avatar Section */}
+              <div className="flex flex-col items-center space-y-3">
+                <div className="relative">
+                  <Avatar
+                    src={avatarUrl}
+                    firstName={user.profile?.first_name ?? undefined}
+                    lastName={user.profile?.last_name ?? undefined}
+                    size="2xl"
+                    className="ring-4 ring-gray-100"
+                  />
+                  {uploadingAvatar && (
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                      <div className="animate-spin h-6 w-6 border-2 border-white border-t-transparent rounded-full"></div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex space-x-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                    id="avatar-upload"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                    className="px-3 py-1.5 text-sm font-medium text-[#40C9C6] border border-[#40C9C6] rounded-md hover:bg-[#40C9C6]/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {avatarUrl ? 'Cambiar' : 'Subir foto'}
+                  </button>
+                  {avatarUrl && (
+                    <button
+                      type="button"
+                      onClick={handleAvatarDelete}
+                      disabled={uploadingAvatar}
+                      className="px-3 py-1.5 text-sm font-medium text-red-600 border border-red-300 rounded-md hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Eliminar
+                    </button>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 text-center">
+                  JPG, PNG, WebP o GIF. Máx 5MB
+                </p>
               </div>
+
+              {/* User Info */}
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-gray-900">
                   {user.profile?.first_name || 'Usuario'} {user.profile?.last_name || ''}
                 </h2>
                 <p className="text-gray-600">{user.email}</p>
                 <div className="mt-2 flex items-center space-x-2">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#40C9C6]/10 text-[#40C9C6]">
                     {getRoleLabel(user.profile?.role)}
                   </span>
                   {formData.date_of_birth && (
@@ -231,7 +349,7 @@ export default function ProfilePage() {
                       required
                       value={formData.first_name}
                       onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#40C9C6] focus:border-[#40C9C6]"
                     />
                   </div>
 
@@ -245,7 +363,7 @@ export default function ProfilePage() {
                       required
                       value={formData.last_name}
                       onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#40C9C6] focus:border-[#40C9C6]"
                     />
                   </div>
 
@@ -275,7 +393,7 @@ export default function ProfilePage() {
                       value={formData.phone}
                       onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                       placeholder="+51 999 999 999"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#40C9C6] focus:border-[#40C9C6]"
                     />
                   </div>
 
@@ -288,7 +406,7 @@ export default function ProfilePage() {
                       id="date_of_birth"
                       value={formData.date_of_birth}
                       onChange={(e) => setFormData(prev => ({ ...prev, date_of_birth: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#40C9C6] focus:border-[#40C9C6]"
                     />
                   </div>
 
@@ -302,7 +420,7 @@ export default function ProfilePage() {
                       value={formData.address}
                       onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
                       placeholder="Calle, Ciudad, Código Postal"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#40C9C6] focus:border-[#40C9C6]"
                     />
                   </div>
                 </div>
@@ -358,14 +476,14 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#40C9C6] focus:ring-offset-2"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                className="px-6 py-2 bg-[#40C9C6] text-white rounded-md hover:bg-[#33a19e] focus:outline-none focus:ring-2 focus:ring-[#40C9C6] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 {saving ? (
                   <>
