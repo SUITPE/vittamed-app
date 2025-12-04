@@ -39,6 +39,7 @@ interface WeeklyCalendarViewProps {
   onTimeSlotClick: (event: React.MouseEvent, doctorId: string, time: Date) => void
   onAppointmentClick: (appointment: Appointment) => void
   onAppointmentMove?: (appointmentId: string, newDoctorId: string, newStartTime: Date) => void
+  viewMode?: 'day' | '3days' | 'week'
 }
 
 export default function WeeklyCalendarView({
@@ -49,7 +50,8 @@ export default function WeeklyCalendarView({
   onDateChange,
   onTimeSlotClick,
   onAppointmentClick,
-  onAppointmentMove
+  onAppointmentMove,
+  viewMode = 'week'
 }: WeeklyCalendarViewProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [draggedAppointment, setDraggedAppointment] = useState<Appointment | null>(null)
@@ -85,15 +87,27 @@ export default function WeeklyCalendarView({
     return `${hour.toString().padStart(2, '0')}:00`
   })
 
+  // Calculate step based on view mode
+  const getNavigationStep = () => {
+    switch (viewMode) {
+      case 'day': return 1
+      case '3days': return 3
+      case 'week': return 1
+      default: return 1
+    }
+  }
+
   const goToPreviousDay = () => {
-    const newDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - 1)
-    console.log('[WeeklyCalendar] Previous day clicked. Current:', selectedDate, 'New:', newDate)
+    const step = getNavigationStep()
+    const newDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - step)
+    console.log('[WeeklyCalendar] Previous clicked. Current:', selectedDate, 'New:', newDate)
     onDateChange(newDate)
   }
 
   const goToNextDay = () => {
-    const newDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 1)
-    console.log('[WeeklyCalendar] Next day clicked. Current:', selectedDate, 'New:', newDate)
+    const step = getNavigationStep()
+    const newDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + step)
+    console.log('[WeeklyCalendar] Next clicked. Current:', selectedDate, 'New:', newDate)
     onDateChange(newDate)
   }
 
@@ -102,6 +116,46 @@ export default function WeeklyCalendarView({
   }
 
   const isToday = selectedDate.toDateString() === new Date().toDateString()
+
+  // Get the title based on view mode
+  const getHeaderTitle = () => {
+    switch (viewMode) {
+      case 'day':
+        return formatDateHeader(selectedDate)
+      case '3days':
+        const endDate = new Date(selectedDate)
+        endDate.setDate(endDate.getDate() + 2)
+        return `${formatDateHeader(selectedDate)} - ${formatDateHeader(endDate)}`
+      case 'week':
+      default:
+        return formatDateHeader(selectedDate)
+    }
+  }
+
+  // Get visible dates based on view mode
+  const getVisibleDates = () => {
+    const dates: Date[] = []
+    switch (viewMode) {
+      case 'day':
+        dates.push(new Date(selectedDate))
+        break
+      case '3days':
+        for (let i = 0; i < 3; i++) {
+          const date = new Date(selectedDate)
+          date.setDate(date.getDate() + i)
+          dates.push(date)
+        }
+        break
+      case 'week':
+      default:
+        // Just show selected day in week view (doctors are columns)
+        dates.push(new Date(selectedDate))
+        break
+    }
+    return dates
+  }
+
+  const visibleDates = getVisibleDates()
 
   const formatDateHeader = (date: Date) => {
     return date.toLocaleDateString('es-ES', {
@@ -206,8 +260,8 @@ export default function WeeklyCalendarView({
   const getStatusColor = (status: string) => {
     const colors = {
       pending: 'bg-yellow-400 border-yellow-500',
-      confirmed: 'bg-blue-400 border-blue-500',
-      completed: 'bg-green-400 border-green-500',
+      confirmed: 'bg-[#40C9C6] border-[#33a19e]',
+      completed: 'bg-[#A6E3A1] border-green-500',
       cancelled: 'bg-red-400 border-red-500'
     }
     return colors[status as keyof typeof colors] || 'bg-gray-400 border-gray-500'
@@ -245,8 +299,8 @@ export default function WeeklyCalendarView({
     })
   }
 
-  // Calculate current time indicator position
-  const getCurrentTimePosition = () => {
+  // Calculate which slot the current time falls in
+  const getCurrentTimeSlotInfo = () => {
     if (!isToday) return null
 
     const hours = currentTime.getHours()
@@ -254,14 +308,15 @@ export default function WeeklyCalendarView({
 
     if (hours < 8 || hours >= 22) return null
 
-    const slotsFromStart = hours - 8
-    const minutePercent = (minutes / 60) * 100
-    const topPercent = (slotsFromStart * 100) + minutePercent
+    // Calculate which slot the current time is in (0-13 for 8:00-21:00)
+    const slotIndex = hours - 8
+    // Calculate position within that slot (0-100%)
+    const positionInSlot = (minutes / 60) * 100
 
-    return topPercent
+    return { slotIndex, positionInSlot }
   }
 
-  const currentTimePosition = getCurrentTimePosition()
+  const currentTimeInfo = getCurrentTimeSlotInfo()
 
   // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, appointment: Appointment) => {
@@ -333,7 +388,7 @@ export default function WeeklyCalendarView({
               <Icons.chevronLeft className="w-5 h-5" />
             </button>
             <div className="text-lg font-semibold text-gray-900 min-w-[200px] text-center">
-              {formatDateHeader(selectedDate)}
+              {getHeaderTitle()}
             </div>
             <button
               onClick={goToNextDay}
@@ -355,7 +410,7 @@ export default function WeeklyCalendarView({
           {doctors.map((doctor) => (
             <div key={doctor.id} className="sticky top-0 bg-white z-20 border-b border-r border-gray-200">
               <div className="h-16 flex flex-col items-center justify-center p-2">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm mb-1">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#40C9C6] to-[#33a19e] flex items-center justify-center text-white font-semibold text-sm mb-1">
                   {doctor.first_name[0]}{doctor.last_name[0]}
                 </div>
                 <div className="text-xs font-medium text-gray-900 text-center">
@@ -386,9 +441,9 @@ export default function WeeklyCalendarView({
                   <div
                     key={`${doctor.id}-${timeSlot}`}
                     className={`border-r border-b border-gray-100 transition-colors relative min-h-[80px] ${
-                      isDropTarget ? 'bg-blue-100 ring-2 ring-blue-400' :
+                      isDropTarget ? 'bg-[#40C9C6]/20 ring-2 ring-[#40C9C6]' :
                       !isAvailable ? 'bg-gray-100 cursor-not-allowed' :
-                      'hover:bg-blue-50 cursor-pointer'
+                      'hover:bg-[#40C9C6]/10 cursor-pointer'
                     }`}
                     onClick={(e) => {
                       if (!isAvailable) return // Block clicks on unavailable slots
@@ -401,13 +456,13 @@ export default function WeeklyCalendarView({
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => isAvailable && handleDrop(e, doctor.id, timeSlot)}
                   >
-                    {/* Current time indicator */}
-                    {slotIndex === 0 && currentTimePosition !== null && (
+                    {/* Current time indicator - shows in the correct time slot */}
+                    {currentTimeInfo && slotIndex === currentTimeInfo.slotIndex && (
                       <div
-                        className="absolute left-0 right-0 z-10 border-t-2 border-red-500"
-                        style={{ top: `${currentTimePosition}%` }}
+                        className="absolute left-0 right-0 z-20 border-t-2 border-red-500 pointer-events-none"
+                        style={{ top: `${currentTimeInfo.positionInSlot}%` }}
                       >
-                        <div className="absolute -left-2 -top-2 w-4 h-4 bg-red-500 rounded-full"></div>
+                        <div className="absolute -left-2 -top-2 w-4 h-4 bg-red-500 rounded-full shadow-md"></div>
                       </div>
                     )}
 
