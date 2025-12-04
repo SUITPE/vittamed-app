@@ -1,485 +1,188 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useMemo } from 'react'
 import { Icons } from '@/components/ui/Icons'
-import VisualAvailabilityEditor from '@/components/agenda/VisualAvailabilityEditor'
 
-interface SchedulableUser {
+interface Schedule {
   id: string
-  first_name: string
-  last_name: string
-  email: string
-  role: string
-}
-
-interface AvailabilityBlock {
-  id: string
-  doctor_tenant_id: string
+  doctor_name: string
   day_of_week: number
   start_time: string
   end_time: string
+  is_active: boolean
 }
 
-interface UserWithSchedule {
-  user: SchedulableUser
-  availability: AvailabilityBlock[]
+interface Doctor {
+  id: string
+  name: string
 }
 
 interface SchedulesClientProps {
-  usersWithSchedules: UserWithSchedule[]
-  tenantId: string
+  initialSchedules: Schedule[]
+  doctors?: Doctor[]
 }
 
-const DAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
-const DAYS_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+export default function SchedulesClient({ initialSchedules, doctors = [] }: SchedulesClientProps) {
+  const [selectedDoctor, setSelectedDoctor] = useState<string>('all')
 
-const getRoleLabel = (role: string) => {
-  const labels: Record<string, string> = {
-    doctor: 'Doctor',
-    staff: 'Staff',
-    member: 'Miembro',
-    receptionist: 'Recepcionista',
-    admin_tenant: 'Administrador'
-  }
-  return labels[role] || role
-}
-
-const getRoleBadgeColor = (role: string) => {
-  const colors: Record<string, string> = {
-    doctor: 'bg-blue-100 text-blue-800',
-    staff: 'bg-purple-100 text-purple-800',
-    member: 'bg-green-100 text-green-800',
-    receptionist: 'bg-yellow-100 text-yellow-800',
-    admin_tenant: 'bg-red-100 text-red-800'
-  }
-  return colors[role] || 'bg-gray-100 text-gray-800'
-}
-
-export default function SchedulesClient({ usersWithSchedules: initialUsersWithSchedules, tenantId }: SchedulesClientProps) {
-  const router = useRouter()
-  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list')
-  const [expandedUser, setExpandedUser] = useState<string | null>(null)
-  const [editingUser, setEditingUser] = useState<string | null>(null)
-  const [usersWithSchedules, setUsersWithSchedules] = useState(initialUsersWithSchedules)
-  const [saving, setSaving] = useState(false)
-
-  const toggleExpand = (userId: string) => {
-    if (editingUser === userId) {
-      // If editing, don't collapse
-      return
-    }
-    setExpandedUser(expandedUser === userId ? null : userId)
-  }
-
-  const handleEditClick = (e: React.MouseEvent, userId: string) => {
-    e.stopPropagation()
-    setExpandedUser(userId)
-    setEditingUser(userId)
-  }
-
-  const handleCancelEdit = () => {
-    setEditingUser(null)
+  const getDayName = (dayOfWeek: number) => {
+    const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+    return days[dayOfWeek]
   }
 
   const formatTime = (time: string) => {
+    // Convert 24h format to display format
     const [hours, minutes] = time.split(':')
-    const hour = parseInt(hours)
-    const ampm = hour >= 12 ? 'PM' : 'AM'
-    const hour12 = hour % 12 || 12
-    return `${hour12}:${minutes} ${ampm}`
+    return `${hours}:${minutes}`
   }
 
-  const getScheduleSummary = (availability: AvailabilityBlock[]) => {
-    if (availability.length === 0) return 'Sin horario configurado'
-
-    const daysWithSchedule = [...new Set(availability.map(a => a.day_of_week))].sort()
-    const dayNames = daysWithSchedule.map(d => DAYS_SHORT[d])
-
-    return `${dayNames.join(', ')} (${availability.length} bloques)`
-  }
-
-  const getTotalHours = (availability: AvailabilityBlock[]) => {
-    let totalMinutes = 0
-    availability.forEach(block => {
-      const [startH, startM] = block.start_time.split(':').map(Number)
-      const [endH, endM] = block.end_time.split(':').map(Number)
-      const startMinutes = startH * 60 + startM
-      const endMinutes = endH * 60 + endM
-      totalMinutes += endMinutes - startMinutes
+  // Group schedules by doctor
+  const schedulesByDoctor = useMemo(() => {
+    const grouped = new Map<string, Schedule[]>()
+    initialSchedules.forEach(schedule => {
+      const existing = grouped.get(schedule.doctor_name) || []
+      grouped.set(schedule.doctor_name, [...existing, schedule])
     })
-    const hours = Math.floor(totalMinutes / 60)
-    const minutes = totalMinutes % 60
-    return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`
-  }
+    return grouped
+  }, [initialSchedules])
 
-  // Handle availability update for a specific user
-  const handleAvailabilityUpdate = async (userId: string, blocks: Array<{ day: number; startTime: string; endTime: string }>) => {
-    setSaving(true)
-    try {
-      const response = await fetch(`/api/doctors/${userId}/availability`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ blocks })
-      })
+  // Filter schedules based on selected doctor
+  const filteredSchedules = useMemo(() => {
+    if (selectedDoctor === 'all') return initialSchedules
+    return initialSchedules.filter(s => s.doctor_name === selectedDoctor)
+  }, [initialSchedules, selectedDoctor])
 
-      if (response.ok) {
-        // Refresh data after save
-        const availResponse = await fetch(`/api/doctors/${userId}/availability`, {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-
-        if (availResponse.ok) {
-          const newAvailability = await availResponse.json()
-
-          // Update local state
-          setUsersWithSchedules(prev => prev.map(item => {
-            if (item.user.id === userId) {
-              return {
-                ...item,
-                availability: newAvailability || []
-              }
-            }
-            return item
-          }))
-        }
-
-        setEditingUser(null)
-      } else {
-        const errorData = await response.json()
-        alert(errorData.error || 'Error al guardar')
-      }
-    } catch (err) {
-      console.error('Error saving availability:', err)
-      alert('Error de conexión al guardar')
-      throw err
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  // Get current user's availability for editor
-  const getEditorAvailability = (userId: string) => {
-    const userSchedule = usersWithSchedules.find(u => u.user.id === userId)
-    if (!userSchedule) return []
-
-    return userSchedule.availability.map(a => ({
-      id: a.id,
-      day_of_week: a.day_of_week,
-      start_time: a.start_time,
-      end_time: a.end_time
-    }))
-  }
+  // Get unique doctor names from schedules
+  const doctorNames = useMemo(() => {
+    return Array.from(new Set(initialSchedules.map(s => s.doctor_name)))
+  }, [initialSchedules])
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Header */}
+    <>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
-          Horarios del Equipo
+          Gestión de Horarios
         </h1>
         <p className="text-gray-600 mt-1">
-          Visualiza y configura la disponibilidad de todos los miembros del equipo
+          Administra los horarios de disponibilidad de todos los profesionales
         </p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Icons.users className="w-5 h-5 text-blue-600" />
+        <div className="bg-white rounded-lg shadow-sm p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-[#40C9C6]/10 rounded-lg">
+              <Icons.users className="w-6 h-6 text-[#40C9C6]" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Miembros con agenda</p>
-              <p className="text-2xl font-bold text-gray-900">{usersWithSchedules.length}</p>
+              <div className="text-2xl font-bold text-gray-900">{schedulesByDoctor.size}</div>
+              <div className="text-sm text-gray-500">Profesionales con horario</div>
             </div>
           </div>
         </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Icons.checkCircle className="w-5 h-5 text-green-600" />
+        <div className="bg-white rounded-lg shadow-sm p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <Icons.calendar className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Con horario configurado</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {usersWithSchedules.filter(u => u.availability.length > 0).length}
-              </p>
+              <div className="text-2xl font-bold text-gray-900">{initialSchedules.length}</div>
+              <div className="text-sm text-gray-500">Bloques de horario</div>
             </div>
           </div>
         </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <Icons.alertCircle className="w-5 h-5 text-yellow-600" />
+        <div className="bg-white rounded-lg shadow-sm p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-green-100 rounded-lg">
+              <Icons.checkCircle className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Sin configurar</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {usersWithSchedules.filter(u => u.availability.length === 0).length}
-              </p>
+              <div className="text-2xl font-bold text-gray-900">
+                {initialSchedules.filter(s => s.is_active).length}
+              </div>
+              <div className="text-sm text-gray-500">Horarios activos</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* View Toggle */}
-      <div className="flex justify-end mb-4">
-        <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1">
-          <button
-            onClick={() => setViewMode('list')}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              viewMode === 'list'
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
+      {/* Filter */}
+      {doctorNames.length > 1 && (
+        <div className="mb-4">
+          <select
+            value={selectedDoctor}
+            onChange={(e) => setSelectedDoctor(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#40C9C6] focus:border-[#40C9C6]"
           >
-            <Icons.list className="w-4 h-4 inline-block mr-1" />
-            Lista
-          </button>
-          <button
-            onClick={() => setViewMode('calendar')}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              viewMode === 'calendar'
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <Icons.calendar className="w-4 h-4 inline-block mr-1" />
-            Calendario
-          </button>
+            <option value="all">Todos los profesionales</option>
+            {doctorNames.map(name => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
         </div>
-      </div>
+      )}
 
-      {/* Content */}
-      {viewMode === 'list' ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          {usersWithSchedules.length === 0 ? (
-            <div className="p-12 text-center">
-              <Icons.users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No hay miembros con agenda
-              </h3>
-              <p className="text-gray-500">
-                No hay usuarios configurados como &quot;schedulable&quot; en este tenant.
+      <div className="bg-white rounded-lg shadow-sm">
+        <div className="p-6 border-b flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Horarios Configurados</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {filteredSchedules.length} {filteredSchedules.length === 1 ? 'horario' : 'horarios'} encontrados
+            </p>
+          </div>
+        </div>
+
+        <div className="p-6">
+          {filteredSchedules.length === 0 ? (
+            <div className="text-center py-12">
+              <Icons.calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 mb-2">No hay horarios configurados</p>
+              <p className="text-sm text-gray-400">
+                Los profesionales pueden configurar su disponibilidad desde su agenda personal
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
-              {usersWithSchedules.map(({ user, availability }) => (
-                <div key={user.id} className="hover:bg-gray-50 transition-colors">
-                  <div
-                    className="p-4 cursor-pointer flex items-center justify-between"
-                    onClick={() => toggleExpand(user.id)}
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-medium">
-                        {user.first_name[0]}{user.last_name[0]}
+            <div className="space-y-4">
+              {filteredSchedules.map((schedule) => (
+                <div key={schedule.id} className="border rounded-lg p-4 hover:border-[#40C9C6] transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#40C9C6] to-[#33a19e] flex items-center justify-center text-white font-semibold text-sm">
+                        {schedule.doctor_name.split(' ').slice(1).map(n => n[0]).join('').slice(0, 2)}
                       </div>
                       <div>
-                        <div className="flex items-center space-x-2">
-                          <h3 className="font-medium text-gray-900">
-                            {user.first_name} {user.last_name}
-                          </h3>
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
-                            {getRoleLabel(user.role)}
+                        <h3 className="font-medium text-gray-900">
+                          {schedule.doctor_name}
+                        </h3>
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded bg-gray-100 text-gray-700 font-medium">
+                            {getDayName(schedule.day_of_week)}
+                          </span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <Icons.clock className="w-3.5 h-3.5" />
+                            {formatTime(schedule.start_time)} - {formatTime(schedule.end_time)}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-500">
-                          {user.email}
-                        </p>
                       </div>
                     </div>
-
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <p className={`text-sm font-medium ${availability.length > 0 ? 'text-green-600' : 'text-yellow-600'}`}>
-                          {getScheduleSummary(availability)}
-                        </p>
-                        {availability.length > 0 && (
-                          <p className="text-xs text-gray-500">
-                            {getTotalHours(availability)} semanales
-                          </p>
-                        )}
-                      </div>
-                      <button
-                        onClick={(e) => handleEditClick(e, user.id)}
-                        className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                      >
-                        <Icons.edit className="w-4 h-4 inline-block mr-1" />
-                        Editar
-                      </button>
-                      <Icons.chevronDown
-                        className={`w-5 h-5 text-gray-400 transition-transform ${
-                          expandedUser === user.id ? 'rotate-180' : ''
-                        }`}
-                      />
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        schedule.is_active
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {schedule.is_active ? 'Activo' : 'Inactivo'}
+                      </span>
                     </div>
                   </div>
-
-                  {expandedUser === user.id && (
-                    <div className="px-4 pb-4 bg-gray-50">
-                      {editingUser === user.id ? (
-                        // Show editor
-                        <div className="pt-4">
-                          <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-lg font-medium text-gray-900">
-                              Editando horario de {user.first_name} {user.last_name}
-                            </h4>
-                            <button
-                              onClick={handleCancelEdit}
-                              className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                            >
-                              Cancelar
-                            </button>
-                          </div>
-                          <VisualAvailabilityEditor
-                            availability={getEditorAvailability(user.id)}
-                            onUpdate={(blocks) => handleAvailabilityUpdate(user.id, blocks)}
-                          />
-                        </div>
-                      ) : (
-                        // Show summary view
-                        <>
-                          {availability.length === 0 ? (
-                            <div className="text-center py-8">
-                              <Icons.calendar className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                              <p className="text-sm text-gray-500 mb-4">
-                                Este usuario no tiene horarios configurados.
-                              </p>
-                              <button
-                                onClick={(e) => handleEditClick(e, user.id)}
-                                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-                              >
-                                <Icons.plus className="w-4 h-4 inline-block mr-1" />
-                                Configurar Horario
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="grid grid-cols-7 gap-2 pt-2">
-                              {DAYS.map((day, index) => {
-                                const dayBlocks = availability.filter(a => a.day_of_week === index)
-                                return (
-                                  <div key={day} className="text-center">
-                                    <p className="text-xs font-medium text-gray-500 mb-2">{DAYS_SHORT[index]}</p>
-                                    {dayBlocks.length > 0 ? (
-                                      <div className="space-y-1">
-                                        {dayBlocks.map(block => (
-                                          <div
-                                            key={block.id}
-                                            className="bg-blue-100 text-blue-800 rounded px-1 py-1 text-xs"
-                                          >
-                                            {formatTime(block.start_time)}
-                                            <br />
-                                            {formatTime(block.end_time)}
-                                          </div>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <div className="bg-gray-100 text-gray-400 rounded px-1 py-2 text-xs">
-                                        -
-                                      </div>
-                                    )}
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
-      ) : (
-        /* Calendar View */
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 border-b">
-                    Miembro
-                  </th>
-                  {DAYS.map(day => (
-                    <th key={day} className="px-2 py-3 text-center text-sm font-medium text-gray-600 border-b min-w-[100px]">
-                      {day}
-                    </th>
-                  ))}
-                  <th className="px-4 py-3 text-center text-sm font-medium text-gray-600 border-b">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {usersWithSchedules.map(({ user, availability }) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xs font-medium">
-                          {user.first_name[0]}{user.last_name[0]}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {user.first_name} {user.last_name}
-                          </p>
-                          <p className="text-xs text-gray-500">{getRoleLabel(user.role)}</p>
-                        </div>
-                      </div>
-                    </td>
-                    {DAYS.map((_, dayIndex) => {
-                      const dayBlocks = availability.filter(a => a.day_of_week === dayIndex)
-                      return (
-                        <td key={dayIndex} className="px-2 py-2 text-center">
-                          {dayBlocks.length > 0 ? (
-                            <div className="space-y-1">
-                              {dayBlocks.map(block => (
-                                <div
-                                  key={block.id}
-                                  className="bg-green-100 text-green-800 rounded px-1 py-0.5 text-xs"
-                                >
-                                  {block.start_time.slice(0, 5)} - {block.end_time.slice(0, 5)}
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-gray-300">—</span>
-                          )}
-                        </td>
-                      )
-                    })}
-                    <td className="px-4 py-2 text-center">
-                      <button
-                        onClick={() => {
-                          setViewMode('list')
-                          setExpandedUser(user.id)
-                          setEditingUser(user.id)
-                        }}
-                        className="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
-                      >
-                        <Icons.edit className="w-3 h-3 inline-block mr-1" />
-                        Editar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-    </div>
+      </div>
+    </>
   )
 }

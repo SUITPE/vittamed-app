@@ -32,7 +32,7 @@ export async function GET(
       }, { status: 403 })
     }
 
-    // First, get all doctor_tenant IDs for this tenant
+    // First, get all doctor_tenant IDs for this tenant with doctor info
     const { data: doctorTenants, error: doctorError } = await supabase
       .from('doctor_tenants')
       .select('id, doctor_id')
@@ -45,15 +45,32 @@ export async function GET(
     }
 
     const doctorTenantIds = doctorTenants?.map(dt => dt.id) || []
+    const doctorIds = doctorTenants?.map(dt => dt.doctor_id) || []
 
     if (doctorTenantIds.length === 0) {
-      return NextResponse.json({ availability: [] })
+      return NextResponse.json({ availability: [], doctors: [] })
     }
 
-    // Create a map from doctor_tenant_id to doctor_id
-    const dtToDoctorMap = new Map<string, string>()
+    // Get doctor profiles to get their names
+    const { data: doctorProfiles, error: profilesError } = await supabase
+      .from('custom_users')
+      .select('id, first_name, last_name')
+      .in('id', doctorIds)
+
+    if (profilesError) {
+      console.error('Error fetching doctor profiles:', profilesError)
+    }
+
+    // Create a map of doctor_id -> doctor info
+    const doctorMap = new Map()
+    doctorProfiles?.forEach(doc => {
+      doctorMap.set(doc.id, `Dr. ${doc.first_name} ${doc.last_name}`)
+    })
+
+    // Create a map of doctor_tenant_id -> doctor_id
+    const doctorTenantMap = new Map()
     doctorTenants?.forEach(dt => {
-      dtToDoctorMap.set(dt.id, dt.doctor_id)
+      doctorTenantMap.set(dt.id, dt.doctor_id)
     })
 
     // Get availability for all doctors in this tenant
@@ -67,13 +84,28 @@ export async function GET(
       return NextResponse.json({ error: 'Failed to fetch availability' }, { status: 500 })
     }
 
-    // Add doctor_id to each availability record
-    const availabilityWithDoctorId = (availability || []).map(avail => ({
-      ...avail,
-      doctor_id: dtToDoctorMap.get(avail.doctor_tenant_id) || null
-    }))
+    // Enrich availability with doctor names
+    const enrichedAvailability = availability?.map(av => {
+      const doctorId = doctorTenantMap.get(av.doctor_tenant_id)
+      const doctorName = doctorMap.get(doctorId) || 'Doctor'
+      return {
+        ...av,
+        doctor_id: doctorId,
+        doctor_name: doctorName,
+        is_active: true
+      }
+    }) || []
 
-    return NextResponse.json({ availability: availabilityWithDoctorId })
+    // Also return doctor list for reference
+    const doctors = doctorProfiles?.map(doc => ({
+      id: doc.id,
+      name: `Dr. ${doc.first_name} ${doc.last_name}`
+    })) || []
+
+    return NextResponse.json({
+      availability: enrichedAvailability,
+      doctors
+    })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

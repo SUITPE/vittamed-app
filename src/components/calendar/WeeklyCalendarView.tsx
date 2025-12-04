@@ -206,8 +206,8 @@ export default function WeeklyCalendarView({
   const getStatusColor = (status: string) => {
     const colors = {
       pending: 'bg-yellow-400 border-yellow-500',
-      confirmed: 'bg-[#40C9C6] border-[#33a19e]',
-      completed: 'bg-[#A6E3A1] border-green-500',
+      confirmed: 'bg-blue-400 border-blue-500',
+      completed: 'bg-green-400 border-green-500',
       cancelled: 'bg-red-400 border-red-500'
     }
     return colors[status as keyof typeof colors] || 'bg-gray-400 border-gray-500'
@@ -355,7 +355,7 @@ export default function WeeklyCalendarView({
           {doctors.map((doctor) => (
             <div key={doctor.id} className="sticky top-0 bg-white z-20 border-b border-r border-gray-200">
               <div className="h-16 flex flex-col items-center justify-center p-2">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#40C9C6] to-[#33a19e] flex items-center justify-center text-white font-semibold text-sm mb-1">
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm mb-1">
                   {doctor.first_name[0]}{doctor.last_name[0]}
                 </div>
                 <div className="text-xs font-medium text-gray-900 text-center">
@@ -386,9 +386,9 @@ export default function WeeklyCalendarView({
                   <div
                     key={`${doctor.id}-${timeSlot}`}
                     className={`border-r border-b border-gray-100 transition-colors relative min-h-[80px] ${
-                      isDropTarget ? 'bg-[#40C9C6]/20 ring-2 ring-[#40C9C6]' :
+                      isDropTarget ? 'bg-blue-100 ring-2 ring-blue-400' :
                       !isAvailable ? 'bg-gray-100 cursor-not-allowed' :
-                      'hover:bg-[#40C9C6]/10 cursor-pointer'
+                      'hover:bg-blue-50 cursor-pointer'
                     }`}
                     onClick={(e) => {
                       if (!isAvailable) return // Block clicks on unavailable slots
