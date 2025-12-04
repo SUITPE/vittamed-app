@@ -137,10 +137,10 @@ export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
           {!isCollapsed && (
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-[#40C9C6] to-[#33a19e] rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-500 rounded-lg flex items-center justify-center">
                 <Icons.heartHandshake className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg font-bold text-[#003A47]">VittaSami</span>
+              <span className="text-lg font-bold text-gray-900">VittaSami</span>
             </div>
           )}
           <button
@@ -176,14 +176,14 @@ export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
                 className={cn(
                   'flex items-center space-x-3 px-3 py-3 rounded-lg transition-all duration-200 group',
                   isActive
-                    ? 'bg-[#40C9C6]/10 text-[#40C9C6]'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-[#40C9C6]'
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
                 )}
               >
                 <Icon
                   className={cn(
                     'w-5 h-5 flex-shrink-0',
-                    isActive ? 'text-[#40C9C6]' : 'text-gray-400 group-hover:text-[#40C9C6]'
+                    isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-blue-600'
                   )}
                 />
                 {!isCollapsed && (
