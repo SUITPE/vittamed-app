@@ -40,6 +40,7 @@ interface WeeklyCalendarViewProps {
   onAppointmentClick: (appointment: Appointment) => void
   onAppointmentMove?: (appointmentId: string, newDoctorId: string, newStartTime: Date) => void
   viewMode?: 'day' | '3days' | 'week'
+  selectedDoctorId?: string | null
 }
 
 export default function WeeklyCalendarView({
@@ -51,7 +52,8 @@ export default function WeeklyCalendarView({
   onTimeSlotClick,
   onAppointmentClick,
   onAppointmentMove,
-  viewMode = 'week'
+  viewMode = 'week',
+  selectedDoctorId = null
 }: WeeklyCalendarViewProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [draggedAppointment, setDraggedAppointment] = useState<Appointment | null>(null)
@@ -148,14 +150,37 @@ export default function WeeklyCalendarView({
         break
       case 'week':
       default:
-        // Just show selected day in week view (doctors are columns)
-        dates.push(new Date(selectedDate))
+        // Show 7 days starting from Monday of the current week
+        const startOfWeek = new Date(selectedDate)
+        const day = startOfWeek.getDay()
+        const diff = day === 0 ? -6 : 1 - day // Adjust to Monday
+        startOfWeek.setDate(startOfWeek.getDate() + diff)
+        for (let i = 0; i < 7; i++) {
+          const date = new Date(startOfWeek)
+          date.setDate(startOfWeek.getDate() + i)
+          dates.push(date)
+        }
         break
     }
     return dates
   }
 
   const visibleDates = getVisibleDates()
+
+  // Get doctors to display based on selection
+  const getDisplayDoctors = (): Doctor[] => {
+    if (viewMode === 'day') {
+      return doctors // Show all doctors in day view
+    }
+    // In 3days or week view, if a doctor is selected, show only that doctor
+    if (selectedDoctorId) {
+      const selected = doctors.find(d => d.id === selectedDoctorId)
+      return selected ? [selected] : doctors
+    }
+    return doctors
+  }
+
+  const displayDoctors = getDisplayDoctors()
 
   const formatDateHeader = (date: Date) => {
     return date.toLocaleDateString('es-ES', {
@@ -173,13 +198,13 @@ export default function WeeklyCalendarView({
     return new Date(year, month - 1, day, hours, minutes, seconds || 0)
   }
 
-  const getAppointmentsForDoctorAtTime = (doctorId: string, timeSlot: string) => {
-    const slotDate = new Date(selectedDate)
+  const getAppointmentsForDoctorAtTime = (doctorId: string, timeSlot: string, date: Date) => {
+    const slotDate = new Date(date)
     const [hours] = timeSlot.split(':').map(Number)
     slotDate.setHours(hours, 0, 0, 0)
 
-    // Build the selected date string for comparison
-    const selectedDateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
+    // Build the date string for comparison
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 
     const filtered = appointments.filter(apt => {
       // Check doctor
@@ -187,8 +212,8 @@ export default function WeeklyCalendarView({
         return false
       }
 
-      // Check if appointment is on the same date as selected date
-      if (apt.appointment_date !== selectedDateStr) {
+      // Check if appointment is on the same date
+      if (apt.appointment_date !== dateStr) {
         return false
       }
 
@@ -202,29 +227,6 @@ export default function WeeklyCalendarView({
 
       return overlaps
     })
-
-    // DEBUG: Log filtering details for first few slots
-    if (timeSlot === '14:00' || timeSlot === '19:00') {
-      console.log(`[WeeklyCalendar] Filtering for doctor=${doctorId}, slot=${timeSlot}:`)
-      console.log('  - selectedDateStr:', selectedDateStr)
-      console.log('  - totalAppointments:', appointments.length)
-      console.log('  - filteredCount:', filtered.length)
-      console.log('  - slotDate:', slotDate.toISOString())
-      console.log('  - doctor we are looking for:', doctorId)
-
-      appointments.forEach((apt, index) => {
-        console.log(`  Appointment ${index + 1}:`, {
-          id: apt.id,
-          patient: apt.patient_name,
-          doctor_id: apt.doctor_id,
-          doctor_match: apt.doctor_id === doctorId,
-          appointment_date: apt.appointment_date,
-          date_match: apt.appointment_date === selectedDateStr,
-          start_time: apt.start_time,
-          end_time: apt.end_time
-        })
-      })
-    }
 
     return filtered
   }
@@ -267,10 +269,10 @@ export default function WeeklyCalendarView({
     return colors[status as keyof typeof colors] || 'bg-gray-400 border-gray-500'
   }
 
-  // Check if a doctor is available at a specific time slot
-  const isDoctorAvailableAtSlot = (doctorId: string, timeSlot: string): boolean => {
-    // Get day of week for selected date (0 = Sunday, 6 = Saturday)
-    const dayOfWeek = selectedDate.getDay()
+  // Check if a doctor is available at a specific time slot on a specific date
+  const isDoctorAvailableAtSlot = (doctorId: string, timeSlot: string, date: Date): boolean => {
+    // Get day of week for the date (0 = Sunday, 6 = Saturday)
+    const dayOfWeek = date.getDay()
 
     // Find availability for this doctor on this day
     const doctorAvailability = availability.filter(a =>
@@ -402,110 +404,242 @@ export default function WeeklyCalendarView({
 
       {/* Calendar Grid */}
       <div className="flex-1 overflow-auto">
-        <div className="grid" style={{ gridTemplateColumns: `80px repeat(${doctors.length}, 1fr)` }}>
-          {/* Header Row - Doctor Names */}
-          <div className="sticky top-0 bg-white z-20 border-b border-gray-200">
-            <div className="h-16 border-r border-gray-200"></div>
-          </div>
-          {doctors.map((doctor) => (
-            <div key={doctor.id} className="sticky top-0 bg-white z-20 border-b border-r border-gray-200">
-              <div className="h-16 flex flex-col items-center justify-center p-2">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#40C9C6] to-[#33a19e] flex items-center justify-center text-white font-semibold text-sm mb-1">
-                  {doctor.first_name[0]}{doctor.last_name[0]}
-                </div>
-                <div className="text-xs font-medium text-gray-900 text-center">
-                  Dr. {doctor.first_name} {doctor.last_name}
-                </div>
-                {doctor.specialty && (
-                  <div className="text-xs text-gray-500">{doctor.specialty}</div>
-                )}
-              </div>
+        {/* Day View - Doctors as columns */}
+        {viewMode === 'day' && (
+          <div className="grid" style={{ gridTemplateColumns: `80px repeat(${displayDoctors.length}, 1fr)` }}>
+            {/* Header Row - Doctor Names */}
+            <div className="sticky top-0 bg-white z-20 border-b border-gray-200">
+              <div className="h-16 border-r border-gray-200"></div>
             </div>
-          ))}
-
-          {/* Time Slots */}
-          {timeSlots.map((timeSlot, slotIndex) => (
-            <React.Fragment key={`slot-${timeSlot}`}>
-              {/* Time Label */}
-              <div className="border-r border-b border-gray-200 bg-gray-50 px-2 py-4 text-sm text-gray-600 font-medium">
-                {timeSlot}
-              </div>
-
-              {/* Doctor Columns */}
-              {doctors.map((doctor) => {
-                const appointmentsAtTime = getAppointmentsForDoctorAtTime(doctor.id, timeSlot)
-                const isDropTarget = dragOverCell?.doctorId === doctor.id && dragOverCell?.timeSlot === timeSlot
-                const isAvailable = isDoctorAvailableAtSlot(doctor.id, timeSlot)
-
-                return (
-                  <div
-                    key={`${doctor.id}-${timeSlot}`}
-                    className={`border-r border-b border-gray-100 transition-colors relative min-h-[80px] ${
-                      isDropTarget ? 'bg-[#40C9C6]/20 ring-2 ring-[#40C9C6]' :
-                      !isAvailable ? 'bg-gray-100 cursor-not-allowed' :
-                      'hover:bg-[#40C9C6]/10 cursor-pointer'
-                    }`}
-                    onClick={(e) => {
-                      if (!isAvailable) return // Block clicks on unavailable slots
-                      const clickDate = new Date(selectedDate)
-                      const [hours] = timeSlot.split(':').map(Number)
-                      clickDate.setHours(hours, 0, 0, 0)
-                      onTimeSlotClick(e, doctor.id, clickDate)
-                    }}
-                    onDragOver={(e) => isAvailable && handleDragOver(e, doctor.id, timeSlot)}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => isAvailable && handleDrop(e, doctor.id, timeSlot)}
-                  >
-                    {/* Current time indicator - shows in the correct time slot */}
-                    {currentTimeInfo && slotIndex === currentTimeInfo.slotIndex && (
-                      <div
-                        className="absolute left-0 right-0 z-20 border-t-2 border-red-500 pointer-events-none"
-                        style={{ top: `${currentTimeInfo.positionInSlot}%` }}
-                      >
-                        <div className="absolute -left-2 -top-2 w-4 h-4 bg-red-500 rounded-full shadow-md"></div>
-                      </div>
-                    )}
-
-                    {/* Appointments */}
-                    {appointmentsAtTime.map((apt) => {
-                      const position = calculateAppointmentPosition(apt, timeSlot)
-                      if (!position) return null
-
-                      return (
-                        <div
-                          key={apt.id}
-                          draggable
-                          className={`absolute left-1 right-1 ${getStatusColor(apt.status)} border-l-4 rounded-md p-2 shadow-sm hover:shadow-md transition-shadow cursor-move overflow-hidden z-10`}
-                          style={{
-                            top: position.top,
-                            height: position.height,
-                            minHeight: '60px'
-                          }}
-                          onDragStart={(e) => handleDragStart(e, apt)}
-                          onDragEnd={handleDragEnd}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onAppointmentClick(apt)
-                          }}
-                        >
-                          <div className="text-xs font-semibold text-gray-900 truncate">
-                            {createAppointmentDateTime(apt.appointment_date, apt.start_time).toLocaleTimeString('es-ES', {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })} - {apt.patient_name}
-                          </div>
-                          <div className="text-xs text-gray-700 truncate mt-1">
-                            {apt.service_name}
-                          </div>
-                        </div>
-                      )
-                    })}
+            {displayDoctors.map((doctor) => (
+              <div key={doctor.id} className="sticky top-0 bg-white z-20 border-b border-r border-gray-200">
+                <div className="h-16 flex flex-col items-center justify-center p-2">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#40C9C6] to-[#33a19e] flex items-center justify-center text-white font-semibold text-sm mb-1">
+                    {doctor.first_name[0]}{doctor.last_name[0]}
                   </div>
-                )
-              })}
-            </React.Fragment>
-          ))}
-        </div>
+                  <div className="text-xs font-medium text-gray-900 text-center">
+                    Dr. {doctor.first_name} {doctor.last_name}
+                  </div>
+                  {doctor.specialty && (
+                    <div className="text-xs text-gray-500">{doctor.specialty}</div>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* Time Slots */}
+            {timeSlots.map((timeSlot, slotIndex) => (
+              <React.Fragment key={`slot-${timeSlot}`}>
+                {/* Time Label */}
+                <div className="border-r border-b border-gray-200 bg-gray-50 px-2 py-4 text-sm text-gray-600 font-medium">
+                  {timeSlot}
+                </div>
+
+                {/* Doctor Columns */}
+                {displayDoctors.map((doctor) => {
+                  const appointmentsAtTime = getAppointmentsForDoctorAtTime(doctor.id, timeSlot, selectedDate)
+                  const isDropTarget = dragOverCell?.doctorId === doctor.id && dragOverCell?.timeSlot === timeSlot
+                  const isAvailable = isDoctorAvailableAtSlot(doctor.id, timeSlot, selectedDate)
+
+                  return (
+                    <div
+                      key={`${doctor.id}-${timeSlot}`}
+                      className={`border-r border-b border-gray-100 transition-colors relative min-h-[80px] ${
+                        isDropTarget ? 'bg-[#40C9C6]/20 ring-2 ring-[#40C9C6]' :
+                        !isAvailable ? 'bg-gray-100 cursor-not-allowed' :
+                        'hover:bg-[#40C9C6]/10 cursor-pointer'
+                      }`}
+                      onClick={(e) => {
+                        if (!isAvailable) return
+                        const clickDate = new Date(selectedDate)
+                        const [hours] = timeSlot.split(':').map(Number)
+                        clickDate.setHours(hours, 0, 0, 0)
+                        onTimeSlotClick(e, doctor.id, clickDate)
+                      }}
+                      onDragOver={(e) => isAvailable && handleDragOver(e, doctor.id, timeSlot)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => isAvailable && handleDrop(e, doctor.id, timeSlot)}
+                    >
+                      {/* Current time indicator */}
+                      {currentTimeInfo && slotIndex === currentTimeInfo.slotIndex && (
+                        <div
+                          className="absolute left-0 right-0 z-20 border-t-2 border-red-500 pointer-events-none"
+                          style={{ top: `${currentTimeInfo.positionInSlot}%` }}
+                        >
+                          <div className="absolute -left-2 -top-2 w-4 h-4 bg-red-500 rounded-full shadow-md"></div>
+                        </div>
+                      )}
+
+                      {/* Appointments */}
+                      {appointmentsAtTime.map((apt) => {
+                        const position = calculateAppointmentPosition(apt, timeSlot)
+                        if (!position) return null
+
+                        return (
+                          <div
+                            key={apt.id}
+                            draggable
+                            className={`absolute left-1 right-1 ${getStatusColor(apt.status)} border-l-4 rounded-md p-2 shadow-sm hover:shadow-md transition-shadow cursor-move overflow-hidden z-10`}
+                            style={{
+                              top: position.top,
+                              height: position.height,
+                              minHeight: '60px'
+                            }}
+                            onDragStart={(e) => handleDragStart(e, apt)}
+                            onDragEnd={handleDragEnd}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onAppointmentClick(apt)
+                            }}
+                          >
+                            <div className="text-xs font-semibold text-gray-900 truncate">
+                              {createAppointmentDateTime(apt.appointment_date, apt.start_time).toLocaleTimeString('es-ES', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })} - {apt.patient_name}
+                            </div>
+                            <div className="text-xs text-gray-700 truncate mt-1">
+                              {apt.service_name}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })}
+              </React.Fragment>
+            ))}
+          </div>
+        )}
+
+        {/* 3 Days / Week View - Dates as columns */}
+        {(viewMode === '3days' || viewMode === 'week') && (
+          <div className="grid" style={{ gridTemplateColumns: `80px repeat(${visibleDates.length}, 1fr)` }}>
+            {/* Header Row - Date Names */}
+            <div className="sticky top-0 bg-white z-20 border-b border-gray-200">
+              <div className="h-16 border-r border-gray-200"></div>
+            </div>
+            {visibleDates.map((date, idx) => {
+              const isDateToday = date.toDateString() === new Date().toDateString()
+              return (
+                <div key={idx} className={`sticky top-0 z-20 border-b border-r border-gray-200 ${isDateToday ? 'bg-[#40C9C6]/10' : 'bg-white'}`}>
+                  <div className="h-16 flex flex-col items-center justify-center p-2">
+                    <div className={`text-xs font-medium uppercase ${isDateToday ? 'text-[#40C9C6]' : 'text-gray-500'}`}>
+                      {date.toLocaleDateString('es-ES', { weekday: 'short' })}
+                    </div>
+                    <div className={`text-xl font-bold ${isDateToday ? 'text-[#40C9C6]' : 'text-gray-900'}`}>
+                      {date.getDate()}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {date.toLocaleDateString('es-ES', { month: 'short' })}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+
+            {/* Time Slots */}
+            {timeSlots.map((timeSlot, slotIndex) => (
+              <React.Fragment key={`slot-${timeSlot}`}>
+                {/* Time Label */}
+                <div className="border-r border-b border-gray-200 bg-gray-50 px-2 py-4 text-sm text-gray-600 font-medium">
+                  {timeSlot}
+                </div>
+
+                {/* Date Columns */}
+                {visibleDates.map((date, dateIdx) => {
+                  const isDateToday = date.toDateString() === new Date().toDateString()
+                  // Get appointments for all doctors on this date/time
+                  const allAppointmentsAtTime = displayDoctors.flatMap(doctor =>
+                    getAppointmentsForDoctorAtTime(doctor.id, timeSlot, date)
+                  )
+
+                  // Check if any doctor is available
+                  const anyDoctorAvailable = displayDoctors.some(doctor =>
+                    isDoctorAvailableAtSlot(doctor.id, timeSlot, date)
+                  )
+
+                  return (
+                    <div
+                      key={`${dateIdx}-${timeSlot}`}
+                      className={`border-r border-b border-gray-100 transition-colors relative min-h-[80px] ${
+                        isDateToday ? 'bg-[#40C9C6]/5' : ''
+                      } ${
+                        !anyDoctorAvailable ? 'bg-gray-100' : 'hover:bg-[#40C9C6]/10 cursor-pointer'
+                      }`}
+                      onClick={(e) => {
+                        if (!anyDoctorAvailable) return
+                        const clickDate = new Date(date)
+                        const [hours] = timeSlot.split(':').map(Number)
+                        clickDate.setHours(hours, 0, 0, 0)
+                        // Use first available doctor or selected doctor
+                        const availableDoctor = displayDoctors.find(d => isDoctorAvailableAtSlot(d.id, timeSlot, date))
+                        if (availableDoctor) {
+                          onTimeSlotClick(e, availableDoctor.id, clickDate)
+                        }
+                      }}
+                    >
+                      {/* Current time indicator */}
+                      {isDateToday && currentTimeInfo && slotIndex === currentTimeInfo.slotIndex && (
+                        <div
+                          className="absolute left-0 right-0 z-20 border-t-2 border-red-500 pointer-events-none"
+                          style={{ top: `${currentTimeInfo.positionInSlot}%` }}
+                        >
+                          <div className="absolute -left-2 -top-2 w-4 h-4 bg-red-500 rounded-full shadow-md"></div>
+                        </div>
+                      )}
+
+                      {/* Appointments - stacked */}
+                      {allAppointmentsAtTime.map((apt, aptIdx) => {
+                        const position = calculateAppointmentPosition(apt, timeSlot)
+                        if (!position) return null
+
+                        // Find doctor name for this appointment
+                        const doctor = displayDoctors.find(d => d.id === apt.doctor_id)
+                        const doctorInitials = doctor ? `${doctor.first_name[0]}${doctor.last_name[0]}` : ''
+
+                        return (
+                          <div
+                            key={apt.id}
+                            draggable
+                            className={`absolute ${getStatusColor(apt.status)} border-l-4 rounded-md p-1 shadow-sm hover:shadow-md transition-shadow cursor-move overflow-hidden z-10`}
+                            style={{
+                              top: position.top,
+                              height: position.height,
+                              minHeight: '50px',
+                              left: `${aptIdx * 4 + 2}px`,
+                              right: '2px',
+                              maxWidth: `calc(100% - ${aptIdx * 4 + 4}px)`
+                            }}
+                            onDragStart={(e) => handleDragStart(e, apt)}
+                            onDragEnd={handleDragEnd}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onAppointmentClick(apt)
+                            }}
+                          >
+                            <div className="text-xs font-semibold text-gray-900 truncate flex items-center gap-1">
+                              <span className="w-5 h-5 rounded-full bg-[#40C9C6] text-white text-[10px] flex items-center justify-center flex-shrink-0">
+                                {doctorInitials}
+                              </span>
+                              <span className="truncate">{apt.patient_name}</span>
+                            </div>
+                            <div className="text-[10px] text-gray-600 truncate mt-0.5">
+                              {createAppointmentDateTime(apt.appointment_date, apt.start_time).toLocaleTimeString('es-ES', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })} - {apt.service_name}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })}
+              </React.Fragment>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
