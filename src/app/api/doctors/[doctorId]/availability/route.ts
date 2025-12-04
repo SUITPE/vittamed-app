@@ -16,11 +16,15 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (user.id !== doctorId) {
+    // Allow admin_tenant to access any user's availability in their tenant
+    const isAdmin = user.profile?.role === 'admin_tenant'
+    const isSelf = user.id === doctorId
+
+    if (!isSelf && !isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    console.log('🔍 Fetching doctor availability for:', { doctorId })
+    console.log('🔍 Fetching doctor availability for:', { doctorId, isAdmin, isSelf })
 
     // Get doctor's tenant_id from custom_users
     const { data: doctorProfile, error: profileError } = await supabase
@@ -104,9 +108,15 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (user.id !== doctorId) {
+    // Allow admin_tenant to update any user's availability in their tenant
+    const isAdmin = user.profile?.role === 'admin_tenant'
+    const isSelf = user.id === doctorId
+
+    if (!isSelf && !isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
+
+    console.log('📝 Updating doctor availability for:', { doctorId, isAdmin, isSelf })
 
     const { blocks } = await request.json()
 
@@ -129,6 +139,11 @@ export async function POST(
     }
 
     const tenantId = doctorProfile.tenant_id
+
+    // Verify admin is in the same tenant
+    if (isAdmin && user.profile?.tenant_id !== tenantId) {
+      return NextResponse.json({ error: 'Cannot modify users from another tenant' }, { status: 403 })
+    }
 
     // Get doctor_tenant entry
     const { data: doctorTenant, error: dtError } = await supabase
@@ -191,7 +206,11 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (user.id !== doctorId) {
+    // Allow admin_tenant to update any user's availability in their tenant
+    const isAdmin = user.profile?.role === 'admin_tenant'
+    const isSelf = user.id === doctorId
+
+    if (!isSelf && !isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -306,7 +325,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (user.id !== doctorId) {
+    // Allow admin_tenant to delete any user's availability in their tenant
+    const isAdmin = user.profile?.role === 'admin_tenant'
+    const isSelf = user.id === doctorId
+
+    if (!isSelf && !isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
