@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { stripe } from '@/lib/stripe'
 import { headers } from 'next/headers'
+import { onPaymentSuccess } from '@/lib/invoice-generator'
 
 export async function POST(request: NextRequest) {
   const supabase = await getSupabaseServerClient()
@@ -66,6 +67,21 @@ export async function POST(request: NextRequest) {
 
       if (notificationError) {
         console.error('Error creating notification:', notificationError)
+      }
+
+      // VT-288: Generate invoice automatically on successful payment
+      try {
+        const invoice = await onPaymentSuccess(
+          appointment.tenant_id,
+          appointment.id,
+          paymentIntent.id
+        )
+        if (invoice) {
+          console.log(`[Webhook] Invoice ${invoice.invoice_number} generated for payment ${paymentIntent.id}`)
+        }
+      } catch (invoiceError) {
+        // Log but don't fail the webhook - payment was successful
+        console.error('[Webhook] Error generating invoice:', invoiceError)
       }
     }
 
