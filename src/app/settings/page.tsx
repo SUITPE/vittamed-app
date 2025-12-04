@@ -2,20 +2,43 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
 import { Icons } from '@/components/ui/Icons'
 import { useFeatures } from '@/hooks/useFeatures'
-import { FEATURE_CONFIG, PLAN_CONFIG } from '@/types/features'
+import { FEATURE_CONFIG } from '@/types/features'
 import { SkeletonCard, Skeleton } from '@/components/ui/Skeleton'
+import SettingsClient from '@/components/admin/SettingsClient'
 import type { FeatureCategory } from '@/types/features'
+import type { BusinessType } from '@/types/business'
+
+interface TenantSettings {
+  id: string
+  name: string
+  tenant_type: BusinessType
+  address: string
+  phone: string
+  email: string
+}
+
+type TabType = 'general' | 'features' | 'team' | 'notifications' | 'billing' | 'security'
 
 export default function SettingsPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'general' | 'features' | 'team' | 'notifications' | 'billing' | 'security'>('features')
+  const searchParams = useSearchParams()
+  const tabFromUrl = searchParams.get('tab') as TabType | null
+
+  const [activeTab, setActiveTab] = useState<TabType>(
+    tabFromUrl && ['general', 'features', 'team', 'notifications', 'billing', 'security'].includes(tabFromUrl)
+      ? tabFromUrl
+      : 'features'
+  )
   const { features, loading: featuresLoading, toggleFeature } = useFeatures()
+  const [tenantData, setTenantData] = useState<TenantSettings | null>(null)
+  const [tenantLoading, setTenantLoading] = useState(false)
+  const [tenantFetched, setTenantFetched] = useState(false)
 
   const currentTenantId = user?.profile?.tenant_id || undefined
 
@@ -24,6 +47,47 @@ export default function SettingsPage() {
       router.push('/auth/login')
     }
   }, [user, loading, router])
+
+  // Sync tab from URL
+  useEffect(() => {
+    if (tabFromUrl && ['general', 'features', 'team', 'notifications', 'billing', 'security'].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl)
+    }
+  }, [tabFromUrl])
+
+  // Fetch tenant data when General tab is active (only once)
+  useEffect(() => {
+    if (activeTab === 'general' && currentTenantId && !tenantFetched && !tenantLoading) {
+      setTenantLoading(true)
+      setTenantFetched(true)
+      fetch(`/api/tenants/${currentTenantId}`)
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`)
+          }
+          return res.json()
+        })
+        .then(data => {
+          if (data && !data.error) {
+            setTenantData(data)
+          }
+        })
+        .catch(err => console.error('Error fetching tenant:', err))
+        .finally(() => setTenantLoading(false))
+    }
+  }, [activeTab, currentTenantId, tenantFetched, tenantLoading])
+
+  // Update URL when tab changes
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab)
+    const params = new URLSearchParams(searchParams.toString())
+    if (tab === 'features') {
+      params.delete('tab')
+    } else {
+      params.set('tab', tab)
+    }
+    router.replace(`/settings${params.toString() ? '?' + params.toString() : ''}`, { scroll: false })
+  }
 
   if (loading) {
     return (
@@ -89,7 +153,7 @@ export default function SettingsPage() {
               <div className="border-b border-gray-200">
                 <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
                   <button
-                    onClick={() => setActiveTab('features')}
+                    onClick={() => handleTabChange('features')}
                     className={`${
                       activeTab === 'features'
                         ? 'border-blue-500 text-blue-600'
@@ -100,7 +164,7 @@ export default function SettingsPage() {
                     Funcionalidades
                   </button>
                   <button
-                    onClick={() => setActiveTab('general')}
+                    onClick={() => handleTabChange('general')}
                     className={`${
                       activeTab === 'general'
                         ? 'border-blue-500 text-blue-600'
@@ -111,7 +175,7 @@ export default function SettingsPage() {
                     General
                   </button>
                   <button
-                    onClick={() => setActiveTab('team')}
+                    onClick={() => handleTabChange('team')}
                     className={`${
                       activeTab === 'team'
                         ? 'border-blue-500 text-blue-600'
@@ -122,7 +186,7 @@ export default function SettingsPage() {
                     Equipo
                   </button>
                   <button
-                    onClick={() => setActiveTab('notifications')}
+                    onClick={() => handleTabChange('notifications')}
                     className={`${
                       activeTab === 'notifications'
                         ? 'border-blue-500 text-blue-600'
@@ -133,7 +197,7 @@ export default function SettingsPage() {
                     Notificaciones
                   </button>
                   <button
-                    onClick={() => setActiveTab('billing')}
+                    onClick={() => handleTabChange('billing')}
                     className={`${
                       activeTab === 'billing'
                         ? 'border-blue-500 text-blue-600'
@@ -144,7 +208,7 @@ export default function SettingsPage() {
                     Facturación
                   </button>
                   <button
-                    onClick={() => setActiveTab('security')}
+                    onClick={() => handleTabChange('security')}
                     className={`${
                       activeTab === 'security'
                         ? 'border-blue-500 text-blue-600'
@@ -300,21 +364,34 @@ export default function SettingsPage() {
 
               {activeTab === 'general' && (
                 <div className="p-6">
-                  <div className="mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-2">Configuración General</h2>
-                    <p className="text-sm text-gray-600">Información básica de tu negocio y preferencias</p>
-                  </div>
-
-                  {/* Empty State */}
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Icons.settings className="w-8 h-8 text-gray-400" />
+                  {tenantLoading ? (
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Skeleton className="h-7 w-48" />
+                        <Skeleton className="h-5 w-72" />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {[1, 2, 3, 4, 5].map(i => (
+                          <div key={i} className="space-y-2">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-10 w-full" />
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Configuración General</h3>
-                    <p className="text-gray-500 max-w-md mx-auto">
-                      Próximamente podrás gestionar la información de tu negocio, horarios y preferencias generales.
-                    </p>
-                  </div>
+                  ) : tenantData && currentTenantId ? (
+                    <SettingsClient tenantData={tenantData} tenantId={currentTenantId} />
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Icons.alertCircle className="w-8 h-8 text-red-500" />
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No se pudo cargar la configuración</h3>
+                      <p className="text-gray-500 max-w-md mx-auto">
+                        Hubo un problema al cargar la información de tu negocio. Por favor, intenta recargar la página.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
