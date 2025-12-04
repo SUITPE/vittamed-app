@@ -186,6 +186,45 @@ export interface InvoiceWithRelations extends Invoice {
 }
 
 // ============================================================================
+// INTERNAL DATA TYPES (for invoice-generator)
+// ============================================================================
+
+/**
+ * Internal type for creating invoices (used by invoice-generator - VT-288)
+ */
+export interface CreateInvoiceData {
+  tenant_id: string;
+  patient_id: string;
+  appointment_id: string | null;
+  invoice_number: string;
+  invoice_type: InvoiceType;
+  issue_date: string;
+  due_date: string;
+  subtotal: number;
+  tax_rate: number;
+  tax_amount: number;
+  discount_amount: number;
+  total: number;
+  status: InvoiceStatus;
+  payment_method: PaymentMethod;
+  payment_reference: string | null;
+  notes: string | null;
+  items: CreateInvoiceItemData[];
+}
+
+/**
+ * Internal type for invoice items (used by invoice-generator - VT-288)
+ */
+export interface CreateInvoiceItemData {
+  description: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+  tax_amount: number;
+  total: number;
+}
+
+// ============================================================================
 // API REQUEST TYPES
 // ============================================================================
 
