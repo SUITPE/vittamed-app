@@ -70,7 +70,7 @@ export default function ReceptionistAgendaPage() {
   const [selectedDate, setSelectedDate] = useState(getLocalDateString())
   const [selectedDoctor, setSelectedDoctor] = useState<string>('')
   const [loadingData, setLoadingData] = useState(true)
-  const [viewMode, setViewMode] = useState<'week' | 'month' | 'list'>('week')
+  const [viewMode, setViewMode] = useState<'day' | '3days' | 'week' | 'month' | 'list'>('week')
 
   // Appointment creation flow
   const [quickMenuPosition, setQuickMenuPosition] = useState<{ x: number; y: number } | null>(null)
@@ -462,42 +462,66 @@ export default function ReceptionistAgendaPage() {
               </div>
 
               {/* View Mode Toggle */}
-              <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
+              <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
                 <button
-                  onClick={() => setViewMode('week')}
+                  onClick={() => setViewMode('day')}
                   className={`
-                    flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all
-                    ${viewMode === 'week'
-                      ? 'bg-white text-blue-600 shadow-sm'
+                    flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all
+                    ${viewMode === 'day'
+                      ? 'bg-white text-[#40C9C6] shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'}
                   `}
                 >
-                  <Icons.calendarDays className="w-4 h-4" />
-                  Semana
+                  <Icons.clock className="w-4 h-4" />
+                  <span className="hidden sm:inline">Día</span>
                 </button>
                 <button
-                  onClick={() => setViewMode('month')}
+                  onClick={() => setViewMode('3days')}
                   className={`
-                    flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all
-                    ${viewMode === 'month'
-                      ? 'bg-white text-blue-600 shadow-sm'
+                    flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all
+                    ${viewMode === '3days'
+                      ? 'bg-white text-[#40C9C6] shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'}
                   `}
                 >
                   <Icons.calendar className="w-4 h-4" />
-                  Mes
+                  <span className="hidden sm:inline">3 Días</span>
+                </button>
+                <button
+                  onClick={() => setViewMode('week')}
+                  className={`
+                    flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all
+                    ${viewMode === 'week'
+                      ? 'bg-white text-[#40C9C6] shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'}
+                  `}
+                >
+                  <Icons.calendarDays className="w-4 h-4" />
+                  <span className="hidden sm:inline">Semana</span>
+                </button>
+                <button
+                  onClick={() => setViewMode('month')}
+                  className={`
+                    flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all
+                    ${viewMode === 'month'
+                      ? 'bg-white text-[#40C9C6] shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'}
+                  `}
+                >
+                  <Icons.calendar className="w-4 h-4" />
+                  <span className="hidden sm:inline">Mes</span>
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
                   className={`
-                    flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all
+                    flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all
                     ${viewMode === 'list'
-                      ? 'bg-white text-blue-600 shadow-sm'
+                      ? 'bg-white text-[#40C9C6] shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'}
                   `}
                 >
                   <Icons.list className="w-4 h-4" />
-                  Lista
+                  <span className="hidden sm:inline">Lista</span>
                 </button>
               </div>
             </div>
@@ -540,11 +564,11 @@ export default function ReceptionistAgendaPage() {
             </div>
           </div>
 
-          {/* Weekly Calendar View (Fresha-style) */}
-          {viewMode === 'week' && (
+          {/* Calendar Views (Day, 3 Days, Week) */}
+          {(viewMode === 'day' || viewMode === '3days' || viewMode === 'week') && (
             <div className="h-[calc(100vh-300px)]">
               <WeeklyCalendarView
-                key={selectedDate} // Force re-render when date changes
+                key={`${selectedDate}-${viewMode}`} // Force re-render when date or view changes
                 doctors={doctors}
                 appointments={appointments}
                 availability={availability}
@@ -564,6 +588,7 @@ export default function ReceptionistAgendaPage() {
                   setShowEditModal(true)
                 }}
                 onAppointmentMove={handleAppointmentMove}
+                viewMode={viewMode}
               />
             </div>
           )}

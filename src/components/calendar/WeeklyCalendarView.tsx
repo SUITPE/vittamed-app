@@ -39,6 +39,7 @@ interface WeeklyCalendarViewProps {
   onTimeSlotClick: (event: React.MouseEvent, doctorId: string, time: Date) => void
   onAppointmentClick: (appointment: Appointment) => void
   onAppointmentMove?: (appointmentId: string, newDoctorId: string, newStartTime: Date) => void
+  viewMode?: 'day' | '3days' | 'week'
 }
 
 export default function WeeklyCalendarView({
@@ -49,7 +50,8 @@ export default function WeeklyCalendarView({
   onDateChange,
   onTimeSlotClick,
   onAppointmentClick,
-  onAppointmentMove
+  onAppointmentMove,
+  viewMode = 'week'
 }: WeeklyCalendarViewProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [draggedAppointment, setDraggedAppointment] = useState<Appointment | null>(null)
@@ -85,15 +87,27 @@ export default function WeeklyCalendarView({
     return `${hour.toString().padStart(2, '0')}:00`
   })
 
+  // Calculate step based on view mode
+  const getNavigationStep = () => {
+    switch (viewMode) {
+      case 'day': return 1
+      case '3days': return 3
+      case 'week': return 1
+      default: return 1
+    }
+  }
+
   const goToPreviousDay = () => {
-    const newDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - 1)
-    console.log('[WeeklyCalendar] Previous day clicked. Current:', selectedDate, 'New:', newDate)
+    const step = getNavigationStep()
+    const newDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - step)
+    console.log('[WeeklyCalendar] Previous clicked. Current:', selectedDate, 'New:', newDate)
     onDateChange(newDate)
   }
 
   const goToNextDay = () => {
-    const newDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 1)
-    console.log('[WeeklyCalendar] Next day clicked. Current:', selectedDate, 'New:', newDate)
+    const step = getNavigationStep()
+    const newDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + step)
+    console.log('[WeeklyCalendar] Next clicked. Current:', selectedDate, 'New:', newDate)
     onDateChange(newDate)
   }
 
@@ -102,6 +116,46 @@ export default function WeeklyCalendarView({
   }
 
   const isToday = selectedDate.toDateString() === new Date().toDateString()
+
+  // Get the title based on view mode
+  const getHeaderTitle = () => {
+    switch (viewMode) {
+      case 'day':
+        return formatDateHeader(selectedDate)
+      case '3days':
+        const endDate = new Date(selectedDate)
+        endDate.setDate(endDate.getDate() + 2)
+        return `${formatDateHeader(selectedDate)} - ${formatDateHeader(endDate)}`
+      case 'week':
+      default:
+        return formatDateHeader(selectedDate)
+    }
+  }
+
+  // Get visible dates based on view mode
+  const getVisibleDates = () => {
+    const dates: Date[] = []
+    switch (viewMode) {
+      case 'day':
+        dates.push(new Date(selectedDate))
+        break
+      case '3days':
+        for (let i = 0; i < 3; i++) {
+          const date = new Date(selectedDate)
+          date.setDate(date.getDate() + i)
+          dates.push(date)
+        }
+        break
+      case 'week':
+      default:
+        // Just show selected day in week view (doctors are columns)
+        dates.push(new Date(selectedDate))
+        break
+    }
+    return dates
+  }
+
+  const visibleDates = getVisibleDates()
 
   const formatDateHeader = (date: Date) => {
     return date.toLocaleDateString('es-ES', {
@@ -333,7 +387,7 @@ export default function WeeklyCalendarView({
               <Icons.chevronLeft className="w-5 h-5" />
             </button>
             <div className="text-lg font-semibold text-gray-900 min-w-[200px] text-center">
-              {formatDateHeader(selectedDate)}
+              {getHeaderTitle()}
             </div>
             <button
               onClick={goToNextDay}
