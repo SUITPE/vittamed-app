@@ -4,12 +4,13 @@ import { createClient } from '@/lib/supabase-server'
 import SchedulesClient from '@/components/admin/SchedulesClient'
 import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
+
 // Force dynamic rendering for pages using cookies
 export const dynamic = 'force-dynamic'
 
-
 interface Schedule {
   id: string
+  doctor_id: string
   doctor_name: string
   day_of_week: number
   start_time: string
@@ -64,14 +65,14 @@ export default async function SchedulesPage() {
           .in('id', doctorIds)
 
         // Create maps
-        const doctorMap = new Map()
+        const doctorMap = new Map<string, string>()
         doctorProfiles?.forEach(doc => {
           doctorMap.set(doc.id, `Dr. ${doc.first_name} ${doc.last_name}`)
         })
 
-        const doctorTenantMap = new Map()
+        const doctorTenantToDoctor = new Map<string, string>()
         doctorTenants.forEach(dt => {
-          doctorTenantMap.set(dt.id, dt.doctor_id)
+          doctorTenantToDoctor.set(dt.id, dt.doctor_id)
         })
 
         // Get availability
@@ -82,10 +83,11 @@ export default async function SchedulesPage() {
           .order('day_of_week', { ascending: true })
 
         schedules = availability?.map(av => {
-          const doctorId = doctorTenantMap.get(av.doctor_tenant_id)
+          const doctorId = doctorTenantToDoctor.get(av.doctor_tenant_id) || ''
           const doctorName = doctorMap.get(doctorId) || 'Doctor'
           return {
             id: av.id,
+            doctor_id: doctorId,
             doctor_name: doctorName,
             day_of_week: av.day_of_week,
             start_time: av.start_time,
@@ -106,12 +108,16 @@ export default async function SchedulesPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <AdminSidebar tenantId={tenantId} />
+      <AdminSidebar tenantId={tenantId || undefined} />
       <div className="flex-1">
         <AdminHeader />
         <div className="pt-16 p-6">
           <div className="max-w-7xl mx-auto">
-            <SchedulesClient initialSchedules={schedules} doctors={doctors} />
+            <SchedulesClient
+              initialSchedules={schedules}
+              doctors={doctors}
+              tenantId={tenantId || ''}
+            />
           </div>
         </div>
       </div>

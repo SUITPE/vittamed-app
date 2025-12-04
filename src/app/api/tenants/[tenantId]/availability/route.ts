@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { customAuth } from '@/lib/custom-auth'
+
+interface TimeBlock {
+  day: number
+  startTime: string
+  endTime: string
+}
 
 export async function GET(
   request: Request,
@@ -108,6 +115,100 @@ export async function GET(
     })
   } catch (error) {
     console.error('Unexpected error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+// PUT - Update availability for a specific doctor (admin only)
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ tenantId: string }> }
+) {
+  const { tenantId } = await params
+  try {
+    const user = await customAuth.getCurrentUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
+    // Only admin_tenant and staff can update other doctors' availability
+    const userRole = user.profile?.role
+    const userTenantId = user.profile?.tenant_id
+
+    if (userTenantId !== tenantId) {
+      return NextResponse.json({ error: 'Cannot modify availability for another tenant' }, { status: 403 })
+    }
+
+    const isAdmin = userRole === 'admin_tenant' || userRole === 'staff'
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Only administrators can update availability' }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const { doctorId, blocks } = body as { doctorId: string; blocks: TimeBlock[] }
+
+    if (!doctorId || !Array.isArray(blocks)) {
+      return NextResponse.json({ error: 'doctorId and blocks array are required' }, { status: 400 })
+    }
+
+    const supabase = createAdminClient()
+
+    // Get doctor_tenant_id
+    const { data: doctorTenant, error: dtError } = await supabase
+      .from('doctor_tenants')
+      .select('id')
+      .eq('doctor_id', doctorId)
+      .eq('tenant_id', tenantId)
+      .single()
+
+    if (dtError || !doctorTenant) {
+      console.error('Error finding doctor_tenant:', dtError)
+      return NextResponse.json({ error: 'Doctor not found for this tenant' }, { status: 404 })
+    }
+
+    const doctorTenantId = doctorTenant.id
+
+    // Delete existing availability for this doctor
+    const { error: deleteError } = await supabase
+      .from('doctor_availability')
+      .delete()
+      .eq('doctor_tenant_id', doctorTenantId)
+
+    if (deleteError) {
+      console.error('Error deleting existing availability:', deleteError)
+      return NextResponse.json({ error: 'Failed to clear existing availability' }, { status: 500 })
+    }
+
+    // Insert new availability blocks
+    if (blocks.length > 0) {
+      const availabilityRecords = blocks.map(block => ({
+        doctor_tenant_id: doctorTenantId,
+        day_of_week: block.day,
+        start_time: block.startTime,
+        end_time: block.endTime,
+        is_active: true
+      }))
+
+      const { error: insertError } = await supabase
+        .from('doctor_availability')
+        .insert(availabilityRecords)
+
+      if (insertError) {
+        console.error('Error inserting availability:', insertError)
+        return NextResponse.json({ error: 'Failed to save availability' }, { status: 500 })
+      }
+    }
+
+    console.log(`[Availability] Updated ${blocks.length} blocks for doctor ${doctorId}`)
+
+    return NextResponse.json({
+      success: true,
+      message: `Availability updated: ${blocks.length} blocks saved`,
+      blocksCount: blocks.length
+    })
+  } catch (error) {
+    console.error('Unexpected error updating availability:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
