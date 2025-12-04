@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { customAuth } from '@/lib/custom-auth'
 import { createClient } from '@/lib/supabase-server'
 import DoctorSidebar from '@/components/DoctorSidebar'
+import AdminSidebar from '@/components/AdminSidebar'
 import AdminHeader from '@/components/AdminHeader'
 import AppointmentsClient from '@/components/appointments/AppointmentsClient'
 
@@ -175,7 +176,7 @@ export default async function AppointmentsPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {isDoctor && <DoctorSidebar />}
+      {isDoctor ? <DoctorSidebar /> : <AdminSidebar tenantId={currentTenantId} />}
       <div className="flex-1">
         <AdminHeader />
         <div className="pt-16 p-6">
