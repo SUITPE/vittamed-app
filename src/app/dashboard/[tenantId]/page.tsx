@@ -147,13 +147,8 @@ export default async function TenantDashboard({ params }: PageProps) {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const monthString = startOfMonth.toISOString().split('T')[0]
 
-    const [
-      todayAppointmentsResult,
-      weekAppointmentsResult,
-      monthRevenueResult,
-      activePatientsResult,
-      pendingAppointmentsResult
-    ] = await Promise.all([
+    // Use Promise.allSettled to handle individual query failures gracefully
+    const results = await Promise.allSettled([
       supabase
         .from('appointments')
         .select('id', { count: 'exact' })
@@ -168,7 +163,7 @@ export default async function TenantDashboard({ params }: PageProps) {
 
       supabase
         .from('appointments')
-        .select('total_amount')
+        .select('id, service_id, services(price)')
         .eq('tenant_id', tenantId)
         .eq('status', 'completed')
         .gte('appointment_date', monthString),
@@ -185,24 +180,34 @@ export default async function TenantDashboard({ params }: PageProps) {
         .eq('status', 'pending')
     ])
 
-    if (todayAppointmentsResult.error) {
-      console.error('[Dashboard] Error fetching today appointments count:', todayAppointmentsResult.error)
+    // Extract results safely
+    const todayAppointmentsResult = results[0].status === 'fulfilled' ? results[0].value : { count: 0, data: null, error: results[0].reason }
+    const weekAppointmentsResult = results[1].status === 'fulfilled' ? results[1].value : { count: 0, data: null, error: results[1].reason }
+    const monthRevenueResult = results[2].status === 'fulfilled' ? results[2].value : { data: null, error: results[2].reason }
+    const activePatientsResult = results[3].status === 'fulfilled' ? results[3].value : { count: 0, data: null, error: results[3].reason }
+    const pendingAppointmentsResult = results[4].status === 'fulfilled' ? results[4].value : { count: 0, data: null, error: results[4].reason }
+
+    // Log errors but don't fail the page
+    if (results[0].status === 'rejected' || todayAppointmentsResult.error) {
+      console.warn('[Dashboard] Error fetching today appointments count')
     }
-    if (weekAppointmentsResult.error) {
-      console.error('[Dashboard] Error fetching week appointments count:', weekAppointmentsResult.error)
+    if (results[1].status === 'rejected' || weekAppointmentsResult.error) {
+      console.warn('[Dashboard] Error fetching week appointments count')
     }
-    if (monthRevenueResult.error) {
-      console.error('[Dashboard] Error fetching month revenue:', monthRevenueResult.error)
+    if (results[2].status === 'rejected' || monthRevenueResult.error) {
+      console.warn('[Dashboard] Error fetching month revenue')
     }
-    if (activePatientsResult.error) {
-      console.error('[Dashboard] Error fetching active patients:', activePatientsResult.error)
+    if (results[3].status === 'rejected' || activePatientsResult.error) {
+      console.warn('[Dashboard] Error fetching active patients')
     }
-    if (pendingAppointmentsResult.error) {
-      console.error('[Dashboard] Error fetching pending appointments:', pendingAppointmentsResult.error)
+    if (results[4].status === 'rejected' || pendingAppointmentsResult.error) {
+      console.warn('[Dashboard] Error fetching pending appointments')
     }
 
-    const monthRevenue = monthRevenueResult.data?.reduce((sum, appointment) => {
-      return sum + (appointment.total_amount || 0)
+    // Calculate revenue from service prices (appointments with completed status)
+    const monthRevenue = monthRevenueResult.data?.reduce((sum: number, appointment: any) => {
+      const servicePrice = appointment.services?.price || 0
+      return sum + servicePrice
     }, 0) || 0
 
     stats = {
@@ -215,7 +220,7 @@ export default async function TenantDashboard({ params }: PageProps) {
 
     console.log('[Dashboard] Stats fetched:', stats)
   } catch (error) {
-    console.warn('[Dashboard] Failed to fetch stats, using defaults')
+    console.warn('[Dashboard] Failed to fetch stats, using defaults:', error)
   }
 
   return (
