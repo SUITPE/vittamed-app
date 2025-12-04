@@ -112,7 +112,6 @@ function generateTimeSlots(
 
       // Check if this slot conflicts with breaks
       const conflictsWithBreak = breaks.some(breakPeriod => {
-        const slotTime = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`
         const breakStart = breakPeriod.start_time.slice(0, 5) // Ensure HH:MM format
         const breakEnd = breakPeriod.end_time.slice(0, 5)
 

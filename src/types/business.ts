@@ -274,9 +274,8 @@ export function getBusinessTypeConfig(type: BusinessType): BusinessTypeConfig {
 }
 
 export function getBusinessTypesByCategory(category: BusinessTypeConfig['category']): BusinessType[] {
-  return Object.entries(BUSINESS_TYPE_CONFIGS)
-    .filter(([_, config]) => config.category === category)
-    .map(([type, _]) => type as BusinessType);
+  return (Object.keys(BUSINESS_TYPE_CONFIGS) as BusinessType[])
+    .filter(type => BUSINESS_TYPE_CONFIGS[type].category === category);
 }
 
 export function isLegacyType(type: BusinessType): boolean {

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
 
 // VT-37: Simplified booking endpoint that directly uses VT-36 and VT-18 validation
 export async function POST(request: NextRequest) {
@@ -63,7 +62,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Call the enhanced appointment API that has VT-36 + VT-18 validation
-    const supabase = await createClient()
     const appointmentResponse = await fetch(`${request.url.split('/api')[0]}/api/appointments`, {
       method: 'POST',
       headers: {

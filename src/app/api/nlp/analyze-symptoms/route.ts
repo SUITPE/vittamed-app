@@ -133,7 +133,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeSy
       );
     }
 
-    const { text, patientContext, provider, includeDiagnosisSuggestions, language } =
+    const { text, patientContext, provider, includeDiagnosisSuggestions } =
       validationResult.data;
 
     // 3. Determinar proveedor AI
@@ -221,12 +221,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeSy
     }
 
     // 9. Transformar a formato de respuesta
-    const severityMap: Record<string, MedicalEntity['type']> = {
-      leve: 'symptom',
-      moderado: 'symptom',
-      severo: 'symptom',
-    };
-
     const result: SymptomAnalysisResult = {
       symptoms: parsedResponse.symptoms.map((s) => ({
         type: 'symptom' as const,
@@ -290,7 +284,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeSy
  *
  * Retorna información sobre proveedores disponibles
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await createClient();
     const {

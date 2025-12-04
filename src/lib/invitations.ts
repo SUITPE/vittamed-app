@@ -194,7 +194,7 @@ Si no esperabas este correo, puedes ignorarlo con seguridad.
   /**
    * Create invitation record in database
    */
-  async createInvitationRecord(data: InvitationData): Promise<string | null> {
+  async createInvitationRecord(_data: InvitationData): Promise<string | null> {
     // TODO: Store invitation in database for tracking
     // This would include:
     // - invitation_id

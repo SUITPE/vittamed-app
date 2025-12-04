@@ -661,8 +661,6 @@ export async function sendBookingConfirmation(
       const { sendEmailNotification } = await import('./notifications')
       const htmlContent = await generateBookingConfirmationEmailTemplate(templateData, branding)
 
-      const fromName = branding?.email_from_name || appointment.tenant.name
-
       emailSent = await sendEmailNotification({
         recipientEmail: appointment.patient.email,
         subject: `✅ Cita confirmada - ${appointment.service.name} | ${appointment.tenant.name}`,

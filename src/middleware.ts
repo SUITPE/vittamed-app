@@ -84,7 +84,7 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL('/dashboard', request.url))
           }
         }
-      } catch (error) {
+      } catch {
         // Token verification failed - clear cookie and redirect if on protected route
         if (isProtectedRoute) {
           const response = NextResponse.redirect(new URL('/auth/login', request.url))

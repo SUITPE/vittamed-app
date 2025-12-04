@@ -44,7 +44,7 @@ class DynamicAuthService {
   }
 
   // Dynamic user profile determination
-  private async determineUserProfileData(email: string, userId: string): Promise<{
+  private async determineUserProfileData(email: string, _userId: string): Promise<{
     role: 'admin_tenant' | 'doctor' | 'patient'
     tenant_id: string | null
     doctor_id: string | null
@@ -153,20 +153,15 @@ class DynamicAuthService {
           const tenantMatch = urlPath.match(/\/dashboard\/([^\/]+)/)
           const tenantId = tenantMatch ? tenantMatch[1] : null
 
-          // Get tenant info dynamically
-          let tenantName = 'Demo Clinic'
+          // Get tenant info dynamically (for potential future use)
           if (tenantId) {
             try {
-              const { data: tenant } = await this.supabase
+              await this.supabase
                 .from('tenants')
                 .select('name')
                 .eq('id', tenantId)
                 .single()
-
-              if (tenant) {
-                tenantName = tenant.name
-              }
-            } catch (error) {
+            } catch {
               console.warn('Could not fetch tenant name')
             }
           }
@@ -210,7 +205,7 @@ class DynamicAuthService {
         if (data && !error) {
           dbProfile = data
         }
-      } catch (error) {
+      } catch {
         console.warn('Could not fetch user profile from database')
       }
 
@@ -308,7 +303,7 @@ class DynamicAuthService {
   }
 
   // Create demo session without external dependencies
-  private createDemoSession(email: string): void {
+  private createDemoSession(_email: string): void {
     try {
       // Set demo cookie
       if (typeof window !== 'undefined') {
