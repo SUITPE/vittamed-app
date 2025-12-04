@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Icons } from '@/components/ui/Icons'
+import VisualAvailabilityEditor from '@/components/agenda/VisualAvailabilityEditor'
 
 interface SchedulableUser {
   id: string
@@ -54,12 +56,30 @@ const getRoleBadgeColor = (role: string) => {
   return colors[role] || 'bg-gray-100 text-gray-800'
 }
 
-export default function SchedulesClient({ usersWithSchedules, tenantId }: SchedulesClientProps) {
+export default function SchedulesClient({ usersWithSchedules: initialUsersWithSchedules, tenantId }: SchedulesClientProps) {
+  const router = useRouter()
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list')
   const [expandedUser, setExpandedUser] = useState<string | null>(null)
+  const [editingUser, setEditingUser] = useState<string | null>(null)
+  const [usersWithSchedules, setUsersWithSchedules] = useState(initialUsersWithSchedules)
+  const [saving, setSaving] = useState(false)
 
   const toggleExpand = (userId: string) => {
+    if (editingUser === userId) {
+      // If editing, don't collapse
+      return
+    }
     setExpandedUser(expandedUser === userId ? null : userId)
+  }
+
+  const handleEditClick = (e: React.MouseEvent, userId: string) => {
+    e.stopPropagation()
+    setExpandedUser(userId)
+    setEditingUser(userId)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingUser(null)
   }
 
   const formatTime = (time: string) => {
@@ -93,6 +113,70 @@ export default function SchedulesClient({ usersWithSchedules, tenantId }: Schedu
     return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`
   }
 
+  // Handle availability update for a specific user
+  const handleAvailabilityUpdate = async (userId: string, blocks: Array<{ day: number; startTime: string; endTime: string }>) => {
+    setSaving(true)
+    try {
+      const response = await fetch(`/api/doctors/${userId}/availability`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ blocks })
+      })
+
+      if (response.ok) {
+        // Refresh data after save
+        const availResponse = await fetch(`/api/doctors/${userId}/availability`, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (availResponse.ok) {
+          const newAvailability = await availResponse.json()
+
+          // Update local state
+          setUsersWithSchedules(prev => prev.map(item => {
+            if (item.user.id === userId) {
+              return {
+                ...item,
+                availability: newAvailability || []
+              }
+            }
+            return item
+          }))
+        }
+
+        setEditingUser(null)
+      } else {
+        const errorData = await response.json()
+        alert(errorData.error || 'Error al guardar')
+      }
+    } catch (err) {
+      console.error('Error saving availability:', err)
+      alert('Error de conexión al guardar')
+      throw err
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Get current user's availability for editor
+  const getEditorAvailability = (userId: string) => {
+    const userSchedule = usersWithSchedules.find(u => u.user.id === userId)
+    if (!userSchedule) return []
+
+    return userSchedule.availability.map(a => ({
+      id: a.id,
+      day_of_week: a.day_of_week,
+      start_time: a.start_time,
+      end_time: a.end_time
+    }))
+  }
+
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
@@ -101,7 +185,7 @@ export default function SchedulesClient({ usersWithSchedules, tenantId }: Schedu
           Horarios del Equipo
         </h1>
         <p className="text-gray-600 mt-1">
-          Vista consolidada de la disponibilidad de todos los miembros del equipo
+          Visualiza y configura la disponibilidad de todos los miembros del equipo
         </p>
       </div>
 
@@ -227,6 +311,13 @@ export default function SchedulesClient({ usersWithSchedules, tenantId }: Schedu
                           </p>
                         )}
                       </div>
+                      <button
+                        onClick={(e) => handleEditClick(e, user.id)}
+                        className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                      >
+                        <Icons.edit className="w-4 h-4 inline-block mr-1" />
+                        Editar
+                      </button>
                       <Icons.chevronDown
                         className={`w-5 h-5 text-gray-400 transition-transform ${
                           expandedUser === user.id ? 'rotate-180' : ''
@@ -237,40 +328,73 @@ export default function SchedulesClient({ usersWithSchedules, tenantId }: Schedu
 
                   {expandedUser === user.id && (
                     <div className="px-4 pb-4 bg-gray-50">
-                      {availability.length === 0 ? (
-                        <p className="text-sm text-gray-500 py-4 text-center">
-                          Este usuario no tiene horarios configurados.
-                          Puede configurar su disponibilidad desde su panel.
-                        </p>
-                      ) : (
-                        <div className="grid grid-cols-7 gap-2 pt-2">
-                          {DAYS.map((day, index) => {
-                            const dayBlocks = availability.filter(a => a.day_of_week === index)
-                            return (
-                              <div key={day} className="text-center">
-                                <p className="text-xs font-medium text-gray-500 mb-2">{DAYS_SHORT[index]}</p>
-                                {dayBlocks.length > 0 ? (
-                                  <div className="space-y-1">
-                                    {dayBlocks.map(block => (
-                                      <div
-                                        key={block.id}
-                                        className="bg-blue-100 text-blue-800 rounded px-1 py-1 text-xs"
-                                      >
-                                        {formatTime(block.start_time)}
-                                        <br />
-                                        {formatTime(block.end_time)}
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <div className="bg-gray-100 text-gray-400 rounded px-1 py-2 text-xs">
-                                    -
-                                  </div>
-                                )}
-                              </div>
-                            )
-                          })}
+                      {editingUser === user.id ? (
+                        // Show editor
+                        <div className="pt-4">
+                          <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-lg font-medium text-gray-900">
+                              Editando horario de {user.first_name} {user.last_name}
+                            </h4>
+                            <button
+                              onClick={handleCancelEdit}
+                              className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                          <VisualAvailabilityEditor
+                            availability={getEditorAvailability(user.id)}
+                            onUpdate={(blocks) => handleAvailabilityUpdate(user.id, blocks)}
+                          />
                         </div>
+                      ) : (
+                        // Show summary view
+                        <>
+                          {availability.length === 0 ? (
+                            <div className="text-center py-8">
+                              <Icons.calendar className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                              <p className="text-sm text-gray-500 mb-4">
+                                Este usuario no tiene horarios configurados.
+                              </p>
+                              <button
+                                onClick={(e) => handleEditClick(e, user.id)}
+                                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                              >
+                                <Icons.plus className="w-4 h-4 inline-block mr-1" />
+                                Configurar Horario
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-7 gap-2 pt-2">
+                              {DAYS.map((day, index) => {
+                                const dayBlocks = availability.filter(a => a.day_of_week === index)
+                                return (
+                                  <div key={day} className="text-center">
+                                    <p className="text-xs font-medium text-gray-500 mb-2">{DAYS_SHORT[index]}</p>
+                                    {dayBlocks.length > 0 ? (
+                                      <div className="space-y-1">
+                                        {dayBlocks.map(block => (
+                                          <div
+                                            key={block.id}
+                                            className="bg-blue-100 text-blue-800 rounded px-1 py-1 text-xs"
+                                          >
+                                            {formatTime(block.start_time)}
+                                            <br />
+                                            {formatTime(block.end_time)}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div className="bg-gray-100 text-gray-400 rounded px-1 py-2 text-xs">
+                                        -
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   )}
@@ -294,6 +418,9 @@ export default function SchedulesClient({ usersWithSchedules, tenantId }: Schedu
                       {day}
                     </th>
                   ))}
+                  <th className="px-4 py-3 text-center text-sm font-medium text-gray-600 border-b">
+                    Acciones
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -333,6 +460,19 @@ export default function SchedulesClient({ usersWithSchedules, tenantId }: Schedu
                         </td>
                       )
                     })}
+                    <td className="px-4 py-2 text-center">
+                      <button
+                        onClick={() => {
+                          setViewMode('list')
+                          setExpandedUser(user.id)
+                          setEditingUser(user.id)
+                        }}
+                        className="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                      >
+                        <Icons.edit className="w-3 h-3 inline-block mr-1" />
+                        Editar
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
