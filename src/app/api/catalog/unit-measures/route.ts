@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { customAuth } from '@/lib/custom-auth'
-import { CreateUnitMeasureData, UpdateUnitMeasureData } from '@/types/catalog'
+import { CreateUnitMeasureData } from '@/types/catalog'
 
 export async function GET(request: NextRequest) {
   try {

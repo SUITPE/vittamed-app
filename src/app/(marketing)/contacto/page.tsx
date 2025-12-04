@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Mail, MessageCircle, Send } from 'lucide-react'
 import { Heading } from '@/components/ui/Heading'
 import { Section } from '@/components/ui/Section'
-import { GradientText } from '@/components/ui/GradientText'
+// GradientText available for future use
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 

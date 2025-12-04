@@ -40,7 +40,7 @@ export default function AgendaPage() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [loadingData, setLoadingData] = useState(true)
   const [activeTab, setActiveTab] = useState<'calendar' | 'settings'>('calendar')
-  const [isMobile, setIsMobile] = useState(false)
+  const [_isMobile, setIsMobile] = useState(false)
   const [viewType, setViewType] = useState<'day' | 'week'>('week')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string } | null>(null)

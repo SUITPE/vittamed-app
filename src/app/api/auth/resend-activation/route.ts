@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generar nuevo token
-    const { token, expiresAt } = await createVerificationToken(user.id)
+    const { token } = await createVerificationToken(user.id)
 
     console.log('[Resend Activation] New token generated for user:', user.id)
 

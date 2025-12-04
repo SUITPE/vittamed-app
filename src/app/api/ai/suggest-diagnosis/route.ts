@@ -29,7 +29,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase-server';
-import { createAIClient, getDefaultProvider, MEDICAL_SYSTEM_PROMPTS } from '@/lib/ai';
+import { createAIClient, getDefaultProvider } from '@/lib/ai';
 import type { AIProvider } from '@/types/nlp';
 
 // Tipos para las sugerencias

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowRight, CheckCircle, Star } from 'lucide-react'
+import { ArrowRight, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Heading } from '@/components/ui/Heading'
 import { Section } from '@/components/ui/Section'

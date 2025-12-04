@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { BookOpen, ArrowRight, Mail } from 'lucide-react'
+import { BookOpen, Mail } from 'lucide-react'
 import { Heading } from '@/components/ui/Heading'
 import { Section } from '@/components/ui/Section'
 import { GradientText } from '@/components/ui/GradientText'

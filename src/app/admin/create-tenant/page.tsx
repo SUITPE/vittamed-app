@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { BusinessType, BUSINESS_TYPE_CONFIGS } from '@/types/business'
+import { BusinessType } from '@/types/business'
 import BusinessTypeSelector from '@/components/admin/BusinessTypeSelector'
 import { Skeleton, SkeletonForm } from '@/components/ui/Skeleton'
 

@@ -6,7 +6,7 @@ import { Section } from '@/components/ui/Section'
 import { GradientText } from '@/components/ui/GradientText'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Icons } from '@/components/ui/Icons'
-import { InvestorMetricsCard } from '@/components/investors/InvestorMetrics'
+// InvestorMetricsCard available for enhanced displays
 import { InvestorCTA } from '@/components/investors/InvestorCTA'
 import {
   INVESTOR_BLOCKS,

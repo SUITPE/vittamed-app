@@ -12,9 +12,6 @@ import { createAdminClient } from '@/lib/supabase-server';
 import { customAuth } from '@/lib/custom-auth';
 import {
   RecurrenceType,
-  SeriesStatus,
-  AppointmentSeries,
-  CreateAppointmentSeriesRequest,
   CreateAppointmentSeriesResponse,
 } from '@/types/appointment-series';
 
@@ -101,12 +98,10 @@ export async function POST(request: NextRequest) {
     }
 
     // 6. Verify provider exists
-    let providerInfo: { name: string; type: 'doctor' | 'member' } | null = null;
-
     if (data.doctor_id) {
       const { data: doctor, error: doctorError } = await supabase
         .from('doctors')
-        .select('id, first_name, last_name')
+        .select('id')
         .eq('id', data.doctor_id)
         .eq('tenant_id', tenantId)
         .single();
@@ -114,11 +109,10 @@ export async function POST(request: NextRequest) {
       if (doctorError || !doctor) {
         return NextResponse.json({ error: 'Doctor no encontrado' }, { status: 404 });
       }
-      providerInfo = { name: `${doctor.first_name} ${doctor.last_name}`, type: 'doctor' };
     } else if (data.member_id) {
       const { data: member, error: memberError } = await supabase
         .from('custom_users')
-        .select('id, first_name, last_name')
+        .select('id')
         .eq('id', data.member_id)
         .eq('tenant_id', tenantId)
         .single();
@@ -126,7 +120,6 @@ export async function POST(request: NextRequest) {
       if (memberError || !member) {
         return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 });
       }
-      providerInfo = { name: `${member.first_name} ${member.last_name}`, type: 'member' };
     }
 
     // 7. Calculate appointment dates

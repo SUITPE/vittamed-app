@@ -1,10 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import type { Metadata } from 'next'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowRight, Check } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { Heading } from '@/components/ui/Heading'
 import { Section } from '@/components/ui/Section'
 import { GradientText } from '@/components/ui/GradientText'

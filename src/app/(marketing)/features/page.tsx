@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { CheckCircle, ArrowRight, Zap, Globe, Lock } from 'lucide-react'
+import { CheckCircle, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { Heading } from '@/components/ui/Heading'
 import { Section } from '@/components/ui/Section'
