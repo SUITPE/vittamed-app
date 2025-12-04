@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { createAdminClient } from '@/lib/supabase-admin'
+import { createClient, createAdminClient } from '@/lib/supabase-server'
 import { customAuth } from '@/lib/custom-auth'
 
 interface TimeBlock {
@@ -152,7 +151,7 @@ export async function PUT(
       return NextResponse.json({ error: 'doctorId and blocks array are required' }, { status: 400 })
     }
 
-    const supabase = createAdminClient()
+    const supabase = await createAdminClient()
 
     // Get doctor_tenant_id
     const { data: doctorTenant, error: dtError } = await supabase
