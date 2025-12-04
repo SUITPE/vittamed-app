@@ -58,6 +58,12 @@ export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
       icon: Icons.calendarDays,
       description: 'Agenda de doctores'
     },
+    {
+      name: 'Citas',
+      href: '/appointments',
+      icon: Icons.calendar,
+      description: 'Gestionar citas'
+    },
     // Only show availability config for schedulable users
     ...(isSchedulable ? [{
       name: 'Mi Disponibilidad',
@@ -65,6 +71,12 @@ export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
       icon: Icons.clock,
       description: 'Configurar horarios'
     }] : []),
+    {
+      name: 'Pacientes',
+      href: '/patients',
+      icon: Icons.users,
+      description: 'Base de pacientes'
+    },
     {
       name: 'Servicios',
       href: '/admin/services',
@@ -78,10 +90,16 @@ export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
       description: 'Gestionar usuarios'
     },
     {
-      name: 'Pacientes',
-      href: '/patients',
-      icon: Icons.users,
-      description: 'Base de pacientes'
+      name: 'Horarios',
+      href: '/admin/schedules',
+      icon: Icons.clock3,
+      description: 'Horarios del equipo'
+    },
+    {
+      name: 'Configuración',
+      href: '/admin/settings',
+      icon: Icons.settings,
+      description: 'Ajustes del sistema'
     }
   ]
 
@@ -179,11 +197,26 @@ export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
         </nav>
 
         {/* User Info & Logout */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-200">
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-200 space-y-1">
+          <Link
+            href="/profile"
+            className={cn(
+              'w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-all duration-200 group',
+              pathname === '/profile' && 'bg-blue-50 text-blue-600'
+            )}
+          >
+            <Icons.user className="w-5 h-5 flex-shrink-0 text-gray-400 group-hover:text-blue-600" />
+            {!isCollapsed && (
+              <div className="flex-1 min-w-0 text-left">
+                <div className="font-medium text-sm">Mi Perfil</div>
+                <div className="text-xs text-gray-500">{user?.email || 'Usuario'}</div>
+              </div>
+            )}
+          </Link>
           <button
             onClick={handleSignOut}
             className={cn(
-              'w-full flex items-center space-x-3 px-3 py-3 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group'
+              'w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group'
             )}
           >
             <Icons.logOut className="w-5 h-5 flex-shrink-0 text-gray-400 group-hover:text-red-600" />
