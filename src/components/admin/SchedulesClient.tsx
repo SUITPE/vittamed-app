@@ -9,7 +9,6 @@ interface SchedulableUser {
   last_name: string
   email: string
   role: string
-  specialty?: string
 }
 
 interface AvailabilityBlock {
@@ -212,7 +211,7 @@ export default function SchedulesClient({ usersWithSchedules, tenantId }: Schedu
                           </span>
                         </div>
                         <p className="text-sm text-gray-500">
-                          {user.specialty || user.email}
+                          {user.email}
                         </p>
                       </div>
                     </div>

@@ -14,7 +14,6 @@ interface SchedulableUser {
   last_name: string
   email: string
   role: string
-  specialty?: string
 }
 
 interface AvailabilityBlock {
@@ -71,7 +70,7 @@ export default async function SchedulesPage() {
   // Get all schedulable users for this tenant
   const { data: schedulableUsers, error: usersError } = await supabase
     .from('custom_users')
-    .select('id, first_name, last_name, email, role, specialty')
+    .select('id, first_name, last_name, email, role')
     .eq('tenant_id', tenantId)
     .eq('schedulable', true)
     .order('first_name')
