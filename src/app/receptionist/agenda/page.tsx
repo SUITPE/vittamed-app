@@ -547,6 +547,7 @@ export default function ReceptionistAgendaPage() {
                 key={selectedDate} // Force re-render when date changes
                 doctors={doctors}
                 appointments={appointments}
+                availability={availability}
                 selectedDate={(() => {
                   // Parse YYYY-MM-DD as local date (not UTC)
                   const [year, month, day] = selectedDate.split('-').map(Number)

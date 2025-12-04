@@ -50,6 +50,12 @@ export async function GET(
       return NextResponse.json({ availability: [] })
     }
 
+    // Create a map from doctor_tenant_id to doctor_id
+    const dtToDoctorMap = new Map<string, string>()
+    doctorTenants?.forEach(dt => {
+      dtToDoctorMap.set(dt.id, dt.doctor_id)
+    })
+
     // Get availability for all doctors in this tenant
     const { data: availability, error } = await supabase
       .from('doctor_availability')
@@ -61,7 +67,13 @@ export async function GET(
       return NextResponse.json({ error: 'Failed to fetch availability' }, { status: 500 })
     }
 
-    return NextResponse.json({ availability: availability || [] })
+    // Add doctor_id to each availability record
+    const availabilityWithDoctorId = (availability || []).map(avail => ({
+      ...avail,
+      doctor_id: dtToDoctorMap.get(avail.doctor_tenant_id) || null
+    }))
+
+    return NextResponse.json({ availability: availabilityWithDoctorId })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

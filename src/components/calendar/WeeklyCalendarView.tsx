@@ -22,9 +22,18 @@ interface Appointment {
   doctor_name?: string
 }
 
+interface DoctorAvailability {
+  id: string
+  doctor_id: string
+  day_of_week: number
+  start_time: string
+  end_time: string
+}
+
 interface WeeklyCalendarViewProps {
   doctors: Doctor[]
   appointments: Appointment[]
+  availability?: DoctorAvailability[]
   selectedDate: Date
   onDateChange: (date: Date) => void
   onTimeSlotClick: (event: React.MouseEvent, doctorId: string, time: Date) => void
@@ -35,6 +44,7 @@ interface WeeklyCalendarViewProps {
 export default function WeeklyCalendarView({
   doctors,
   appointments,
+  availability = [],
   selectedDate,
   onDateChange,
   onTimeSlotClick,
@@ -203,6 +213,38 @@ export default function WeeklyCalendarView({
     return colors[status as keyof typeof colors] || 'bg-gray-400 border-gray-500'
   }
 
+  // Check if a doctor is available at a specific time slot
+  const isDoctorAvailableAtSlot = (doctorId: string, timeSlot: string): boolean => {
+    // Get day of week for selected date (0 = Sunday, 6 = Saturday)
+    const dayOfWeek = selectedDate.getDay()
+
+    // Find availability for this doctor on this day
+    const doctorAvailability = availability.filter(a =>
+      a.doctor_id === doctorId && a.day_of_week === dayOfWeek
+    )
+
+    // If no availability configured for this doctor on this day, return false
+    if (doctorAvailability.length === 0) {
+      return false
+    }
+
+    // Parse the time slot hour
+    const [slotHour] = timeSlot.split(':').map(Number)
+    const slotMinutes = slotHour * 60 // Convert to minutes for comparison
+
+    // Check if this time slot falls within any availability block
+    return doctorAvailability.some(avail => {
+      const [startHour, startMin] = avail.start_time.split(':').map(Number)
+      const [endHour, endMin] = avail.end_time.split(':').map(Number)
+      const startMinutes = startHour * 60 + (startMin || 0)
+      const endMinutes = endHour * 60 + (endMin || 0)
+
+      // The slot is available if it starts within the availability window
+      // (slot must be >= start and slot + 60 min must be <= end)
+      return slotMinutes >= startMinutes && (slotMinutes + 60) <= endMinutes
+    })
+  }
+
   // Calculate current time indicator position
   const getCurrentTimePosition = () => {
     if (!isToday) return null
@@ -338,22 +380,26 @@ export default function WeeklyCalendarView({
               {doctors.map((doctor) => {
                 const appointmentsAtTime = getAppointmentsForDoctorAtTime(doctor.id, timeSlot)
                 const isDropTarget = dragOverCell?.doctorId === doctor.id && dragOverCell?.timeSlot === timeSlot
+                const isAvailable = isDoctorAvailableAtSlot(doctor.id, timeSlot)
 
                 return (
                   <div
                     key={`${doctor.id}-${timeSlot}`}
-                    className={`border-r border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors relative min-h-[80px] ${
-                      isDropTarget ? 'bg-blue-100 ring-2 ring-blue-400' : ''
+                    className={`border-r border-b border-gray-100 transition-colors relative min-h-[80px] ${
+                      isDropTarget ? 'bg-blue-100 ring-2 ring-blue-400' :
+                      !isAvailable ? 'bg-gray-100 cursor-not-allowed' :
+                      'hover:bg-blue-50 cursor-pointer'
                     }`}
                     onClick={(e) => {
+                      if (!isAvailable) return // Block clicks on unavailable slots
                       const clickDate = new Date(selectedDate)
                       const [hours] = timeSlot.split(':').map(Number)
                       clickDate.setHours(hours, 0, 0, 0)
                       onTimeSlotClick(e, doctor.id, clickDate)
                     }}
-                    onDragOver={(e) => handleDragOver(e, doctor.id, timeSlot)}
+                    onDragOver={(e) => isAvailable && handleDragOver(e, doctor.id, timeSlot)}
                     onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDrop(e, doctor.id, timeSlot)}
+                    onDrop={(e) => isAvailable && handleDrop(e, doctor.id, timeSlot)}
                   >
                     {/* Current time indicator */}
                     {slotIndex === 0 && currentTimePosition !== null && (
