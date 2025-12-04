@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Icons } from '@/components/ui/Icons'
 import { cn } from '@/lib/utils'
-import { useAuth } from '@/contexts/AuthContext'
 
 interface AdminSidebarProps {
   tenantId?: string
@@ -13,12 +12,8 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
   const pathname = usePathname()
-  const { user } = useAuth()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
-
-  // Check if user can configure their own availability
-  const isSchedulable = user?.profile?.schedulable === true
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -64,18 +59,17 @@ export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
       icon: Icons.calendar,
       description: 'Gestionar citas'
     },
-    // Only show availability config for schedulable users
-    ...(isSchedulable ? [{
-      name: 'Mi Disponibilidad',
-      href: '/availability',
+    {
+      name: 'Horarios',
+      href: '/admin/schedules',
       icon: Icons.clock,
       description: 'Configurar horarios'
-    }] : []),
+    },
     {
-      name: 'Pacientes',
-      href: '/patients',
-      icon: Icons.users,
-      description: 'Base de pacientes'
+      name: 'Mi Disponibilidad',
+      href: '/agenda',
+      icon: Icons.clock3,
+      description: 'Mi calendario personal'
     },
     {
       name: 'Servicios',
@@ -90,16 +84,10 @@ export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
       description: 'Gestionar usuarios'
     },
     {
-      name: 'Horarios',
-      href: '/admin/schedules',
-      icon: Icons.clock3,
-      description: 'Horarios del equipo'
-    },
-    {
-      name: 'Configuración',
-      href: '/admin/settings',
-      icon: Icons.settings,
-      description: 'Ajustes del sistema'
+      name: 'Pacientes',
+      href: '/patients',
+      icon: Icons.users,
+      description: 'Base de pacientes'
     }
   ]
 
@@ -137,10 +125,10 @@ export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
           {!isCollapsed && (
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-[#40C9C6] to-[#33a19e] rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-500 rounded-lg flex items-center justify-center">
                 <Icons.heartHandshake className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg font-bold text-[#003A47]">VittaSami</span>
+              <span className="text-lg font-bold text-gray-900">VittaSami</span>
             </div>
           )}
           <button
@@ -172,18 +160,17 @@ export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
               <Link
                 key={item.name}
                 href={item.href}
-                prefetch={false}
                 className={cn(
                   'flex items-center space-x-3 px-3 py-3 rounded-lg transition-all duration-200 group',
                   isActive
-                    ? 'bg-[#40C9C6]/10 text-[#40C9C6]'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-[#40C9C6]'
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
                 )}
               >
                 <Icon
                   className={cn(
                     'w-5 h-5 flex-shrink-0',
-                    isActive ? 'text-[#40C9C6]' : 'text-gray-400 group-hover:text-[#40C9C6]'
+                    isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-blue-600'
                   )}
                 />
                 {!isCollapsed && (
@@ -198,27 +185,11 @@ export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
         </nav>
 
         {/* User Info & Logout */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-200 space-y-1">
-          <Link
-            href="/profile"
-            prefetch={false}
-            className={cn(
-              'w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-[#40C9C6] transition-all duration-200 group',
-              pathname === '/profile' && 'bg-[#40C9C6]/10 text-[#40C9C6]'
-            )}
-          >
-            <Icons.user className="w-5 h-5 flex-shrink-0 text-gray-400 group-hover:text-[#40C9C6]" />
-            {!isCollapsed && (
-              <div className="flex-1 min-w-0 text-left">
-                <div className="font-medium text-sm">Mi Perfil</div>
-                <div className="text-xs text-gray-500">{user?.email || 'Usuario'}</div>
-              </div>
-            )}
-          </Link>
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-200">
           <button
             onClick={handleSignOut}
             className={cn(
-              'w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group'
+              'w-full flex items-center space-x-3 px-3 py-3 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group'
             )}
           >
             <Icons.logOut className="w-5 h-5 flex-shrink-0 text-gray-400 group-hover:text-red-600" />
