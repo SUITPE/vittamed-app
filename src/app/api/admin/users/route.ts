@@ -3,7 +3,7 @@ import { customAuth } from '@/lib/custom-auth'
 import { createAdminClient } from '@/lib/supabase-server'
 
 // GET /api/admin/users - Get all users (super_admin only)
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Authenticate user
     const user = await customAuth.getCurrentUser()

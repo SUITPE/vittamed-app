@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { customAuth } from '@/lib/custom-auth'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     console.log('🔍 /api/auth/me called')
     const user = await customAuth.getCurrentUser()
