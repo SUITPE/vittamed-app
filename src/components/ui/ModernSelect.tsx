@@ -155,7 +155,7 @@ export function ModernSelect({
   const defaultRenderOption = (option: SelectOption) => (
     <div className="flex items-center gap-3">
       {option.avatar && (
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#40C9C6] to-[#33a19e] flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-500 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
           {option.avatar}
         </div>
       )}
@@ -165,7 +165,7 @@ export function ModernSelect({
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-[#003A47] truncate">{option.label}</p>
+        <p className="font-medium text-primary-800 truncate">{option.label}</p>
         {option.sublabel && (
           <p className="text-xs text-gray-500 truncate">{option.sublabel}</p>
         )}
@@ -187,11 +187,11 @@ export function ModernSelect({
         className={cn(
           "w-full px-4 py-3 text-left bg-white border rounded-xl transition-all duration-200",
           "flex items-center justify-between gap-2",
-          "focus:outline-none focus:ring-2 focus:ring-[#40C9C6]/20 focus:border-[#40C9C6]",
-          isOpen && "ring-2 ring-[#40C9C6]/20 border-[#40C9C6]",
+          "focus:outline-none focus:ring-2 focus:ring-primary-400/20 focus:border-primary-400",
+          isOpen && "ring-2 ring-primary-400/20 border-primary-400",
           disabled
             ? "bg-gray-50 cursor-not-allowed opacity-60"
-            : "hover:border-[#40C9C6]/50 cursor-pointer",
+            : "hover:border-primary-400/50 cursor-pointer",
           !isOpen && "border-gray-200"
         )}
         aria-haspopup="listbox"
@@ -234,7 +234,7 @@ export function ModernSelect({
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder={searchPlaceholder}
                     className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg
-                             focus:outline-none focus:ring-2 focus:ring-[#40C9C6]/20 focus:border-[#40C9C6]
+                             focus:outline-none focus:ring-2 focus:ring-primary-400/20 focus:border-primary-400
                              placeholder:text-gray-400"
                   />
                 </div>
@@ -262,9 +262,9 @@ export function ModernSelect({
                     className={cn(
                       "px-4 py-3 cursor-pointer transition-colors duration-100 relative",
                       option.disabled && "opacity-50 cursor-not-allowed",
-                      !option.disabled && index === highlightedIndex && "bg-[#40C9C6]/10",
-                      !option.disabled && option.value === value && "bg-[#40C9C6]/5",
-                      !option.disabled && "hover:bg-[#40C9C6]/10"
+                      !option.disabled && index === highlightedIndex && "bg-primary-400/10",
+                      !option.disabled && option.value === value && "bg-primary-400/5",
+                      !option.disabled && "hover:bg-primary-400/10"
                     )}
                   >
                     {renderOption ? renderOption(option) : defaultRenderOption(option)}
@@ -276,7 +276,7 @@ export function ModernSelect({
                         animate={{ scale: 1 }}
                         className="absolute right-4 top-1/2 -translate-y-1/2"
                       >
-                        <Icons.check className="w-4 h-4 text-[#40C9C6]" />
+                        <Icons.check className="w-4 h-4 text-primary-400" />
                       </motion.div>
                     )}
                   </li>

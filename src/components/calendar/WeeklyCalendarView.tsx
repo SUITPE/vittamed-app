@@ -262,8 +262,8 @@ export default function WeeklyCalendarView({
   const getStatusColor = (status: string) => {
     const colors = {
       pending: 'bg-yellow-400 border-yellow-500',
-      confirmed: 'bg-[#40C9C6] border-[#33a19e]',
-      completed: 'bg-[#A6E3A1] border-green-500',
+      confirmed: 'bg-primary-400 border-primary-500',
+      completed: 'bg-success-400 border-green-500',
       cancelled: 'bg-red-400 border-red-500'
     }
     return colors[status as keyof typeof colors] || 'bg-gray-400 border-gray-500'
@@ -414,7 +414,7 @@ export default function WeeklyCalendarView({
             {displayDoctors.map((doctor) => (
               <div key={doctor.id} className="sticky top-0 bg-white z-20 border-b border-r border-gray-200">
                 <div className="h-16 flex flex-col items-center justify-center p-2">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#40C9C6] to-[#33a19e] flex items-center justify-center text-white font-semibold text-sm mb-1">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-500 flex items-center justify-center text-white font-semibold text-sm mb-1">
                     {doctor.first_name[0]}{doctor.last_name[0]}
                   </div>
                   <div className="text-xs font-medium text-gray-900 text-center">
@@ -445,9 +445,9 @@ export default function WeeklyCalendarView({
                     <div
                       key={`${doctor.id}-${timeSlot}`}
                       className={`border-r border-b border-gray-100 transition-colors relative min-h-[80px] ${
-                        isDropTarget ? 'bg-[#40C9C6]/20 ring-2 ring-[#40C9C6]' :
+                        isDropTarget ? 'bg-primary-400/20 ring-2 ring-primary-400' :
                         !isAvailable ? 'bg-gray-100 cursor-not-allowed' :
-                        'hover:bg-[#40C9C6]/10 cursor-pointer'
+                        'hover:bg-primary-400/10 cursor-pointer'
                       }`}
                       onClick={(e) => {
                         if (!isAvailable) return
@@ -522,12 +522,12 @@ export default function WeeklyCalendarView({
             {visibleDates.map((date, idx) => {
               const isDateToday = date.toDateString() === new Date().toDateString()
               return (
-                <div key={idx} className={`sticky top-0 z-20 border-b border-r border-gray-200 ${isDateToday ? 'bg-[#40C9C6]/10' : 'bg-white'}`}>
+                <div key={idx} className={`sticky top-0 z-20 border-b border-r border-gray-200 ${isDateToday ? 'bg-primary-400/10' : 'bg-white'}`}>
                   <div className="h-16 flex flex-col items-center justify-center p-2">
-                    <div className={`text-xs font-medium uppercase ${isDateToday ? 'text-[#40C9C6]' : 'text-gray-500'}`}>
+                    <div className={`text-xs font-medium uppercase ${isDateToday ? 'text-primary-400' : 'text-gray-500'}`}>
                       {date.toLocaleDateString('es-ES', { weekday: 'short' })}
                     </div>
-                    <div className={`text-xl font-bold ${isDateToday ? 'text-[#40C9C6]' : 'text-gray-900'}`}>
+                    <div className={`text-xl font-bold ${isDateToday ? 'text-primary-400' : 'text-gray-900'}`}>
                       {date.getDate()}
                     </div>
                     <div className="text-xs text-gray-500">
@@ -563,9 +563,9 @@ export default function WeeklyCalendarView({
                     <div
                       key={`${dateIdx}-${timeSlot}`}
                       className={`border-r border-b border-gray-100 transition-colors relative min-h-[80px] ${
-                        isDateToday ? 'bg-[#40C9C6]/5' : ''
+                        isDateToday ? 'bg-primary-400/5' : ''
                       } ${
-                        !anyDoctorAvailable ? 'bg-gray-100' : 'hover:bg-[#40C9C6]/10 cursor-pointer'
+                        !anyDoctorAvailable ? 'bg-gray-100' : 'hover:bg-primary-400/10 cursor-pointer'
                       }`}
                       onClick={(e) => {
                         if (!anyDoctorAvailable) return
@@ -619,7 +619,7 @@ export default function WeeklyCalendarView({
                             }}
                           >
                             <div className="text-xs font-semibold text-gray-900 truncate flex items-center gap-1">
-                              <span className="w-5 h-5 rounded-full bg-[#40C9C6] text-white text-[10px] flex items-center justify-center flex-shrink-0">
+                              <span className="w-5 h-5 rounded-full bg-primary-400 text-white text-[10px] flex items-center justify-center flex-shrink-0">
                                 {doctorInitials}
                               </span>
                               <span className="truncate">{apt.patient_name}</span>

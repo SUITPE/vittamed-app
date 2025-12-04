@@ -188,17 +188,17 @@ export function DatePicker({
         className={cn(
           "w-full px-4 py-3 text-left bg-white border rounded-xl transition-all duration-200",
           "flex items-center justify-between gap-2",
-          "focus:outline-none focus:ring-2 focus:ring-[#40C9C6]/20 focus:border-[#40C9C6]",
-          isOpen && "ring-2 ring-[#40C9C6]/20 border-[#40C9C6]",
+          "focus:outline-none focus:ring-2 focus:ring-primary-400/20 focus:border-primary-400",
+          isOpen && "ring-2 ring-primary-400/20 border-primary-400",
           disabled
             ? "bg-gray-50 cursor-not-allowed opacity-60"
-            : "hover:border-[#40C9C6]/50 cursor-pointer",
+            : "hover:border-primary-400/50 cursor-pointer",
           !isOpen && "border-gray-200"
         )}
       >
         <div className="flex items-center gap-3">
-          <Icons.calendar className="w-5 h-5 text-[#40C9C6]" />
-          <span className={value ? "text-[#003A47] font-medium" : "text-gray-400"}>
+          <Icons.calendar className="w-5 h-5 text-primary-400" />
+          <span className={value ? "text-primary-800 font-medium" : "text-gray-400"}>
             {value ? formatDateDisplay(value) : placeholder}
           </span>
         </div>
@@ -230,7 +230,7 @@ export function DatePicker({
                 <Icons.chevronLeft className="w-5 h-5 text-gray-600" />
               </button>
 
-              <h3 className="text-lg font-semibold text-[#003A47]">
+              <h3 className="text-lg font-semibold text-primary-800">
                 {MONTHS_ES[viewMonth]} {viewYear}
               </h3>
 
@@ -268,11 +268,11 @@ export function DatePicker({
                         "w-full h-full rounded-lg text-sm font-medium transition-all duration-150",
                         "flex items-center justify-center",
                         isDateDisabled(day) && "opacity-30 cursor-not-allowed",
-                        !isDateDisabled(day) && "hover:bg-[#40C9C6]/10 cursor-pointer",
-                        isToday(day) && !isSelected(day) && "border-2 border-[#40C9C6]/50",
+                        !isDateDisabled(day) && "hover:bg-primary-400/10 cursor-pointer",
+                        isToday(day) && !isSelected(day) && "border-2 border-primary-400/50",
                         isSelected(day)
-                          ? "bg-[#40C9C6] text-white hover:bg-[#33a19e]"
-                          : "text-[#003A47]"
+                          ? "bg-primary-400 text-white hover:bg-primary-500"
+                          : "text-primary-800"
                       )}
                     >
                       {day}
@@ -287,7 +287,7 @@ export function DatePicker({
               <button
                 type="button"
                 onClick={handleToday}
-                className="px-4 py-2 text-sm font-medium text-[#40C9C6] hover:bg-[#40C9C6]/10 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-primary-400 hover:bg-primary-400/10 rounded-lg transition-colors"
               >
                 Hoy
               </button>
