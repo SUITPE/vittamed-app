@@ -172,6 +172,7 @@ export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
               <Link
                 key={item.name}
                 href={item.href}
+                prefetch={false}
                 className={cn(
                   'flex items-center space-x-3 px-3 py-3 rounded-lg transition-all duration-200 group',
                   isActive
@@ -200,6 +201,7 @@ export default function AdminSidebar({ tenantId }: AdminSidebarProps) {
         <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-200 space-y-1">
           <Link
             href="/profile"
+            prefetch={false}
             className={cn(
               'w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-all duration-200 group',
               pathname === '/profile' && 'bg-blue-50 text-blue-600'
