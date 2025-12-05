@@ -35,6 +35,7 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
   const [patientId, setPatientId] = useState<string>('')
   const [showRecordForm, setShowRecordForm] = useState(false)
   const [recordToEdit, setRecordToEdit] = useState<MedicalRecordWithRelations | null>(null)
+  const [tenantType, setTenantType] = useState<string>('clinic')
 
   const currentTenantId = user?.profile?.tenant_id
 
@@ -53,6 +54,20 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
       fetchPatientData()
     }
   }, [user, patientId])
+
+  // Fetch tenant type for specialty-specific fields
+  useEffect(() => {
+    if (currentTenantId) {
+      fetch(`/api/tenants/${currentTenantId}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.tenant_type) {
+            setTenantType(data.tenant_type)
+          }
+        })
+        .catch(err => console.error('Error fetching tenant:', err))
+    }
+  }, [currentTenantId])
 
   const fetchPatientData = async () => {
     try {
@@ -530,6 +545,7 @@ export default function PatientProfilePage({ params }: { params: Promise<{ patie
           }}
           patientId={patientId}
           tenantId={currentTenantId || ''}
+          tenantType={tenantType}
           doctorId={user?.profile?.id || ''}
           doctorName={user?.profile ? `${user.profile.first_name} ${user.profile.last_name}` : ''}
           recordToEdit={recordToEdit}

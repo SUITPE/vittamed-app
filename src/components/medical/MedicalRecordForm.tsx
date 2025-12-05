@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react'
 import { Icons } from '@/components/ui/Icons'
 import { VoiceDictation } from '@/components/medical/VoiceDictation'
 import SpecialtyFields from '@/components/medical/SpecialtyFields'
-import { getFieldsForSpecialty, getSpecialtyFromTenantType, SPECIALTY_CONFIG } from '@/lib/medical-fields'
+import { DiagnosisSuggestions } from '@/components/medical/DiagnosisSuggestions'
+import { useDiagnosisSuggestions, type DiagnosisSuggestion } from '@/hooks/useDiagnosisSuggestions'
+import { getFieldsForSpecialty, getSpecialtyFromTenantType, getTerminologyForSpecialty, SPECIALTY_CONFIG } from '@/lib/medical-fields'
 import type { RecordType, MedicalRecordFormData, PrescriptionFormData, DiagnosisFormData } from '@/types/medical-history'
 
 interface MedicalRecordFormProps {
@@ -33,8 +35,13 @@ const VITAL_RANGES = {
 
 type VitalSign = keyof typeof VITAL_RANGES
 
-// Parser inteligente para detectar secciones SOAP en el dictado
-function parseSOAPTranscription(text: string) {
+/**
+ * Parser inteligente para extraer información clínica del dictado
+ * Extrae: Motivo de consulta, Subjetivo, Objetivo, Evaluación y Plan
+ */
+function parseMedicalDictation(text: string) {
+  console.log('[Medical Parser] Input text:', text)
+
   const result: {
     chief_complaint?: string
     subjective?: string
@@ -43,36 +50,173 @@ function parseSOAPTranscription(text: string) {
     plan?: string
   } = {}
 
-  // Normalizar texto
+  // Normalizar texto para búsqueda
   const normalized = text.toLowerCase()
 
-  // Patrones para detectar cada sección (usando [\s\S] en vez de flag 's' para compatibilidad)
-  const patterns = {
-    chief_complaint: /(?:motivo de consulta|motivo|chief complaint)[:\s]*([\s\S]+?)(?=(?:subjetivo|objetivo|evaluación|assessment|plan|$))/i,
-    subjective: /(?:subjetivo|s|subjective)[:\s]*([\s\S]+?)(?=(?:objetivo|evaluación|assessment|plan|$))/i,
-    objective: /(?:objetivo|o|objective)[:\s]*([\s\S]+?)(?=(?:evaluación|assessment|plan|$))/i,
-    assessment: /(?:evaluación|assessment|a|diagnóstico)[:\s]*([\s\S]+?)(?=(?:plan|$))/i,
-    plan: /(?:plan|p|tratamiento)[:\s]*([\s\S]+?)$/i
-  }
+  // ==========================================
+  // 1. EXTRAER MOTIVO DE CONSULTA (Chief Complaint)
+  // ==========================================
+  // Patrones para identificar el motivo de consulta
+  const chiefComplaintPatterns = [
+    /(?:motivo de consulta|motivo de la consulta)[:\s]+([^.]+)/i,
+    /(?:acude por|consulta por|viene por)[:\s]*([^.]+)/i,
+    /(?:paciente (?:acude|viene|consulta) (?:por|debido a|a causa de))[:\s]*([^.]+)/i,
+    /(?:el motivo (?:es|de la visita))[:\s]*([^.]+)/i,
+  ]
 
-  // Intentar detectar cada sección
-  for (const [field, pattern] of Object.entries(patterns)) {
-    const match = normalized.match(pattern)
+  for (const pattern of chiefComplaintPatterns) {
+    const match = text.match(pattern)
     if (match && match[1]) {
-      // Obtener el texto original (no normalizado) de la misma posición
-      const startIndex = match.index! + match[0].indexOf(match[1])
-      const length = match[1].length
-      const originalText = text.substring(startIndex, startIndex + length).trim()
-
-      result[field as keyof typeof result] = originalText
+      result.chief_complaint = match[1].trim()
+      break
     }
   }
 
-  // Si no se detectaron secciones, todo va a subjetivo
-  if (Object.keys(result).length === 0) {
+  // Si no hay motivo explícito, extraer de la primera mención de síntomas
+  if (!result.chief_complaint) {
+    const symptomPatterns = [
+      /(?:refiere|presenta|tiene|siente)[:\s]*([^.]{10,80})/i,
+      /(?:dolor|molestia|sensibilidad|inflamación|sangrado)[^.]{0,50}/i,
+    ]
+
+    for (const pattern of symptomPatterns) {
+      const match = text.match(pattern)
+      if (match) {
+        // Tomar la primera parte como motivo de consulta (máx 100 chars)
+        const complaint = match[0].substring(0, 100).trim()
+        if (complaint.length > 10) {
+          result.chief_complaint = complaint
+          break
+        }
+      }
+    }
+  }
+
+  // ==========================================
+  // 2. DIVIDIR EN SECCIONES POR MARCADORES
+  // ==========================================
+  const sectionMarkers = {
+    subjective: {
+      patterns: [
+        /(?:subjetivo|anamnesis)[:\s]*/i,
+        /(?:paciente refiere|el paciente refiere|la paciente refiere)[:\s]*/i,
+        /(?:refiere que|manifiesta que|comenta que)[:\s]*/i,
+        /(?:historia de la enfermedad|antecedentes)[:\s]*/i,
+      ],
+      keywords: ['refiere', 'manifiesta', 'siente', 'tiene', 'desde hace', 'comenzó', 'empezó', 'síntomas']
+    },
+    objective: {
+      patterns: [
+        /(?:objetivo|examen físico|examen clínico|exploración)[:\s]*/i,
+        /(?:al examen|a la exploración|se observa|se evidencia)[:\s]*/i,
+        /(?:hallazgos|signos vitales)[:\s]*/i,
+      ],
+      keywords: ['se observa', 'se evidencia', 'presenta', 'exploración', 'palpación', 'auscultación', 'inspección', 'radiografía', 'rx', 'sondaje']
+    },
+    assessment: {
+      patterns: [
+        /(?:evaluación|assessment|diagnóstico|impresión diagnóstica|dx)[:\s]*/i,
+        /(?:se diagnostica|diagnóstico probable|impresión clínica)[:\s]*/i,
+      ],
+      keywords: ['diagnóstico', 'dx', 'impresión', 'se diagnostica', 'compatible con', 'sugestivo de']
+    },
+    plan: {
+      patterns: [
+        /(?:plan|tratamiento|indicaciones|recomendaciones)[:\s]*/i,
+        /(?:se recomienda|se indica|se prescribe|plan de tratamiento)[:\s]*/i,
+        /(?:procedimiento a realizar|se procederá)[:\s]*/i,
+      ],
+      keywords: ['se recomienda', 'se indica', 'tratamiento', 'medicación', 'control', 'cita', 'procedimiento', 'aplicar', 'tomar']
+    }
+  }
+
+  // Encontrar posiciones de secciones explícitas
+  const sections: { type: keyof typeof sectionMarkers; start: number; matchLength: number }[] = []
+
+  for (const [sectionType, config] of Object.entries(sectionMarkers)) {
+    for (const pattern of config.patterns) {
+      const match = normalized.match(pattern)
+      if (match && match.index !== undefined) {
+        sections.push({
+          type: sectionType as keyof typeof sectionMarkers,
+          start: match.index,
+          matchLength: match[0].length
+        })
+        break // Solo tomar el primer match por sección
+      }
+    }
+  }
+
+  // Si hay secciones explícitas, extraer por posición
+  if (sections.length > 0) {
+    sections.sort((a, b) => a.start - b.start)
+
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i]
+      const startContent = section.start + section.matchLength
+      const endContent = i < sections.length - 1 ? sections[i + 1].start : text.length
+      const content = text.substring(startContent, endContent).trim()
+
+      if (content && content.length > 5) {
+        result[section.type] = content
+      }
+    }
+  }
+
+  // ==========================================
+  // 3. PARSING SEMÁNTICO POR ORACIONES
+  // ==========================================
+  // Dividir en oraciones y clasificar las que no fueron capturadas
+  const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 10)
+
+  for (const sentence of sentences) {
+    const lower = sentence.toLowerCase()
+
+    // Verificar si ya está incluida en algún resultado
+    const alreadyIncluded = Object.values(result).some(v => v && v.toLowerCase().includes(lower))
+    if (alreadyIncluded) continue
+
+    // Clasificar por keywords
+    if (sectionMarkers.plan.keywords.some(k => lower.includes(k))) {
+      result.plan = (result.plan ? result.plan + ' ' : '') + sentence + '.'
+    } else if (sectionMarkers.assessment.keywords.some(k => lower.includes(k))) {
+      result.assessment = (result.assessment ? result.assessment + ' ' : '') + sentence + '.'
+    } else if (sectionMarkers.objective.keywords.some(k => lower.includes(k))) {
+      result.objective = (result.objective ? result.objective + ' ' : '') + sentence + '.'
+    } else if (sectionMarkers.subjective.keywords.some(k => lower.includes(k))) {
+      result.subjective = (result.subjective ? result.subjective + ' ' : '') + sentence + '.'
+    }
+  }
+
+  // ==========================================
+  // 4. FALLBACK: Si no hay nada estructurado
+  // ==========================================
+  if (!result.subjective && !result.objective && !result.assessment && !result.plan) {
+    // Poner todo en subjetivo si no se pudo clasificar
     result.subjective = text.trim()
   }
 
+  // Si hay subjetivo pero no motivo de consulta, usar primera oración del subjetivo
+  if (!result.chief_complaint && result.subjective) {
+    const firstSentence = result.subjective.split(/[.!?]/)[0]?.trim()
+    if (firstSentence && firstSentence.length > 10 && firstSentence.length < 150) {
+      result.chief_complaint = firstSentence
+    }
+  }
+
+  // ==========================================
+  // 5. LIMPIAR RESULTADOS
+  // ==========================================
+  for (const key of Object.keys(result) as (keyof typeof result)[]) {
+    if (result[key]) {
+      // Limpiar espacios múltiples y trim
+      result[key] = result[key]!.trim().replace(/\s+/g, ' ')
+      // Capitalizar primera letra
+      result[key] = result[key]!.charAt(0).toUpperCase() + result[key]!.slice(1)
+    }
+  }
+
+  console.log('[Medical Parser] Parsed result:', result)
   return result
 }
 
@@ -91,10 +235,11 @@ export default function MedicalRecordForm({
   const [activeSection, setActiveSection] = useState<'basic' | 'vitals' | 'specialty' | 'prescriptions' | 'diagnoses'>('basic')
   const [vitalWarnings, setVitalWarnings] = useState<Record<string, string>>({})
 
-  // Specialty-specific fields
+  // Specialty-specific fields and terminology
   const specialty = getSpecialtyFromTenantType(tenantType)
   const specialtyFields = getFieldsForSpecialty(specialty)
   const specialtyInfo = SPECIALTY_CONFIG[specialty]
+  const terminology = getTerminologyForSpecialty(specialty)
   const [specialtyData, setSpecialtyData] = useState<Record<string, unknown>>({})
 
   // Form state
@@ -112,6 +257,71 @@ export default function MedicalRecordForm({
 
   const [prescriptions, setPrescriptions] = useState<PrescriptionFormData[]>([])
   const [diagnoses, setDiagnoses] = useState<DiagnosisFormData[]>([])
+
+  // Hook de sugerencias de diagnóstico con IA
+  const {
+    suggestions: diagnosisSuggestions,
+    disclaimer: diagnosisDisclaimer,
+    isLoading: isLoadingSuggestions,
+    getSuggestions,
+    clearSuggestions,
+    selectDiagnosis,
+    selectedDiagnosis
+  } = useDiagnosisSuggestions()
+
+  // Función para extraer síntomas del texto del dictado
+  const extractSymptomsFromText = (text: string): string[] => {
+    // Patrones para identificar síntomas en español
+    const symptomPatterns = [
+      /(?:presenta|refiere|tiene|siente|padece)\s+(?:de\s+)?([^,.;]+)/gi,
+      /(?:dolor|molestia|malestar|sensibilidad|inflamación|sangrado|fiebre|tos|náuseas|vómitos|diarrea|mareo|fatiga|debilidad|ardor)\s*(?:de|en)?\s*([^,.;]*)/gi,
+    ]
+
+    const symptoms: string[] = []
+
+    // Extraer síntomas usando patrones
+    for (const pattern of symptomPatterns) {
+      let match
+      while ((match = pattern.exec(text)) !== null) {
+        const symptom = match[0].trim()
+        if (symptom.length > 3 && !symptoms.includes(symptom)) {
+          symptoms.push(symptom)
+        }
+      }
+    }
+
+    // Si no se encontraron síntomas con patrones, usar el texto completo dividido en oraciones
+    if (symptoms.length === 0 && text.trim().length > 10) {
+      const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 10)
+      symptoms.push(...sentences.slice(0, 3)) // Máximo 3 oraciones como síntomas
+    }
+
+    return symptoms.slice(0, 5) // Máximo 5 síntomas
+  }
+
+  // Función para manejar selección de diagnóstico sugerido
+  const handleSelectDiagnosis = (suggestion: DiagnosisSuggestion) => {
+    // Actualizar el campo assessment con el diagnóstico
+    setFormData(prev => ({
+      ...prev,
+      assessment: suggestion.diagnosis + (suggestion.icd10Code ? ` (${suggestion.icd10Code})` : '') +
+        (prev.assessment ? '\n\n' + prev.assessment : '')
+    }))
+
+    // Agregar a la lista de diagnósticos con código CIE-10
+    const newDiagnosis: DiagnosisFormData = {
+      diagnosis_name: suggestion.diagnosis,
+      diagnosis_code: suggestion.icd10Code || '',
+      diagnosis_type: diagnoses.length === 0 ? 'primary' : 'secondary',
+      severity: suggestion.confidence === 'high' ? 'severe' :
+                suggestion.confidence === 'medium' ? 'moderate' : 'mild',
+      notes: suggestion.reasoning,
+      status: 'active'
+    }
+
+    setDiagnoses(prev => [...prev, newDiagnosis])
+    selectDiagnosis(suggestion)
+  }
 
   // Load record data if editing
   useEffect(() => {
@@ -307,9 +517,9 @@ export default function MedicalRecordForm({
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold">
-                    {recordToEdit ? 'Editar Registro Médico' : 'Nuevo Registro Médico'}
+                    {recordToEdit ? `Editar ${terminology.recordLabel}` : `Nueva ${terminology.recordLabel}`}
                   </h2>
-                  <p className="text-blue-100 text-sm mt-1">Complete la información del registro</p>
+                  <p className="text-blue-100 text-sm mt-1">Complete la información del {terminology.patientLabel.toLowerCase()}</p>
                 </div>
                 <button
                   onClick={onClose}
@@ -333,16 +543,18 @@ export default function MedicalRecordForm({
                 >
                   Información Básica
                 </button>
-                <button
-                  onClick={() => setActiveSection('vitals')}
-                  className={`py-3 px-1 border-b-2 font-medium text-sm ${
-                    activeSection === 'vitals'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  Signos Vitales
-                </button>
+                {terminology.showVitals && (
+                  <button
+                    onClick={() => setActiveSection('vitals')}
+                    className={`py-3 px-1 border-b-2 font-medium text-sm ${
+                      activeSection === 'vitals'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Signos Vitales
+                  </button>
+                )}
                 {specialtyFields.length > 0 && (
                   <button
                     onClick={() => setActiveSection('specialty')}
@@ -420,26 +632,26 @@ export default function MedicalRecordForm({
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Motivo de Consulta
+                        {terminology.chiefComplaintLabel}
                       </label>
                       <textarea
                         rows={2}
                         value={formData.chief_complaint}
                         onChange={(e) => setFormData({ ...formData, chief_complaint: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="¿Por qué acude el paciente?"
+                        placeholder={terminology.chiefComplaintPlaceholder}
                       />
                     </div>
 
                     <div className="border-t border-gray-200 pt-4">
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900">Notas SOAP</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">Notas Clínicas</h3>
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-gray-600">Dictar notas:</span>
                           <VoiceDictation
                             onTranscriptionComplete={(text) => {
-                              // Parser inteligente para mapear a campos SOAP
-                              const parsed = parseSOAPTranscription(text)
+                              // Parser inteligente para mapear dictado a campos médicos
+                              const parsed = parseMedicalDictation(text)
                               setFormData(prev => ({
                                 ...prev,
                                 chief_complaint: parsed.chief_complaint || prev.chief_complaint,
@@ -448,6 +660,17 @@ export default function MedicalRecordForm({
                                 assessment: parsed.assessment || prev.assessment,
                                 plan: parsed.plan || prev.plan
                               }))
+
+                              // Extraer síntomas y solicitar sugerencias de diagnóstico con IA
+                              const symptoms = extractSymptomsFromText(text)
+                              if (symptoms.length > 0) {
+                                clearSuggestions() // Limpiar sugerencias anteriores
+                                getSuggestions({
+                                  symptoms,
+                                  clinicalText: text,
+                                  maxSuggestions: 3
+                                })
+                              }
                             }}
                             variant="compact"
                             language="es-ES"
@@ -458,53 +681,68 @@ export default function MedicalRecordForm({
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            <span className="text-blue-600 font-bold">S</span> Subjetivo
+                            <span className="text-blue-600 font-bold">S</span> {terminology.subjectiveLabel}
                           </label>
                           <textarea
                             rows={3}
                             value={formData.subjective}
                             onChange={(e) => setFormData({ ...formData, subjective: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Síntomas reportados por el paciente, historia del presente..."
+                            placeholder={terminology.subjectivePlaceholder}
                           />
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            <span className="text-green-600 font-bold">O</span> Objetivo
+                            <span className="text-green-600 font-bold">O</span> {terminology.objectiveLabel}
                           </label>
                           <textarea
                             rows={3}
                             value={formData.objective}
                             onChange={(e) => setFormData({ ...formData, objective: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Hallazgos del examen físico, observaciones clínicas..."
+                            placeholder={terminology.objectivePlaceholder}
                           />
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            <span className="text-purple-600 font-bold">A</span> Evaluación/Assessment
+                            <span className="text-purple-600 font-bold">A</span> {terminology.assessmentLabel}
                           </label>
                           <textarea
                             rows={3}
                             value={formData.assessment}
                             onChange={(e) => setFormData({ ...formData, assessment: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Diagnóstico o impresión clínica..."
+                            placeholder={terminology.assessmentPlaceholder}
                           />
                         </div>
 
+                        {/* Sugerencias de diagnóstico con IA y CIE-10 */}
+                        {(diagnosisSuggestions.length > 0 || isLoadingSuggestions) && (
+                          <div className="mt-4">
+                            <DiagnosisSuggestions
+                              suggestions={diagnosisSuggestions}
+                              disclaimer={diagnosisDisclaimer || undefined}
+                              onSelect={handleSelectDiagnosis}
+                              selectedCode={selectedDiagnosis?.icd10Code || undefined}
+                              isLoading={isLoadingSuggestions}
+                              showDifferentials={true}
+                              showRecommendedTests={true}
+                            />
+                          </div>
+                        )}
+
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            <span className="text-orange-600 font-bold">P</span> Plan
+                            <span className="text-orange-600 font-bold">P</span> {terminology.planLabel}
                           </label>
                           <textarea
                             rows={3}
                             value={formData.plan}
                             onChange={(e) => setFormData({ ...formData, plan: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Plan de tratamiento, seguimiento, recomendaciones..."
+                            placeholder={terminology.planPlaceholder}
                           />
                         </div>
                       </div>

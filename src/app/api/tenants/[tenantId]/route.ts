@@ -146,3 +146,11 @@ export async function PUT(
     )
   }
 }
+
+// PATCH is alias for PUT (partial update)
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<{ tenantId: string }> }
+) {
+  return PUT(request, context)
+}

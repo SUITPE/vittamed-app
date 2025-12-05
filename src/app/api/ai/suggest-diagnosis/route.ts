@@ -28,7 +28,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createClient } from '@/lib/supabase-server';
+import { getSupabaseServerClient } from '@/lib/supabase-api';
+import { customAuth } from '@/lib/custom-auth';
 import { createAIClient, getDefaultProvider } from '@/lib/ai';
 import type { AIProvider } from '@/types/nlp';
 
@@ -127,18 +128,17 @@ export async function POST(request: NextRequest): Promise<NextResponse<SuggestDi
   const startTime = Date.now();
 
   try {
-    // 1. Verificar autenticación
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    // 1. Verificar autenticación usando JWT custom
+    const user = await customAuth.getCurrentUser();
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
+
+    // Cliente Supabase para consultas de base de datos
+    const supabase = await getSupabaseServerClient();
 
     // 2. Parsear y validar body
     const body = await request.json();

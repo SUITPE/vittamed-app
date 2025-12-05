@@ -62,6 +62,7 @@ export interface SpecialtyConfig {
 
 // Map tenant_type to specialty
 export const TENANT_TYPE_TO_SPECIALTY: Record<string, SpecialtyType> = {
+  // Legacy types
   clinic: 'general',
   consultorio: 'general',
   spa: 'aesthetics',
@@ -71,7 +72,200 @@ export const TENANT_TYPE_TO_SPECIALTY: Record<string, SpecialtyType> = {
   nutrition: 'nutrition',
   physiotherapy: 'physiotherapy',
   psychology: 'psychology',
-  veterinary: 'veterinary'
+  veterinary: 'veterinary',
+  // New BusinessType values
+  medical_clinic: 'general',
+  dental_clinic: 'dentistry',
+  pediatric_clinic: 'pediatrics',
+  physiotherapy_clinic: 'physiotherapy',
+  psychology_clinic: 'psychology',
+  aesthetic_clinic: 'aesthetics',
+  wellness_spa: 'aesthetics',
+  beauty_salon: 'aesthetics',
+  massage_center: 'aesthetics',
+  rehabilitation_center: 'physiotherapy',
+  diagnostic_center: 'general',
+  veterinary_clinic: 'veterinary'
+}
+
+// Terminology configuration by specialty
+export interface SpecialtyTerminology {
+  patientLabel: string       // "Paciente" vs "Mascota"
+  recordLabel: string        // "Historia Clínica" vs "Ficha Médica"
+  appointmentLabel: string   // "Cita" vs "Sesión"
+  chiefComplaintLabel: string
+  chiefComplaintPlaceholder: string
+  subjectiveLabel: string
+  subjectivePlaceholder: string
+  objectiveLabel: string
+  objectivePlaceholder: string
+  assessmentLabel: string
+  assessmentPlaceholder: string
+  planLabel: string
+  planPlaceholder: string
+  showVitals: boolean
+  showSOAP: boolean
+}
+
+export const SPECIALTY_TERMINOLOGY: Record<SpecialtyType, SpecialtyTerminology> = {
+  general: {
+    patientLabel: 'Paciente',
+    recordLabel: 'Historia Clínica',
+    appointmentLabel: 'Cita',
+    chiefComplaintLabel: 'Motivo de Consulta',
+    chiefComplaintPlaceholder: 'Describe el motivo principal de la consulta...',
+    subjectiveLabel: 'Subjetivo (S)',
+    subjectivePlaceholder: 'Síntomas referidos por el paciente, historia de la enfermedad actual...',
+    objectiveLabel: 'Objetivo (O)',
+    objectivePlaceholder: 'Hallazgos del examen físico, signos vitales, resultados de laboratorio...',
+    assessmentLabel: 'Evaluación (A)',
+    assessmentPlaceholder: 'Diagnóstico diferencial, análisis clínico...',
+    planLabel: 'Plan (P)',
+    planPlaceholder: 'Tratamiento, indicaciones, estudios a solicitar, seguimiento...',
+    showVitals: true,
+    showSOAP: true
+  },
+  pediatrics: {
+    patientLabel: 'Paciente Pediátrico',
+    recordLabel: 'Historia Clínica Pediátrica',
+    appointmentLabel: 'Control',
+    chiefComplaintLabel: 'Motivo de Consulta',
+    chiefComplaintPlaceholder: 'Motivo de la consulta, referido por el padre/madre...',
+    subjectiveLabel: 'Subjetivo (S)',
+    subjectivePlaceholder: 'Síntomas referidos, desarrollo del niño, alimentación...',
+    objectiveLabel: 'Objetivo (O)',
+    objectivePlaceholder: 'Examen físico, percentiles, desarrollo psicomotor...',
+    assessmentLabel: 'Evaluación (A)',
+    assessmentPlaceholder: 'Diagnóstico, estado nutricional, desarrollo...',
+    planLabel: 'Plan (P)',
+    planPlaceholder: 'Tratamiento, vacunas, próximo control, indicaciones para padres...',
+    showVitals: true,
+    showSOAP: true
+  },
+  dentistry: {
+    patientLabel: 'Paciente',
+    recordLabel: 'Ficha Dental',
+    appointmentLabel: 'Cita Dental',
+    chiefComplaintLabel: 'Motivo de Consulta',
+    chiefComplaintPlaceholder: 'Dolor, revisión de rutina, tratamiento específico...',
+    subjectiveLabel: 'Historia Dental',
+    subjectivePlaceholder: 'Síntomas, sensibilidad, hábitos de higiene, última visita...',
+    objectiveLabel: 'Examen Dental',
+    objectivePlaceholder: 'Estado de piezas dentales, encías, radiografías, hallazgos...',
+    assessmentLabel: 'Diagnóstico',
+    assessmentPlaceholder: 'Caries, gingivitis, periodontitis, necesidad de tratamiento...',
+    planLabel: 'Plan de Tratamiento',
+    planPlaceholder: 'Procedimientos a realizar, número de sesiones, presupuesto...',
+    showVitals: false,
+    showSOAP: true
+  },
+  dermatology: {
+    patientLabel: 'Paciente',
+    recordLabel: 'Historia Dermatológica',
+    appointmentLabel: 'Consulta',
+    chiefComplaintLabel: 'Motivo de Consulta',
+    chiefComplaintPlaceholder: 'Lesión, erupción, mancha, picazón...',
+    subjectiveLabel: 'Historia de la Lesión',
+    subjectivePlaceholder: 'Tiempo de evolución, síntomas, factores agravantes...',
+    objectiveLabel: 'Examen de Piel',
+    objectivePlaceholder: 'Descripción de lesiones: tipo, localización, tamaño, color...',
+    assessmentLabel: 'Diagnóstico',
+    assessmentPlaceholder: 'Diagnóstico dermatológico, diferenciales...',
+    planLabel: 'Plan de Tratamiento',
+    planPlaceholder: 'Medicamentos tópicos/sistémicos, procedimientos, seguimiento...',
+    showVitals: false,
+    showSOAP: true
+  },
+  aesthetics: {
+    patientLabel: 'Cliente',
+    recordLabel: 'Ficha Estética',
+    appointmentLabel: 'Sesión',
+    chiefComplaintLabel: 'Objetivo del Tratamiento',
+    chiefComplaintPlaceholder: 'Qué desea mejorar o tratar el cliente...',
+    subjectiveLabel: 'Historial Estético',
+    subjectivePlaceholder: 'Tratamientos previos, alergias, expectativas del cliente...',
+    objectiveLabel: 'Evaluación Facial/Corporal',
+    objectivePlaceholder: 'Tipo de piel, zonas a tratar, fotoenvejecimiento...',
+    assessmentLabel: 'Valoración',
+    assessmentPlaceholder: 'Análisis de necesidades, tratamientos recomendados...',
+    planLabel: 'Plan de Tratamiento',
+    planPlaceholder: 'Procedimientos, productos, número de sesiones, cuidados post...',
+    showVitals: false,
+    showSOAP: true
+  },
+  nutrition: {
+    patientLabel: 'Paciente',
+    recordLabel: 'Historia Nutricional',
+    appointmentLabel: 'Consulta',
+    chiefComplaintLabel: 'Motivo de Consulta',
+    chiefComplaintPlaceholder: 'Pérdida de peso, ganancia muscular, patología específica...',
+    subjectiveLabel: 'Historia Alimentaria',
+    subjectivePlaceholder: 'Hábitos alimenticios, horarios de comida, restricciones...',
+    objectiveLabel: 'Evaluación Nutricional',
+    objectivePlaceholder: 'Medidas antropométricas, composición corporal, IMC...',
+    assessmentLabel: 'Diagnóstico Nutricional',
+    assessmentPlaceholder: 'Estado nutricional, deficiencias, riesgos...',
+    planLabel: 'Plan Nutricional',
+    planPlaceholder: 'Dieta recomendada, suplementos, objetivos, próximo control...',
+    showVitals: false,
+    showSOAP: true
+  },
+  physiotherapy: {
+    patientLabel: 'Paciente',
+    recordLabel: 'Historia Fisioterapéutica',
+    appointmentLabel: 'Sesión',
+    chiefComplaintLabel: 'Motivo de Consulta',
+    chiefComplaintPlaceholder: 'Dolor, limitación de movimiento, rehabilitación...',
+    subjectiveLabel: 'Evaluación del Dolor',
+    subjectivePlaceholder: 'Localización, intensidad, factores que agravan/alivian...',
+    objectiveLabel: 'Evaluación Funcional',
+    objectivePlaceholder: 'Rango de movimiento, fuerza muscular, postura, marcha...',
+    assessmentLabel: 'Diagnóstico Fisioterapéutico',
+    assessmentPlaceholder: 'Disfunción identificada, limitaciones funcionales...',
+    planLabel: 'Plan de Rehabilitación',
+    planPlaceholder: 'Técnicas a aplicar, ejercicios, frecuencia, objetivos...',
+    showVitals: false,
+    showSOAP: true
+  },
+  psychology: {
+    patientLabel: 'Paciente',
+    recordLabel: 'Historia Clínica Psicológica',
+    appointmentLabel: 'Sesión',
+    chiefComplaintLabel: 'Motivo de Consulta',
+    chiefComplaintPlaceholder: 'Situación o problema principal que trae a consulta...',
+    subjectiveLabel: 'Relato del Paciente',
+    subjectivePlaceholder: 'Lo que el paciente expresa, emociones, pensamientos...',
+    objectiveLabel: 'Observación Clínica',
+    objectivePlaceholder: 'Estado mental, afecto, conducta durante la sesión...',
+    assessmentLabel: 'Impresión Diagnóstica',
+    assessmentPlaceholder: 'Hipótesis diagnóstica, dinámicas identificadas...',
+    planLabel: 'Plan Terapéutico',
+    planPlaceholder: 'Objetivos terapéuticos, técnicas, tareas, próxima sesión...',
+    showVitals: false,
+    showSOAP: true
+  },
+  veterinary: {
+    patientLabel: 'Mascota',
+    recordLabel: 'Ficha Veterinaria',
+    appointmentLabel: 'Consulta',
+    chiefComplaintLabel: 'Motivo de Consulta',
+    chiefComplaintPlaceholder: 'Síntomas que presenta la mascota, comportamiento anormal...',
+    subjectiveLabel: 'Historia Reportada',
+    subjectivePlaceholder: 'Lo que reporta el dueño: síntomas, duración, cambios de comportamiento...',
+    objectiveLabel: 'Examen Físico',
+    objectivePlaceholder: 'Peso, temperatura, mucosas, auscultación, palpación...',
+    assessmentLabel: 'Diagnóstico',
+    assessmentPlaceholder: 'Diagnóstico presuntivo, diferenciales...',
+    planLabel: 'Plan de Tratamiento',
+    planPlaceholder: 'Medicamentos, dosis, indicaciones para el dueño, control...',
+    showVitals: true,
+    showSOAP: true
+  }
+}
+
+// Get terminology for a specialty
+export function getTerminologyForSpecialty(specialty: SpecialtyType): SpecialtyTerminology {
+  return SPECIALTY_TERMINOLOGY[specialty] || SPECIALTY_TERMINOLOGY.general
 }
 
 // Common fields shared across all specialties

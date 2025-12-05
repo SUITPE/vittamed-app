@@ -38,6 +38,7 @@ export function useSpeechRecognition({
   const [isListening, setIsListening] = useState(false)
   const [transcript, setTranscript] = useState('')
   const recognitionRef = useRef<any>(null)
+  const transcriptRef = useRef<string>('') // Ref para mantener transcript actualizado en callbacks
 
   const isSupported = useCallback(() => {
     return !!(
@@ -46,12 +47,35 @@ export function useSpeechRecognition({
     )
   }, [])
 
-  const startListening = useCallback(() => {
+  const startListening = useCallback(async () => {
     if (!isSupported()) {
       onError?.({
         code: 'not-supported',
         message:
           'Tu navegador no soporta reconocimiento de voz. Por favor usa Chrome o Safari.',
+      })
+      return
+    }
+
+    // Solicitar permiso de micrófono explícitamente primero
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      // Detener el stream inmediatamente después de obtener permiso
+      stream.getTracks().forEach(track => track.stop())
+    } catch (permissionError: any) {
+      console.error('[VoiceDictation] Microphone permission denied:', permissionError)
+
+      let message = 'Permiso de micrófono denegado. Por favor habilita el micrófono en configuración del navegador.'
+
+      // Detectar si es un problema de Permissions Policy (iframe o política de seguridad)
+      if (permissionError.message?.includes('Permission denied') ||
+          permissionError.name === 'NotAllowedError') {
+        message = 'No se puede acceder al micrófono. Verifica que:\n1. Estás usando https:// o localhost\n2. El navegador tiene permiso de micrófono\n3. Haz clic en el icono de candado en la barra de direcciones para habilitar el micrófono'
+      }
+
+      onError?.({
+        code: 'no-permission',
+        message,
       })
       return
     }
@@ -88,6 +112,7 @@ export function useSpeechRecognition({
         if (finalTranscript) {
           setTranscript((prev) => {
             const fullTranscript = prev + finalTranscript
+            transcriptRef.current = fullTranscript // Mantener ref sincronizada
             onTranscriptionUpdate?.(fullTranscript)
             return fullTranscript
           })
@@ -134,12 +159,12 @@ export function useSpeechRecognition({
       }
 
       recognition.onend = () => {
-        console.log('[VoiceDictation] Recognition ended')
+        console.log('[VoiceDictation] Recognition ended, transcript:', transcriptRef.current)
         setIsListening(false)
 
-        // Emitir transcripción final
-        if (transcript) {
-          onTranscriptionComplete(transcript)
+        // Emitir transcripción final usando ref (no stale state)
+        if (transcriptRef.current) {
+          onTranscriptionComplete(transcriptRef.current)
         }
       }
 
@@ -156,7 +181,6 @@ export function useSpeechRecognition({
     language,
     continuous,
     interimResults,
-    transcript,
     onTranscriptionComplete,
     onTranscriptionUpdate,
     onError,
@@ -172,6 +196,7 @@ export function useSpeechRecognition({
 
   const resetTranscript = useCallback(() => {
     setTranscript('')
+    transcriptRef.current = ''
   }, [])
 
   return {

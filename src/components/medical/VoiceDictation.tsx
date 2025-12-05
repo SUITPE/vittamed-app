@@ -13,8 +13,8 @@
 
 'use client'
 
-import { useState } from 'react'
-import { Mic, Circle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Mic, Circle, Check, X, Edit3 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 import { VoiceDictationProps } from './VoiceDictation.types'
@@ -32,19 +32,47 @@ export function VoiceDictation({
   disabled = false,
 }: VoiceDictationProps) {
   const [error, setError] = useState<string | null>(null)
+  const [editableText, setEditableText] = useState('')
+  const [showEditor, setShowEditor] = useState(false)
 
-  const { isListening, transcript, startListening, stopListening, isSupported } =
+  const { isListening, transcript, startListening, stopListening, resetTranscript, isSupported } =
     useSpeechRecognition({
       language,
       continuous,
       interimResults,
-      onTranscriptionComplete,
+      onTranscriptionComplete: (text) => {
+        // En lugar de enviar directamente, mostramos el editor
+        setEditableText(text)
+        setShowEditor(true)
+      },
       onTranscriptionUpdate,
       onError: (err) => {
         setError(err.message)
         onError?.(err)
       },
     })
+
+  // Sincronizar transcript con editableText durante la grabación
+  useEffect(() => {
+    if (isListening && transcript) {
+      setEditableText(transcript)
+    }
+  }, [isListening, transcript])
+
+  const handleApplyText = () => {
+    if (editableText.trim()) {
+      onTranscriptionComplete(editableText.trim())
+    }
+    setShowEditor(false)
+    setEditableText('')
+    resetTranscript()
+  }
+
+  const handleCancelEdit = () => {
+    setShowEditor(false)
+    setEditableText('')
+    resetTranscript()
+  }
 
   const handleToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
@@ -142,12 +170,70 @@ export function VoiceDictation({
         </motion.div>
       )}
 
-      {/* Transcripción en tiempo real (solo en desarrollo) */}
-      {process.env.NODE_ENV === 'development' && transcript && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-700">
-          <div className="font-medium mb-1">Transcripción:</div>
-          <div className="text-gray-600">{transcript}</div>
-        </div>
+      {/* Transcripción en tiempo real durante grabación */}
+      {isListening && editableText && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800"
+        >
+          <div className="font-medium mb-1 flex items-center gap-2">
+            <Edit3 className="h-4 w-4" />
+            Transcribiendo...
+          </div>
+          <div className="text-blue-700">{editableText}</div>
+        </motion.div>
+      )}
+
+      {/* Editor de transcripción (después de detener grabación) */}
+      {showEditor && !isListening && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white border border-gray-300 rounded-lg p-4 shadow-lg space-y-3"
+        >
+          <div className="flex items-center justify-between">
+            <label className="font-medium text-gray-700 flex items-center gap-2">
+              <Edit3 className="h-4 w-4" />
+              Revisar y editar transcripción
+            </label>
+            <span className="text-xs text-gray-500">
+              Puedes corregir el texto antes de aplicar
+            </span>
+          </div>
+
+          <textarea
+            value={editableText}
+            onChange={(e) => setEditableText(e.target.value)}
+            className="w-full h-32 p-3 border border-gray-300 rounded-lg text-sm
+                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                       resize-none"
+            placeholder="La transcripción aparecerá aquí..."
+          />
+
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100
+                         hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <X className="h-4 w-4" />
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleApplyText}
+              disabled={!editableText.trim()}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600
+                         hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed
+                         rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Check className="h-4 w-4" />
+              Aplicar texto
+            </button>
+          </div>
+        </motion.div>
       )}
     </div>
   )
